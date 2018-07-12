@@ -11,6 +11,7 @@
 #include <circle/timer.h>
 #include <circle/logger.h>
 #include <circle/types.h>
+
 #include "sprite/sprite_manager.h"
 
 namespace hfh3
@@ -29,7 +30,10 @@ namespace hfh3
     private:
         // ** System objects:
         // Initializes the MMU and the memory subsystem of the Raspberry PI
-        CMemorySystem memory;
+        CMemorySystem      memory;
+    	CActLED		       activityLED;
+    	CKernelOptions     options;
+    	CDeviceNameService nameService;
 
         // ** Application objects:
         // Sprite manager manages rendering sprites on the screen and

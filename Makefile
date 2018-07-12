@@ -13,7 +13,7 @@ include $(CIRCLEHOME)/Rules.mk
 $(LIBS):
 	make -C $(dir $@) RASPPI=$(RASPPI) $(notdir $@)
 
-$(OWN_LIBS): $(wildcard $(dir $@)/*.cpp)
+$(OWN_LIBS): $(wildcard lib/*/*.cpp) graphics/sprites.xpm
 
 all: $(TARGET)
 	echo "Created $(TARGET)"

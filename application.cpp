@@ -10,13 +10,9 @@ bool Application::Initialize()
     return spriteManager.Initialize();
 }
 
-/**
- * This is the main run loop for the application.
- * Should update game state and present each frame.
+
+/** Simple struct holding state for each character shown on-screen
  */
-
-;
-
 struct Character {
     int x,y;
     int dir;
@@ -30,10 +26,11 @@ struct Character {
         x = x + dx;
         y = y + dy;
         if (x < -16) x += width + 32;
+        else if (x > width+16) x -= width + 32;
         if (y < -16) y += height + 32;
-        if (x > width+16) x -= width + 32;
-        if (y > height+16) y -= height + 32;
+        else if (y > height+16) y -= height + 32;
 
+        // Change direction at random intervals.
         if (random.Get() % relaxed == 0)
         {
             unsigned r = random.Get();
@@ -43,6 +40,10 @@ struct Character {
 };
 
 
+/**
+* This is the main run loop for the application.
+* Should update game state and present each frame.
+*/
 int Application::Run()
 {
     const int width = spriteManager.GetWidth()-8;

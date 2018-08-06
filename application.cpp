@@ -2,12 +2,40 @@
 #include "sprite/image.h"
 #include "sprite/sprite_data.h"
 #include "util/random.h"
+#include "util/log.h"
 
 using namespace hfh3;
 
+Application::Application() :
+    memory(true),  // Passing true enables caching and the MMU, which improves performance
+    timer(&interrupts),      // The timer needs a pointer to the intterrupt system
+    logger(LogDebug, &timer),
+    usb(&interrupts, &timer), // The usb subsystem needs both the timer and access to bind to interrupts
+    spriteManager()
+{}
+
+// Wrapper around calling the Initialize method.
+// If it fails it will immediately abort the current function.
+#define INIT(obj, ...) if(!obj.Initialize(__VA_ARGS__)) { return false; }
+
 bool Application::Initialize()
 {
-    return spriteManager.Initialize();
+    INIT(spriteManager)
+    INIT(serial, 115200)
+    {
+        CDevice *log_device = nameService.GetDevice(options.GetLogDevice(), false);
+        if (!log_device)
+        {
+            log_device = &serial;
+        }
+
+        INIT(logger, log_device)
+    }
+    INIT(interrupts)
+    INIT(timer)
+    INIT(usb)
+    INIT(input)
+    return true;
 }
 
 
@@ -15,14 +43,50 @@ bool Application::Initialize()
  */
 struct Character {
     int x,y;
-    int dir;
+    Direction dir;
     int model;
+    int shape;
     int relaxed;
+    bool is_player;
 
     void Update(int width, int height, Random& random)
     {
-        int dx = (dir % 4) == 0 ? 0 : (dir > 4) ? -1 : 1;
-        int dy = (dir % 4) == 2 ? 0 : (dir % 6) > 2  ? 1 : -1;
+        int dx=0, dy=0;
+        switch(dir)
+        {
+        case North:
+            dy =- 1;
+            break;
+        case NorthEast:
+            dx = 1;
+            dy = -1;
+            break;
+        case East:
+            dx = 1;
+            break;
+        case SouthEast:
+            dx = 1;
+            dy = 1;
+            break;
+        case South:
+            dy = 1;
+            break;
+        case SouthWest:
+            dx = -1;
+            dy = 1;
+            break;
+        case West:
+            dx = -1;
+            break;
+        case NorthWest:
+            dx = -1;
+            dy = -1;
+            break;
+        default:
+        case Stopped:
+            return;
+        }
+        shape = dir -1;
         x = x + dx;
         y = y + dy;
         if (x < -16) x += width + 32;
@@ -31,14 +95,13 @@ struct Character {
         else if (y > height+16) y -= height + 32;
 
         // Change direction at random intervals.
-        if (random.Get() % relaxed == 0)
+        if (!is_player && random.Get() % relaxed == 0)
         {
             unsigned r = random.Get();
-            dir = (dir + (r%3)-1) % 8;
+            dir = static_cast<Direction>((((dir-1) + (r%3)-1) % 8)+1);
         }
     }
 };
-
 
 /**
 * This is the main run loop for the application.
@@ -46,9 +109,11 @@ struct Character {
 */
 int Application::Run()
 {
+    INFO("Started MultiKobo. Compile time: " __DATE__ " " __TIME__);
+
     const int width = spriteManager.GetWidth()-8;
     const int height = spriteManager.GetHeight()-8;
-
+    serial.Write("Application::Run()\r\n",20);
     Image image[6][8] = {
         {
             Image (&sprites_pixels[0*16*sprites_width+8*16], 16, 16, 255, sprites_width),
@@ -113,23 +178,29 @@ int Application::Run()
 
     };
     Random random;
-    const int spriteCount = 200;
+    const int spriteCount = 20;
     Character sprite[spriteCount];
+    const int player = spriteCount - 1;
     for (int i = 0; i < spriteCount; i++)
     {
         sprite[i].x = (random.Get()+i*4) % width;
         sprite[i].y = random.Get() % height;
-        sprite[i].dir = random.Get() % 8;
+        sprite[i].shape = random.Get() % 8;
+        sprite[i].dir = static_cast<Direction>(sprite[i].shape + 1);
         sprite[i].model = random.Get() % 6;
         sprite[i].relaxed = random.Get() % 100;
+        sprite[i].is_player = false;
     }
+
+    sprite[player].is_player = true;
 
     while(true)
     {
         spriteManager.Clear();
+        sprite[player].dir = input.GetPlayerDirection();
         for (int i = 0; i < spriteCount; i++)
         {
-            spriteManager.DrawImage(sprite[i].x, sprite[i].y, image[sprite[i].model][sprite[i].dir]);
+            spriteManager.DrawImage(sprite[i].x, sprite[i].y, image[sprite[i].model][sprite[i].shape]);
             sprite[i].Update(width, height, random);
         }
         spriteManager.Present();

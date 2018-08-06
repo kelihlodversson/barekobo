@@ -11,8 +11,10 @@
 #include <circle/timer.h>
 #include <circle/logger.h>
 #include <circle/types.h>
+#include <circle/usb/dwhcidevice.h>
 
 #include "sprite/sprite_manager.h"
+#include "input/input.h"
 
 namespace hfh3
 {
@@ -20,24 +22,27 @@ namespace hfh3
     class Application
     {
     public:
-        Application() :
-            memory(true),  // Passing true enables caching and the MMU, which improves performance
-            spriteManager()
-        {}
-
+        Application();
         bool Initialize();
         int Run();
     private:
+
         // ** System objects:
         // Initializes the MMU and the memory subsystem of the Raspberry PI
         CMemorySystem      memory;
-    	CActLED		       activityLED;
-    	CKernelOptions     options;
-    	CDeviceNameService nameService;
-
+        CActLED            activityLED;
+        CKernelOptions     options;
+        CDeviceNameService nameService;
+        CSerialDevice      serial;
+        CExceptionHandler  exceptionHandler;
+        CInterruptSystem   interrupts;
+        CTimer             timer;
+        CLogger            logger;
+        CDWHCIDevice       usb;
         // ** Application objects:
         // Sprite manager manages rendering sprites on the screen and
         // performing page flipping to avoid flickering.
         SpriteManager spriteManager;
+        Input         input;
     };
 }

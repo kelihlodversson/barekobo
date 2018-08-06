@@ -3,7 +3,7 @@
 //
 // Circle - A C++ bare metal environment for Raspberry Pi
 // Copyright (C) 2014-2016  R. Stange <rsta2@o2online.de>
-// 
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -115,21 +115,32 @@ boolean CUSBHIDDevice::StartRequest (void)
 {
 	assert (m_pReportEndpoint != 0);
 	assert (m_pReportBuffer != 0);
-	
+
 	assert (m_pURB == 0);
 	assert (m_nReportSize > 0);
 	m_pURB = new CUSBRequest (m_pReportEndpoint, m_pReportBuffer, m_nReportSize);
 	assert (m_pURB != 0);
 	m_pURB->SetCompletionRoutine (CompletionStub, 0, this);
-	
+
 	return GetHost ()->SubmitAsyncRequest (m_pURB);
 }
+
+#ifdef HFH3_PATCH
+void CUSBHIDDevice::StartRequestDelayed (unsigned hTimer, void *pParam, void *pContext)
+{
+	CUSBHIDDevice* pThis = (CUSBHIDDevice*) pContext;
+	assert (pThis != 0);
+	if (!pThis->StartRequest ())
+	{
+		CLogger::Get ()->Write (FromUSBHID, LogError, "Cannot restart request");
+	}
+}
+#endif
 
 void CUSBHIDDevice::CompletionRoutine (CUSBRequest *pURB)
 {
 	assert (pURB != 0);
 	assert (m_pURB == pURB);
-
 	if (   pURB->GetStatus () != 0
 	    && pURB->GetResultLength () == m_nReportSize)
 	{
@@ -140,19 +151,32 @@ void CUSBHIDDevice::CompletionRoutine (CUSBRequest *pURB)
 		ReportHandler (0);
 	}
 
+#ifdef HFH3_PATCH
+	unsigned nInterval = m_pURB->GetEndpoint ()->GetInterval ();
+	DataMemBarrier();
+	//CLogger::Get ()->Write (FromUSBHID, LogDebug, "interval %ums", nInterval);
+#endif
+
 	delete m_pURB;
 	m_pURB = 0;
-	
+
+#ifdef HFH3_PATCH
+	if (!CTimer::Get()->StartKernelTimer (MSEC2HZ(nInterval), StartRequestDelayed, 0, this))
+	{
+		CLogger::Get ()->Write (FromUSBHID, LogError, "Cannot schedule new request");
+	}
+#else
 	if (!StartRequest ())
 	{
 		CLogger::Get ()->Write (FromUSBHID, LogError, "Cannot restart request");
 	}
+#endif
 }
 
 void CUSBHIDDevice::CompletionStub (CUSBRequest *pURB, void *pParam, void *pContext)
 {
 	CUSBHIDDevice *pThis = (CUSBHIDDevice *) pContext;
 	assert (pThis != 0);
-	
+
 	pThis->CompletionRoutine (pURB);
 }

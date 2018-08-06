@@ -14,7 +14,7 @@ RASPPI ?= 3
 include $(CIRCLEHOME)/Rules.mk
 
 $(VENDOR_LIBS):
-	make -C $(dir $@) RASPPI=$(RASPPI)
+	make -C $(dir $@) RASPPI=$(RASPPI) OPTIMIZE="$(OPTIMIZE) -DHFH3_PATCH"
 
 $(OWN_LIBS):
 	make -C $(dir $@) RASPPI=$(RASPPI)  $(notdir $@)

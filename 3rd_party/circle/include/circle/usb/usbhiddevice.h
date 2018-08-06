@@ -3,7 +3,7 @@
 //
 // Circle - A C++ bare metal environment for Raspberry Pi
 // Copyright (C) 2014-2016  R. Stange <rsta2@o2online.de>
-// 
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -39,6 +39,10 @@ private:
 
 private:
 	boolean StartRequest (void);
+
+#ifdef HFH3_PATCH
+	static void StartRequestDelayed (unsigned hTimer, void *pParam, void *pContext);
+#endif
 
 	void CompletionRoutine (CUSBRequest *pURB);
 	static void CompletionStub (CUSBRequest *pURB, void *pParam, void *pContext);

@@ -3,7 +3,7 @@
 //
 // Circle - A C++ bare metal environment for Raspberry Pi
 // Copyright (C) 2014-2017  R. Stange <rsta2@o2online.de>
-// 
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -59,11 +59,11 @@ CUSBEndpoint::CUSBEndpoint (CUSBDevice *pDevice, const TUSBEndpointDescriptor *p
 		assert (0);	// endpoint configuration should be checked by function driver
 		return;
 	}
-	
+
 	m_ucNumber       = pDesc->bEndpointAddress & 0x0F;
 	m_bDirectionIn   = pDesc->bEndpointAddress & 0x80 ? TRUE : FALSE;
 	m_nMaxPacketSize = pDesc->wMaxPacketSize;
-	
+
 	if (m_Type == EndpointTypeInterrupt)
 	{
 		u8 ucInterval = pDesc->bInterval;
@@ -170,7 +170,7 @@ TUSBPID CUSBEndpoint::GetNextPID (boolean bStatusStage)
 
 		return USBPIDData1;
 	}
-	
+
 	return m_NextPID;
 }
 
@@ -179,7 +179,7 @@ void CUSBEndpoint::SkipPID (unsigned nPackets, boolean bStatusStage)
 	assert (   m_Type == EndpointTypeControl
 		|| m_Type == EndpointTypeBulk
 		|| m_Type == EndpointTypeInterrupt);
-	
+
 	if (!bStatusStage)
 	{
 		switch (m_NextPID)
@@ -194,7 +194,7 @@ void CUSBEndpoint::SkipPID (unsigned nPackets, boolean bStatusStage)
 				m_NextPID = USBPIDData1;
 			}
 			break;
-			
+
 		case USBPIDData1:
 			if (nPackets & 1)
 			{

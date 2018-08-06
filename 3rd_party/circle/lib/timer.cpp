@@ -3,7 +3,7 @@
 //
 // Circle - A C++ bare metal environment for Raspberry Pi
 // Copyright (C) 2014-2018  R. Stange <rsta2@o2online.de>
-// 
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -93,7 +93,7 @@ boolean CTimer::Initialize (void)
 	write32 (ARM_SYSTIMER_CLO, -(30 * CLOCKHZ));	// timer wraps soon, to check for problems
 
 	write32 (ARM_SYSTIMER_C3, read32 (ARM_SYSTIMER_CLO) + CLOCKHZ / HZ);
-	
+
 #ifdef CALIBRATE_DELAY
 	TuneMsDelay ();
 #endif
@@ -433,10 +433,11 @@ void CTimer::PollKernelTimers (void)
 
 void CTimer::InterruptHandler (void)
 {
+#ifndef HFH3_PATCH
 	PeripheralEntry ();
 
 	//assert (read32 (ARM_SYSTIMER_CS) & (1 << 3));
-	
+
 	u32 nCompare = read32 (ARM_SYSTIMER_C3) + CLOCKHZ / HZ;
 	write32 (ARM_SYSTIMER_C3, nCompare);
 	if (nCompare < read32 (ARM_SYSTIMER_CLO))			// time may drift
@@ -448,6 +449,7 @@ void CTimer::InterruptHandler (void)
 	write32 (ARM_SYSTIMER_CS, 1 << 3);
 
 	PeripheralExit ();
+#endif
 
 #ifndef NDEBUG
 	//debug_click ();
@@ -469,6 +471,24 @@ void CTimer::InterruptHandler (void)
 	{
 		(*m_pPeriodicHandler) ();
 	}
+
+#ifdef HFH3_PATCH
+	PeripheralEntry ();
+
+	//assert (read32 (ARM_SYSTIMER_CS) & (1 << 3));
+
+	u32 nCompare = read32 (ARM_SYSTIMER_C3) + CLOCKHZ / HZ;
+	write32 (ARM_SYSTIMER_C3, nCompare);
+	if (nCompare < read32 (ARM_SYSTIMER_CLO))			// time may drift
+	{
+		nCompare = read32 (ARM_SYSTIMER_CLO) + CLOCKHZ / HZ;
+		write32 (ARM_SYSTIMER_C3, nCompare);
+	}
+
+	write32 (ARM_SYSTIMER_CS, 1 << 3);
+
+	PeripheralExit ();
+#endif
 }
 
 void CTimer::InterruptHandler (void *pParam)

@@ -18,6 +18,7 @@ $(LIBS):
 	@$(MAKE) -C $(dir $@) RASPPI=$(RASPPI) OPTIMIZE="$(OPTIMIZE) -DHFH3_PATCH"
 
 CPPFLAGS += -MMD -DHFH3_PATCH
+EXTRACLEAN += $(OBJS) $(DEP) graphics/sprite_data.gen.cpp
 
 # sprite_data.gen.cpp is generated from a xpm file in the graphics directory
 graphics/sprite_data.gen.cpp: graphics/sprites.xpm
@@ -35,14 +36,9 @@ libclean:
 		make -C $$dir clean;      	\
 	done
 
-depclean:
-	rm -f $(DEP)
-
-clean: depclean
-
 -include $(DEP)
 
-.PHONY: clean deploy libclean depclean
+.PHONY: clean deploy libclean
 
 debug:
 	echo $(OBJS)

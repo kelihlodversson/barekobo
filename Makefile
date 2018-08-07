@@ -1,31 +1,33 @@
 
 CIRCLEHOME=3rd_party/circle
-OBJS	= $(patsubst %.cpp,%.o,$(wildcard *.cpp))
-VENDOR_LIBS = $(CIRCLEHOME)/lib/usb/libusb.a \
-              $(CIRCLEHOME)/lib/fs/libfs.a \
-			  $(CIRCLEHOME)/lib/input/libinput.a \
-			  $(CIRCLEHOME)/lib/libcircle.a
-LIB_DIRS = $(wildcard lib/*)
-OWN_LIBS = $(foreach  D,$(LIB_DIRS),$D/lib$(notdir $D).a)
-LIBS	= $(OWN_LIBS) $(VENDOR_LIBS)
-INCLUDE	+= -I lib -I .
+DIRS = . sprite input util
+OBJS = $(patsubst %.cpp,%.o, $(patsubst ./%,%, $(foreach  D,$(DIRS),$(wildcard $D/*.cpp))))
+LIBS = $(CIRCLEHOME)/lib/usb/libusb.a \
+		$(CIRCLEHOME)/lib/fs/libfs.a \
+		$(CIRCLEHOME)/lib/input/libinput.a \
+		$(CIRCLEHOME)/lib/libcircle.a
+INCLUDE	+= -I .
+OBJS += graphics/sprite_data.gen.o
+
 DEP = $(OBJS:%.o=%.d)
 
 RASPPI ?= 3
 include $(CIRCLEHOME)/Rules.mk
 
-$(VENDOR_LIBS):
-	make -C $(dir $@) RASPPI=$(RASPPI) OPTIMIZE="$(OPTIMIZE) -DHFH3_PATCH"
+$(LIBS):
+	@$(MAKE) -C $(dir $@) RASPPI=$(RASPPI) OPTIMIZE="$(OPTIMIZE) -DHFH3_PATCH"
 
-$(OWN_LIBS):
-	make -C $(dir $@) RASPPI=$(RASPPI) OPTIMIZE="$(OPTIMIZE) -DHFH3_PATCH" $(notdir $@)
+CPPFLAGS += -MMD -DHFH3_PATCH
 
-$(OWN_LIBS): $(wildcard lib/*/*.cpp) graphics/sprites.xpm
+# sprite_data.gen.cpp is generated from a xpm file in the graphics directory
+graphics/sprite_data.gen.cpp: graphics/sprites.xpm
+	perl graphics/xpm2c.pl $< sprites > $@
 
-CPPFLAGS += -MMD
-
-all: $(TARGET)
-	echo "Created $(TARGET)"
+# Helper target to copy the generated image to a remote tftp server.
+# It assumes the images should be stored in a directory called /tftpboot/multikobo
+# on a server called "pi" (either host name or alias in .ssh/config.)
+deploy: $(TARGET).img
+	scp $(TARGET).img pi:/tftpboot/multikobo
 
 libclean:
 	@for dir in $(dir $(LIBS)) ;   	\
@@ -34,8 +36,13 @@ libclean:
 	done
 
 depclean:
-	rm $(DEP)
+	rm -f $(DEP)
 
-clean: libclean depclean
+clean: depclean
 
 -include $(DEP)
+
+.PHONY: clean deploy libclean depclean
+
+debug:
+	echo $(OBJS)

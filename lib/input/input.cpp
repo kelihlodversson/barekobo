@@ -3,6 +3,7 @@
 #include <circle/usb/usbhostcontroller.h>
 #include <circle/usb/usbgamepad.h>
 #include <circle/usb/usbkeyboard.h>
+#include <circle/startup.h>
 
 #include "input/input.h"
 #include "util/log.h"
@@ -102,10 +103,26 @@ enum KeyCodes {
     LetterD     = 0x07,
     LetterS     = 0x16,
     LetterW     = 0x1a,
+    DeleteKey   = 0x4c,
     RightArrow  = 0x4f,
     LeftArrow   = 0x50,
     DownArrow   = 0x51,
     UpArrow     = 0x52,
+};
+
+enum ModfierMask {
+    LeftCtrl    = 0x01,
+    LeftShift   = 0x02,
+    LeftAlt     = 0x04,
+    LeftMeta    = 0x08,
+    RightCtrl   = 0x10,
+    RightShift  = 0x20,
+    RightAlt    = 0x40,
+    RightMeta   = 0x80,
+    AnyCtrl     = LeftCtrl  | RightCtrl,
+    AnyShift    = LeftShift | RightShift,
+    AnyAlt      = LeftAlt   | RightAlt,
+    AnyMeta     = LeftMeta  | RightMeta
 };
 
 void Input::KeyboardStatusHandler(unsigned char modifiers, const unsigned char keys[6])
@@ -119,6 +136,7 @@ void Input::KeyboardStatusHandler(unsigned char modifiers, const unsigned char k
     }
 
     int x = 0, y = 0;
+    bool deletePressed = false;
     for(int i=0; i<6; i++)
     {
         switch(keys[i])
@@ -139,11 +157,23 @@ void Input::KeyboardStatusHandler(unsigned char modifiers, const unsigned char k
             case LetterD:
                 x+=1;
                 break;
+            case DeleteKey:
+                deletePressed = true;
+                break;
             default:
                 // ignore all other keys
                 break;
         }
     }
+
+    // Reboot if CTRL-ALT-DEL is pressed at the same time
+    if (deletePressed && (modifiers & AnyCtrl) && (modifiers & AnyAlt)
+        && !(modifiers & ~(AnyCtrl|AnyAlt)))
+    {
+        INFO("REBOOT!");
+        reboot();
+    }
+
     instance->playerDirection = AxisToDirection(x,y);
     instance->lastDevice = kbd_device;
 }

@@ -179,7 +179,11 @@ boolean CUSBGamePadDevice::Configure (void)
 
 const TGamePadState *CUSBGamePadDevice::GetReport (void)
 {
+#ifdef HFH3_PATCH
+	assert (0 < m_usReportSize && m_usReportSize <= 64);
+#else
 	assert (0 < m_usReportSize && m_usReportSize < 64);
+#endif
 	u8 ReportBuffer[m_usReportSize];
 	if (GetHost ()->ControlMessage (GetEndpoint0 (),
 					REQUEST_IN | REQUEST_CLASS | REQUEST_TO_INTERFACE,
@@ -223,6 +227,10 @@ void CUSBGamePadDevice::DecodeReport (const u8 *pReportBuffer)
 	s32 lmax = UNDEFINED, lmin = UNDEFINED, pmin = UNDEFINED, pmax = UNDEFINED;
 	s32 naxes = 0, nhats = 0;
 	u32 id = 0;
+#ifdef HFH3_PATCH
+	s32 naxetypes = 0;
+	AxisType axisTypes[MAX_AXIS]={AxisType::Unknown};
+#endif
 	enum
 	{
 		None,
@@ -302,6 +310,10 @@ void CUSBGamePadDevice::DecodeReport (const u8 *pReportBuffer)
 			case HID_USAGE_SLIDER:
 				if (state == GamePad)
 					state = GamePadAxis;
+#ifdef HFH3_PATCH
+				if (state == GamePadAxis)
+					axisTypes[naxetypes++] = static_cast<AxisType>(arg-HID_USAGE_X+(int)AxisType::X);
+#endif
 				break;
 			case HID_USAGE_HATSWITCH:
 				if (state == GamePad)
@@ -341,6 +353,9 @@ void CUSBGamePadDevice::DecodeReport (const u8 *pReportBuffer)
 							BitGetSigned(pReportBuffer, offset + i * size, size) :
 							BitGetUnsigned(pReportBuffer, offset + i * size, size);
 
+#ifdef HFH3_PATCH
+						m_State.axes[naxes].type = axisTypes[naxes];
+#endif
 						m_State.axes[naxes++].value = value;
 					}
 

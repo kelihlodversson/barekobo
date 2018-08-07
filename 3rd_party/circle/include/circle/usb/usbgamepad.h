@@ -29,6 +29,21 @@
 #define MAX_AXIS    6
 #define MAX_HATS    6
 
+#ifdef HFH3_PATCH
+enum class AxisType {
+	Unknown,
+	X,
+	Y,
+	Z,
+	Rx,
+	Ry,
+	Rz,
+	Slider0,
+	Slider1,
+	Wheel
+};
+#endif
+
 struct TGamePadState
 {
 	int naxes;
@@ -37,6 +52,9 @@ struct TGamePadState
 		int value;
 		int minimum;
 		int maximum;
+#ifdef HFH3_PATCH
+		AxisType type;
+#endif
 	}
 	axes[MAX_AXIS];
 

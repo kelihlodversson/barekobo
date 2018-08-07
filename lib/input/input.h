@@ -1,13 +1,11 @@
 #pragma once
 
 #include <circle/types.h>
-#include <circle/usb/usbgamepad.h>
 
 namespace hfh3
 {
     enum Direction
     {
-        Stopped,
         North,
         NorthEast,
         East,
@@ -15,7 +13,8 @@ namespace hfh3
         South,
         SouthWest,
         West,
-        NorthWest
+        NorthWest,
+        Stopped
     };
 
     /** Wrapper around input methods for controlling the game
@@ -31,11 +30,13 @@ namespace hfh3
 
     private:
         static Input* instance;
-        static void GamePadStatusHandler (unsigned device, const TGamePadState *state);
+        static void KeyboardStatusHandler(unsigned char modifiers, const unsigned char keys[6]);
+        static void GamePadStatusHandler (unsigned device, const class TGamePadState *state);
         static int NormalizeAxisValue(int value, int min, int max);
 
+
         Direction playerDirection;
-        CUSBGamePadDevice *gamePad;
+        unsigned lastDevice;
     };
 
 }

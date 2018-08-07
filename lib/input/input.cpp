@@ -1,6 +1,9 @@
 #include <circle/devicenameservice.h>
 #include <circle/usb/usb.h>
 #include <circle/usb/usbhostcontroller.h>
+#include <circle/usb/usbgamepad.h>
+#include <circle/usb/usbkeyboard.h>
+
 #include "input/input.h"
 #include "util/log.h"
 using namespace hfh3;
@@ -10,95 +13,193 @@ Input* Input::instance;
 
 Input::Input()
     : playerDirection(Stopped)
+    , lastDevice(0)
 {
     instance = this;
 }
 
 bool Input::Initialize()
 {
-    gamePad = (CUSBGamePadDevice *) CDeviceNameService::Get()->GetDevice("upad1", false);
-    if(!gamePad)
-        return false;
-
-    // The Circle implementation of HID drivers polls the unit in a tight loop
-    // Setting the IDLE property on the device will reduce the amount of resources
-    // consumed.
-    if (gamePad->GetHost()->ControlMessage(gamePad->GetEndpoint0(),
-                    REQUEST_OUT | REQUEST_CLASS | REQUEST_TO_INTERFACE,
-                    SET_IDLE, 0,
-                    gamePad->GetInterfaceNumber (), 0, 0) < 0)
+    bool found = false;
+    for(int i = 1; i < 10; i++)
     {
-        ERROR("Cannot set idle parameters");
-        return false;
+        CString device_id;
+        device_id.Format ("upad%u", i);
+
+        CUSBGamePadDevice *gamePad = (CUSBGamePadDevice *) CDeviceNameService::Get()->GetDevice(device_id, false);
+        if(!gamePad)
+            break;
+
+        // The Circle implementation of HID drivers polls the unit in a tight loop
+        // Setting the IDLE property on the device will reduce the amount of resources
+        // consumed.
+        if (gamePad->GetHost()->ControlMessage(gamePad->GetEndpoint0(),
+                        REQUEST_OUT | REQUEST_CLASS | REQUEST_TO_INTERFACE,
+                        SET_IDLE, 0,
+                        gamePad->GetInterfaceNumber (), 0, 0) < 0)
+        {
+            ERROR("Cannot set idle parameters");
+            continue;
+        }
+
+        gamePad->RegisterStatusHandler(GamePadStatusHandler);
+        const TUSBDeviceDescriptor *deviceDescriptor = gamePad->GetDevice()->GetDeviceDescriptor();
+        assert (deviceDescriptor);
+        INFO("Found game controller: %04x:%04x", deviceDescriptor->idVendor, deviceDescriptor->idProduct);
+        found = true;
     }
 
-    gamePad->RegisterStatusHandler(GamePadStatusHandler);
-    const TGamePadState *state = gamePad->GetReport();
-    if(state)
+    // allow using a keyboard as well
+    CUSBKeyboardDevice *keyboard = (CUSBKeyboardDevice *) CDeviceNameService::Get()->GetDevice("ukbd1", false);
+    if(keyboard)
     {
-        INFO("Gamepad %u: %d Button(s) %d Hat(s) %d Axes\n", 1, state->nbuttons, state->nhats, state->naxes);
+        keyboard->RegisterKeyStatusHandlerRaw(KeyboardStatusHandler);
+        const TUSBDeviceDescriptor *deviceDescriptor = keyboard->GetDevice()->GetDeviceDescriptor();
+        assert (deviceDescriptor);
+        INFO("Found keyboard: %04x:%04x", deviceDescriptor->idVendor, deviceDescriptor->idProduct);
+        found = true;
     }
-    return true;
+    return found;
 }
+
+/** convert a normalized axis value to a compass direction */
+static Direction AxisToDirection(int x, int y)
+{
+    if (x < 0)
+    {
+        if (y < 0)
+            return NorthWest;
+        else if (y > 0)
+            return SouthWest;
+        else
+            return West;
+    }
+    else if (x > 0)
+    {
+        if (y < 0)
+            return NorthEast;
+        else if (y > 0)
+            return SouthEast;
+        else
+            return East;
+    }
+    else
+    {
+        if (y < 0)
+            return North;
+        else if (y > 0)
+            return South;
+        else
+            return Stopped;
+    }
+}
+
+// Key scan codes used for player control
+// The letter names correspond to the keycaps on a US or UK querty keyboard.
+// On other keyboards the location will still be the same, but the printed keycap may be different.
+enum KeyCodes {
+    LetterA     = 0x04,
+    LetterD     = 0x07,
+    LetterS     = 0x16,
+    LetterW     = 0x1a,
+    RightArrow  = 0x4f,
+    LeftArrow   = 0x50,
+    DownArrow   = 0x51,
+    UpArrow     = 0x52,
+};
+
+void Input::KeyboardStatusHandler(unsigned char modifiers, const unsigned char keys[6])
+{
+    static const unsigned kbd_device = (unsigned)-1;
+    assert(instance != nullptr);
+    // Ignore input from the keyboard if another controller is already controlling the player
+    if (instance->playerDirection != Stopped && instance->lastDevice != kbd_device)
+    {
+        return;
+    }
+
+    int x = 0, y = 0;
+    for(int i=0; i<6; i++)
+    {
+        switch(keys[i])
+        {
+            case UpArrow:
+            case LetterW:
+                y-=1;
+                break;
+            case DownArrow:
+            case LetterS:
+                y+=1;
+                break;
+            case LeftArrow:
+            case LetterA:
+                x-=1;
+                break;
+            case RightArrow:
+            case LetterD:
+                x+=1;
+                break;
+            default:
+                // ignore all other keys
+                break;
+        }
+    }
+    instance->playerDirection = AxisToDirection(x,y);
+    instance->lastDevice = kbd_device;
+}
+
 
 int Input::NormalizeAxisValue(int value, int min, int max)
 {
-    int mid = (min+max)/2;
-    return value < mid ? -1 : value > mid ? 1 : 0;
+    int low_threshold = (min+max)/4;
+    int high_threshold = 3*(min+max)/4;
+    return value < low_threshold ? -1 : value > high_threshold ? 1 : 0;
 }
+
 
 void Input::GamePadStatusHandler (unsigned device, const TGamePadState *state)
 {
     assert(instance != nullptr);
-    if (state->naxes >= 2)
-    {
-        // Assuming last two axes are the X and Y axes
-        const auto& x_axis = state->axes[state->naxes-2];
-        const auto& y_axis = state->axes[state->naxes-1];
-        int x = NormalizeAxisValue(x_axis.value, x_axis.minimum, x_axis.maximum);
-        int y = NormalizeAxisValue(y_axis.value, y_axis.minimum, y_axis.maximum);
-        instance->playerDirection =
-            x == 0 ?
-                y == 0 ? Stopped :
-                y  < 0 ? North   :
-                South :
-            x  < 0 ?
-                y == 0 ? West :
-                y  < 0 ? NorthWest   :
-                SouthWest :
-                y == 0 ? East :
-                y  < 0 ? NorthEast :
-                SouthEast ;
 
+    // Ignore input from this controller if another controller is already controlling the player
+    if (instance->playerDirection != Stopped && instance->lastDevice != device)
+    {
+        return;
     }
-    #if 0
-    CString Msg;
-    Msg.Format ("Gamepad %u: Buttons 0x%X", device+1, state->buttons);
 
-    CString Value;
-
-    if (state->naxes > 0)
+    Direction newDirection = Stopped;
+    if (state->nhats > 0) // Prefer hats over axes
     {
-        Msg.Append (" Axes");
-
-        for (int i = 0; i < state->naxes; i++)
+        for (int i = 0 ; i<state->nhats; i++)
         {
-            Value.Format (" %d", state->axes[i].value);
-            Msg.Append (Value);
+            if (state->hats[i] != Stopped)
+            {
+                newDirection = (Direction)state->hats[i];
+            }
+        }
+    }
+    if (newDirection == Stopped && state->naxes >= 2)
+    {
+        int found=-1;
+        // Find the first pair of X/Y axes
+        for(int i=0; i<state->naxes-1;i++)
+        {
+            if(state->axes[i].type == AxisType::X && state->axes[i+1].type == AxisType::Y)
+            {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+        {
+            const auto& x_axis = state->axes[found];
+            const auto& y_axis = state->axes[found+1];
+            int x = NormalizeAxisValue(x_axis.value, x_axis.minimum, x_axis.maximum);
+            int y = NormalizeAxisValue(y_axis.value, y_axis.minimum, y_axis.maximum);
+            newDirection = AxisToDirection(x, y);
         }
     }
 
-    if (state->nhats > 0)
-    {
-        Msg.Append (" Hats");
-
-        for (int i = 0; i < state->nhats; i++)
-        {
-            Value.Format (" %d", state->hats[i]);
-            Msg.Append (Value);
-        }
-    }
-
-    INFO(Msg);
-    #endif
+    instance->playerDirection = newDirection;
+    instance->lastDevice = device;
 }

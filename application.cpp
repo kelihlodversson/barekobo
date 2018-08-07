@@ -86,7 +86,7 @@ struct Character {
         case Stopped:
             return;
         }
-        shape = dir -1;
+        shape = dir;
         x = x + dx;
         y = y + dy;
         if (x < -16) x += width + 32;
@@ -98,10 +98,20 @@ struct Character {
         if (!is_player && random.Get() % relaxed == 0)
         {
             unsigned r = random.Get();
-            dir = static_cast<Direction>((((dir-1) + (r%3)-1) % 8)+1);
+            dir = static_cast<Direction>((dir + (r%3)-1) % 8);
         }
     }
 };
+#if 0
+static void TimerTest (unsigned hTimer, void *pParam, void *pContext)
+{
+    INFO("Timer %u, %p, %p", hTimer, pParam, pContext);
+    if (!CTimer::Get()->StartKernelTimer (MSEC2HZ(1000), TimerTest, pParam, pContext))
+    {
+        ERROR("Could not schedule kernel timer");
+    }
+}
+#endif
 
 /**
 * This is the main run loop for the application.
@@ -110,6 +120,7 @@ struct Character {
 int Application::Run()
 {
     INFO("Started MultiKobo. Compile time: " __DATE__ " " __TIME__);
+    //TimerTest(-1, this, nullptr);
 
     const int width = spriteManager.GetWidth()-8;
     const int height = spriteManager.GetHeight()-8;
@@ -186,7 +197,7 @@ int Application::Run()
         sprite[i].x = (random.Get()+i*4) % width;
         sprite[i].y = random.Get() % height;
         sprite[i].shape = random.Get() % 8;
-        sprite[i].dir = static_cast<Direction>(sprite[i].shape + 1);
+        sprite[i].dir = static_cast<Direction>(sprite[i].shape);
         sprite[i].model = random.Get() % 6;
         sprite[i].relaxed = random.Get() % 100;
         sprite[i].is_player = false;

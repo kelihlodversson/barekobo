@@ -10,7 +10,7 @@ namespace hfh3
         Random(u64 inSeed = -1);
 
         u32 Get();
-        u32 Reset(u64 inSeed);
+        void Reset(u64 inSeed);
     private:
         u64 seed;
         static const u64 multiplier = 0x5deece66d;

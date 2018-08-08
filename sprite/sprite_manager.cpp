@@ -1,6 +1,6 @@
 #include <circle/util.h>
+#include "graphics/sprite_data.h"
 #include "sprite/sprite_manager.h"
-#include "sprite/sprite_data.h"
 #include "sprite/image.h"
 
 using namespace hfh3;

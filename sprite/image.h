@@ -24,8 +24,8 @@ namespace hfh3
         }
 
         u8	*imageData;
-        unsigned height;
         unsigned width;
+        unsigned height;
         unsigned stride;
         int transparent;
 

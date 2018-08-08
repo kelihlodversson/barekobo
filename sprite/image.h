@@ -18,7 +18,7 @@ namespace hfh3
         Image(u8* inData, unsigned inWidth, unsigned inHeight, int inTransparent=-1, unsigned inRowStride=0);
 
     private:
-        u8* GetPixelAddress(int x, int y)
+        const u8* GetPixelAddress(int x, int y) const
         {
             return &imageData[x + y*stride];
         }

@@ -205,15 +205,19 @@ int Application::Run()
 
     sprite[player].is_player = true;
 
+    ScreenManager::ScreenRect clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
     while(true)
     {
+        screenManager.Clear(10);
+        screenManager.SetClip(clippedArea);
         screenManager.Clear();
         sprite[player].dir = input.GetPlayerDirection();
         for (int i = 0; i < spriteCount; i++)
         {
-            screenManager.DrawImage(sprite[i].x, sprite[i].y, image[sprite[i].model][sprite[i].shape]);
+            screenManager.DrawImage(ScreenManager::Coordinate(sprite[i].x, sprite[i].y), image[sprite[i].model][sprite[i].shape]);
             sprite[i].Update(width, height, random);
         }
+        screenManager.ClearClip();
         screenManager.Present();
 
     }

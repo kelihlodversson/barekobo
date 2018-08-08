@@ -11,11 +11,10 @@ ScreenManager::ScreenManager()
     : framebuffer(nullptr)
     , active(0)
     , bufferAddress(nullptr)
-    , width(0)
-    , height(0)
+    , size(0,0)
     , stride(0)
+    , clip()
 {
-
 }
 
 ScreenManager::~ScreenManager()
@@ -40,10 +39,10 @@ bool ScreenManager::Initialize()
 
     framebuffer->SetVirtualOffset(0, 0);
     active = 1;
-    width = framebuffer->GetWidth();
-    height = framebuffer->GetHeight();
+    size = Coordinate(framebuffer->GetWidth(), framebuffer->GetHeight());
     stride = framebuffer->GetPitch();
     bufferAddress = reinterpret_cast<u8*>(framebuffer->GetBuffer());
+    ClearClip();
     return bufferAddress != nullptr;
 }
 
@@ -55,125 +54,103 @@ void ScreenManager::Present()
         return;
     }
 
-    framebuffer->SetVirtualOffset(0, active*height);
+    framebuffer->SetVirtualOffset(0, active*GetHeight());
     framebuffer->WaitForVerticalSync();
     active = (active + 1) % 2; // Swap the active screen
 }
 
-void ScreenManager::DrawPixel(int x, int y, u8 color)
+void ScreenManager::SetClip(const ScreenRect& rect)
+{
+    clip = ScreenRect(Coordinate(), size) & rect;
+}
+
+void ScreenManager::ClearClip()
+{
+    clip = ScreenRect(Coordinate(), size);
+}
+
+void ScreenManager::DrawPixel(const Coordinate& at, u8 color)
 {
     if(!bufferAddress)
     {
         return;
     }
-    if ( x < 0 || y < 0 || x > width || y > width)
+    if ( !clip.Contains(at) )
     {
         return;
     }
-    *GetPixelAddress(x,y) = color;
+    *GetPixelAddress(at) = color;
 }
 
-void ScreenManager::DrawRect(int x, int y, int w, int h, u8 color)
+void ScreenManager::DrawRect(const ScreenRect& rect, u8 color)
 {
     if(!bufferAddress)
     {
         return;
     }
     // Clip the rect to the frame buffer
-    if (w + x > width)
+    ScreenRect clipped = clip & rect;
+    if(!clipped.IsValid())
     {
-        w = width - x;
+        return;
     }
-    if (h + y > height)
-    {
-        h = height - y;
-    }
-    if (x < 0)
-    {
-        w += x;
-        x = 0;
-    }
-    if (y < 0)
-    {
-        h += y;
-        y = 0;
-    }
-
-    int max_y = y+h;
 
     // If the rectangle fills the entire width of the screen we can draw it with a single memset
-    if( w == width )
+    if( clipped.Width() == GetWidth())
     {
-        assert(x == 0);
-        memset(GetPixelAddress(0,y), color, stride * h);
+        assert(clipped.Left() == 0);
+        memset(GetPixelAddress(clipped.origin), color, stride * clipped.Height());
     }
     // Else, we need to draw each scan line separately
     else
     {
-        for (int row = y; y < max_y; row++)
+        for (int row = clipped.Top(); row < clipped.Bottom(); row++)
         {
-            memset(GetPixelAddress(x,row), color, w);
+            memset(GetPixelAddress(clipped.Left(),row), color, clipped.Width());
         }
     }
 }
 
 void ScreenManager::Clear(u8 color)
 {
-    if(!bufferAddress)
-    {
-        return;
-    }
-    memset(GetPixelAddress(0,0), color, stride * height);
+    DrawRect(clip, color);
 }
 
-void ScreenManager::DrawImage(int x, int y, Image& image)
+void ScreenManager::DrawImage(const Coordinate& at, const Image& image)
 {
     if(!bufferAddress)
     {
         return;
     }
-    int image_min_x = 0;
-    int image_min_y = 0;
-    int image_max_x = image.width;
-    int image_max_y = image.height;
 
-    // Clip image to the frame buffer
-    if (image_max_x + x > width)
+    ScreenRect clipped = clip & ScreenRect(at.x, at.y, image.width, image.height);
+
+    if(!clipped.IsValid())
     {
-        image_max_x = width - x;
-    }
-    if (image_max_y + y > height)
-    {
-        image_max_y = height - y;
-    }
-    if (x < 0)
-    {
-        image_min_x =  -x;
-    }
-    if (y < 0)
-    {
-        image_min_y =  -y;
+        return;
     }
 
-    int row_width = image_max_x - image_min_x;
+    int image_min_x = Max(clipped.Left() - at.x , 0);
+    int image_min_y = Max(clipped.Top() - at.y , 0);
+    int image_max_y = image_min_y + clipped.Height();
 
     // if the image has no transparent pixels, we can simply memcpy each row
     if(image.transparent < 0)
     {
         for (int image_y = image_min_y; image_y < image_max_y; image_y++)
         {
-            memcpy(GetPixelAddress(x+image_min_x, y+image_y), image.GetPixelAddress(image_min_x, image_y), row_width);
+            memcpy(GetPixelAddress(at.x+image_min_x, at.y+image_y), image.GetPixelAddress(image_min_x, image_y), clipped.Width());
         }
     }
     // else we have to compare each pixel to the transparent value before plotting it
     else
     {
+        const u8 transparent = (u8)image.transparent;
         for (int image_y = image_min_y; image_y < image_max_y; image_y++)
         {
-            u8* dstRow = GetPixelAddress(x+image_min_x, y+image_y);
-            u8* srcRow = image.GetPixelAddress(image_min_x, image_y);
-            const u8 transparent = (u8)image.transparent;
-            for(int i = 0; i < row_width; i++)
+            u8* dstRow = GetPixelAddress(at.x+image_min_x, at.y+image_y);
+            const u8* srcRow = image.GetPixelAddress(image_min_x, image_y);
+            for(int i = 0; i < clipped.Width(); i++)
             {
                 if (srcRow[i] != transparent)
                 {

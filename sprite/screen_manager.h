@@ -8,12 +8,12 @@ namespace hfh3
 
     /** Class for managing a list of images to be drawn on-screen.
       */
-    class SpriteManager
+    class ScreenManager
     {
     public:
 
-        SpriteManager();
-        ~SpriteManager();
+        ScreenManager();
+        ~ScreenManager();
 
         bool Initialize();
         void DrawImage(int x, int y, class Image& image);

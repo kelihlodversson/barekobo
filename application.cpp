@@ -11,7 +11,7 @@ Application::Application() :
     timer(&interrupts),      // The timer needs a pointer to the intterrupt system
     logger(LogDebug, &timer),
     usb(&interrupts, &timer), // The usb subsystem needs both the timer and access to bind to interrupts
-    spriteManager()
+    screenManager()
 {}
 
 // Wrapper around calling the Initialize method.
@@ -20,7 +20,7 @@ Application::Application() :
 
 bool Application::Initialize()
 {
-    INIT(spriteManager)
+    INIT(screenManager)
     INIT(serial, 115200)
     {
         CDevice *log_device = nameService.GetDevice(options.GetLogDevice(), false);
@@ -122,8 +122,8 @@ int Application::Run()
     INFO("Started MultiKobo. Compile time: " __DATE__ " " __TIME__);
     //TimerTest(-1, this, nullptr);
 
-    const int width = spriteManager.GetWidth()-8;
-    const int height = spriteManager.GetHeight()-8;
+    const int width = screenManager.GetWidth()-8;
+    const int height = screenManager.GetHeight()-8;
     serial.Write("Application::Run()\r\n",20);
     Image image[6][8] = {
         {
@@ -207,14 +207,14 @@ int Application::Run()
 
     while(true)
     {
-        spriteManager.Clear();
+        screenManager.Clear();
         sprite[player].dir = input.GetPlayerDirection();
         for (int i = 0; i < spriteCount; i++)
         {
-            spriteManager.DrawImage(sprite[i].x, sprite[i].y, image[sprite[i].model][sprite[i].shape]);
+            screenManager.DrawImage(sprite[i].x, sprite[i].y, image[sprite[i].model][sprite[i].shape]);
             sprite[i].Update(width, height, random);
         }
-        spriteManager.Present();
+        screenManager.Present();
 
     }
     return EXIT_HALT;

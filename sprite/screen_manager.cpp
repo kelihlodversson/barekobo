@@ -1,13 +1,13 @@
 #include <circle/util.h>
 #include "graphics/sprite_data.h"
-#include "sprite/sprite_manager.h"
+#include "sprite/screen_manager.h"
 #include "sprite/image.h"
 
 using namespace hfh3;
 
 
 
-SpriteManager::SpriteManager()
+ScreenManager::ScreenManager()
     : framebuffer(nullptr)
     , active(0)
     , bufferAddress(nullptr)
@@ -18,14 +18,14 @@ SpriteManager::SpriteManager()
 
 }
 
-SpriteManager::~SpriteManager()
+ScreenManager::~ScreenManager()
 {
     delete framebuffer;
     framebuffer = nullptr;
     bufferAddress = nullptr;
 }
 
-bool SpriteManager::Initialize()
+bool ScreenManager::Initialize()
 {
     framebuffer = new CBcmFrameBuffer(fbWidth, fbHeight, 8, fbWidth, fbHeight*2);
     for(int i = 0; i<256; i++)
@@ -48,7 +48,7 @@ bool SpriteManager::Initialize()
 }
 
 // Draws the current frame and presents it.
-void SpriteManager::Present()
+void ScreenManager::Present()
 {
     if(!framebuffer)
     {
@@ -60,7 +60,7 @@ void SpriteManager::Present()
     active = (active + 1) % 2; // Swap the active screen
 }
 
-void SpriteManager::DrawPixel(int x, int y, u8 color)
+void ScreenManager::DrawPixel(int x, int y, u8 color)
 {
     if(!bufferAddress)
     {
@@ -73,7 +73,7 @@ void SpriteManager::DrawPixel(int x, int y, u8 color)
     *GetPixelAddress(x,y) = color;
 }
 
-void SpriteManager::DrawRect(int x, int y, int w, int h, u8 color)
+void ScreenManager::DrawRect(int x, int y, int w, int h, u8 color)
 {
     if(!bufferAddress)
     {
@@ -117,7 +117,7 @@ void SpriteManager::DrawRect(int x, int y, int w, int h, u8 color)
     }
 }
 
-void SpriteManager::Clear(u8 color)
+void ScreenManager::Clear(u8 color)
 {
     if(!bufferAddress)
     {
@@ -126,7 +126,7 @@ void SpriteManager::Clear(u8 color)
     memset(GetPixelAddress(0,0), color, stride * height);
 }
 
-void SpriteManager::DrawImage(int x, int y, Image& image)
+void ScreenManager::DrawImage(int x, int y, Image& image)
 {
     if(!bufferAddress)
     {

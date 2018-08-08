@@ -13,7 +13,7 @@
 #include <circle/types.h>
 #include <circle/usb/dwhcidevice.h>
 
-#include "sprite/sprite_manager.h"
+#include "sprite/screen_manager.h"
 #include "input/input.h"
 
 namespace hfh3
@@ -42,7 +42,7 @@ namespace hfh3
         // ** Application objects:
         // Sprite manager manages rendering sprites on the screen and
         // performing page flipping to avoid flickering.
-        SpriteManager spriteManager;
+        ScreenManager screenManager;
         Input         input;
     };
 }

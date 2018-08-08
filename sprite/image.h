@@ -10,7 +10,7 @@ namespace hfh3
       * content in the framebuffer will be left untouched.
       *
       * Note that the Image class only keeps a reference to the underlying
-      * pixel buffer and that the actual rendering is handled by the SpriteManager.
+      * pixel buffer and that the actual rendering is handled by the ScreenManager.
       */
     class Image
     {
@@ -29,6 +29,6 @@ namespace hfh3
         unsigned stride;
         int transparent;
 
-        friend class SpriteManager;
+        friend class ScreenManager;
     };
 }

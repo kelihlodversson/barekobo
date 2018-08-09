@@ -1,5 +1,4 @@
 #pragma once
-#include <circle/bcmframebuffer.h>
 #include <circle/types.h>
 
 namespace hfh3
@@ -18,6 +17,7 @@ namespace hfh3
         Image(u8* inData, unsigned inWidth, unsigned inHeight, int inTransparent=-1, unsigned inRowStride=0);
 
     private:
+        void VerifyTransparency();
         const u8* GetPixelAddress(int x, int y) const
         {
             return &imageData[x + y*stride];

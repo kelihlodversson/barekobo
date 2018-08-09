@@ -3,7 +3,7 @@
 
 using namespace hfh3;
 
-ImageSheet::ImageSheet(u8* inData, unsigned bufferWidth, unsigned bufferHeight, unsigned imageWidth, unsigned imageHeight, int transparent, unsigned inGroupSize) :
+ImageSheet::ImageSheet(u8* inData, unsigned bufferWidth, unsigned bufferHeight, int imageWidth, int imageHeight, int transparent, unsigned inGroupSize) :
     groupSize(inGroupSize)
 {
     const unsigned columns = bufferWidth / imageWidth;
@@ -35,7 +35,7 @@ ImageSheet::~ImageSheet()
     {
         // Since we used placement new to allocate the array, we need to manually
         // invoke the destructors for the images.
-        for(int i=0; i<imageCount; i++)
+        for(unsigned i=0; i<imageCount; i++)
         {
             images[i].~Image();
         }

@@ -26,7 +26,7 @@ namespace hfh3
           * @param transparent The index of the transparent pixel. Pass -1 if all pixels should be rendered.
           * @param groupSize The number of images in each group.
           */
-        ImageSheet(u8* inData, unsigned bufferWidth, unsigned bufferHeight, unsigned imageWidth, unsigned imageHeight, int transparent=-1, unsigned groupSize=1);
+        ImageSheet(u8* inData, unsigned bufferWidth, unsigned bufferHeight, int imageWidth, int imageHeight, int transparent=-1, unsigned groupSize=1);
         ~ImageSheet();
 
         /** Returns an array of images representing a group of images.

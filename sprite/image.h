@@ -1,5 +1,6 @@
 #pragma once
 #include <circle/types.h>
+#include "util/vector.h"
 
 namespace hfh3
 {
@@ -14,21 +15,29 @@ namespace hfh3
     class Image
     {
     public:
-        Image(u8* inData, unsigned inWidth, unsigned inHeight, int inTransparent=-1, unsigned inRowStride=0);
+        Image(u8* inData, int inWidth, int inHeight, int inTransparent=-1, int inRowStride=0);
 
-    private:
-        void VerifyTransparency();
+        const Vector<int>& GetSize() const
+        {
+            return size;
+        }
+
         const u8* GetPixelAddress(int x, int y) const
         {
             return &imageData[x + y*stride];
         }
 
+        int GetTransparent() const
+        {
+            return transparent;
+        }
+
+    private:
+        void VerifyTransparency();
         u8	*imageData;
-        unsigned width;
-        unsigned height;
-        unsigned stride;
+        Vector<int> size;
+        int stride;
         int transparent;
 
-        friend class ScreenManager;
     };
 }

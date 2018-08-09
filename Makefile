@@ -1,17 +1,23 @@
 
 CIRCLEHOME=3rd_party/circle
-DIRS = . sprite input util
+# Default RaspberryPI model to build for
+RASPPI ?= 3
+# Directories containing source files for this project
+DIRS = . game sprite input util
+
+# Additional CIRCLE features to include
+CIRCLE_FEATURES = usb fs input
+
 OBJS = $(patsubst %.cpp,%.o, $(patsubst ./%,%, $(foreach  D,$(DIRS),$(wildcard $D/*.cpp))))
-LIBS = $(CIRCLEHOME)/lib/usb/libusb.a \
-		$(CIRCLEHOME)/lib/fs/libfs.a \
-		$(CIRCLEHOME)/lib/input/libinput.a \
+LIBS = $(foreach  L,$(CIRCLE_FEATURES),$(CIRCLEHOME)/lib/$L/lib$L.a) \
 		$(CIRCLEHOME)/lib/libcircle.a
 INCLUDE	+= -I .
-OBJS += graphics/sprite_data.gen.o
 
+OBJS += graphics/sprite_data.gen.o
 DEP = $(OBJS:%.o=%.d)
 
-RASPPI ?= 3
+# Include build rules from the circle project.
+# contains the correct definitions for cross compilers and compiler options.
 include $(CIRCLEHOME)/Rules.mk
 
 $(LIBS):
@@ -39,6 +45,3 @@ libclean:
 -include $(DEP)
 
 .PHONY: clean deploy libclean
-
-debug:
-	echo $(OBJS)

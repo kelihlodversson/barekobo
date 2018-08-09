@@ -4,6 +4,9 @@
 #include "graphics/sprite_data.h"
 #include "util/random.h"
 #include "util/log.h"
+#include "game/actor.h"
+#include "game/player.h"
+#include "game/enemy.h"
 
 using namespace hfh3;
 
@@ -39,74 +42,6 @@ bool Application::Initialize()
     return true;
 }
 
-
-/** Simple struct holding state for each character shown on-screen
- */
-struct Character {
-    Vector<int> position;
-    Direction dir;
-    Image* model;
-    int shape;
-    int relaxed;
-    bool is_player;
-
-    void Draw(ScreenManager& screenManager)
-    {
-        screenManager.DrawImage(position, model[shape]);
-    }
-
-    void Update(int width, int height, Random& random)
-    {
-        Vector<int> delta(0,0);
-        switch(dir)
-        {
-        case North:
-            delta.y =- 1;
-            break;
-        case NorthEast:
-            delta.x = 1;
-            delta.y = -1;
-            break;
-        case East:
-            delta.x = 1;
-            break;
-        case SouthEast:
-            delta.x = 1;
-            delta.y = 1;
-            break;
-        case South:
-            delta.y = 1;
-            break;
-        case SouthWest:
-            delta.x = -1;
-            delta.y = 1;
-            break;
-        case West:
-            delta.x = -1;
-            break;
-        case NorthWest:
-            delta.x = -1;
-            delta.y = -1;
-            break;
-        default:
-        case Stopped:
-            return;
-        }
-        shape = dir;
-        position += delta;
-        if (position.x < -16) position.x += width + 32;
-        else if (position.x > width+16) position.x -= width + 32;
-        if (position.y < -16) position.y += height + 32;
-        else if (position.y > height+16) position.y -= height + 32;
-
-        // Change direction at random intervals.
-        if (!is_player && random.Get() % relaxed == 0)
-        {
-            unsigned r = random.Get();
-            dir = static_cast<Direction>((dir + (r%3)-1) % 8);
-        }
-    }
-};
 #if 0
 static void TimerTest (unsigned hTimer, void *pParam, void *pContext)
 {
@@ -127,37 +62,16 @@ int Application::Run()
     INFO("Started MultiKobo. Compile time: " __DATE__ " " __TIME__);
     //TimerTest(-1, this, nullptr);
 
-    const int width = screenManager.GetWidth()-8;
-    const int height = screenManager.GetHeight()-8;
-    serial.Write("Application::Run()\r\n",20);
     ImageSheet image(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8);
     Random random;
     const int spriteCount = 50;
-    Character sprite[spriteCount];
+    IActor* sprite[spriteCount];
     const int player = spriteCount - 1;
-    const int player_model = 6;
-    for (int i = 0; i < spriteCount; i++)
+    for (int i = 0; i < spriteCount-1; i++)
     {
-        sprite[i].position = Vector<int>((random.Get()+i*4) % width, random.Get() % height);
-        sprite[i].shape = random.Get() % image.GetGroupSize();
-        sprite[i].dir = static_cast<Direction>(sprite[i].shape);
-
-        int model = random.Get() % 8 + 1;
-        if(model>=2) // Skip the explosion sprites
-            model++;
-        if(model>=6) // Skip the player model sprites
-            model++;
-        if(model>=9) // Skip some random sprites
-            model++;
-        if(model>=11) // Skip some random sprites
-            model++;
-        sprite[i].model = image[model];
-        sprite[i].relaxed = random.Get() % 100;
-        sprite[i].is_player = false;
+        sprite[i] = new Enemy(screenManager, image, random);
     }
-
-    sprite[player].is_player = true;
-    sprite[player].model = image[player_model];
+    sprite[player] = new Player(screenManager, image, input);
 
     ScreenManager::ScreenRect clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
     while(true)
@@ -165,15 +79,18 @@ int Application::Run()
         screenManager.Clear(10);
         screenManager.SetClip(clippedArea);
         screenManager.Clear(0);
-        sprite[player].dir = input.GetPlayerDirection();
         for (int i = 0; i < spriteCount; i++)
         {
-            sprite[i].Draw(screenManager);
-            sprite[i].Update(width, height, random);
+            sprite[i]->Update();
+            sprite[i]->Draw();
         }
         screenManager.ClearClip();
         screenManager.Present();
 
+    }
+    for (int i = 0; i < spriteCount; i++)
+    {
+        delete sprite[i];
     }
     return EXIT_HALT;
 }

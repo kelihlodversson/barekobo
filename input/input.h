@@ -1,22 +1,10 @@
 #pragma once
 
 #include <circle/types.h>
+#include "util/direction.h"
 
 namespace hfh3
 {
-    enum Direction
-    {
-        North,
-        NorthEast,
-        East,
-        SouthEast,
-        South,
-        SouthWest,
-        West,
-        NorthWest,
-        Stopped
-    };
-
     /** Wrapper around input methods for controlling the game
       */
     class Input

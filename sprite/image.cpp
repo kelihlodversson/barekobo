@@ -2,10 +2,9 @@
 
 using namespace hfh3;
 
-Image::Image(u8* inData, unsigned inWidth, unsigned inHeight, int inTransparent, unsigned inRowStride)
+Image::Image(u8* inData, int inWidth, int inHeight, int inTransparent, int inRowStride)
     : imageData(inData)
-    , width(inWidth)
-    , height(inHeight)
+    , size(inWidth, inHeight)
     , stride(inRowStride)
     , transparent(inTransparent)
 {
@@ -13,7 +12,7 @@ Image::Image(u8* inData, unsigned inWidth, unsigned inHeight, int inTransparent,
     // the image.
     if(stride == 0)
     {
-        stride = width;
+        stride = size.x;
     }
     if(transparent >= 0)
     {
@@ -25,10 +24,10 @@ void Image::VerifyTransparency()
 {
     // Verify that the image does contain at least one transparent pixel,
     // and set transparent to -1 if not.
-    for(unsigned y=0; y<height; y++)
+    for(int y=0; y<size.y; y++)
     {
         const u8* row = GetPixelAddress(0,y);
-        for(unsigned x=0; x<width; x++)
+        for(int x=0; x<size.x; x++)
         {
             // If we find just one transparent pixel,
             // early out and keep the value.

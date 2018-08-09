@@ -123,7 +123,7 @@ void ScreenManager::DrawImage(const Coordinate& at, const Image& image)
         return;
     }
 
-    ScreenRect clipped = clip & ScreenRect(at.x, at.y, image.width, image.height);
+    ScreenRect clipped = clip & ScreenRect(at, image.GetSize());
 
     if(!clipped.IsValid())
     {
@@ -135,7 +135,8 @@ void ScreenManager::DrawImage(const Coordinate& at, const Image& image)
     int image_max_y = image_min_y + clipped.Height();
 
     // if the image has no transparent pixels, we can simply memcpy each row
-    if(image.transparent < 0)
+    int transparent = image.GetTransparent();
+    if(transparent < 0)
     {
         for (int image_y = image_min_y; image_y < image_max_y; image_y++)
         {
@@ -145,14 +146,14 @@ void ScreenManager::DrawImage(const Coordinate& at, const Image& image)
     // else we have to compare each pixel to the transparent value before plotting it
     else
     {
-        const u8 transparent = (u8)image.transparent;
+        const u8 tcolor = (u8)transparent;
         for (int image_y = image_min_y; image_y < image_max_y; image_y++)
         {
             u8* dstRow = GetPixelAddress(at.x+image_min_x, at.y+image_y);
             const u8* srcRow = image.GetPixelAddress(image_min_x, image_y);
             for(int i = 0; i < clipped.Width(); i++)
             {
-                if (srcRow[i] != transparent)
+                if (srcRow[i] != tcolor)
                 {
                     dstRow[i] = srcRow[i];
                 }

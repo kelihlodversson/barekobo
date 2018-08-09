@@ -1,4 +1,5 @@
 #include "application.h"
+#include "sprite/imagesheet.h"
 #include "sprite/image.h"
 #include "graphics/sprite_data.h"
 #include "util/random.h"
@@ -42,57 +43,61 @@ bool Application::Initialize()
 /** Simple struct holding state for each character shown on-screen
  */
 struct Character {
-    int x,y;
+    Vector<int> position;
     Direction dir;
-    int model;
+    Image* model;
     int shape;
     int relaxed;
     bool is_player;
 
+    void Draw(ScreenManager& screenManager)
+    {
+        screenManager.DrawImage(position, model[shape]);
+    }
+
     void Update(int width, int height, Random& random)
     {
-        int dx=0, dy=0;
+        Vector<int> delta(0,0);
         switch(dir)
         {
         case North:
-            dy =- 1;
+            delta.y =- 1;
             break;
         case NorthEast:
-            dx = 1;
-            dy = -1;
+            delta.x = 1;
+            delta.y = -1;
             break;
         case East:
-            dx = 1;
+            delta.x = 1;
             break;
         case SouthEast:
-            dx = 1;
-            dy = 1;
+            delta.x = 1;
+            delta.y = 1;
             break;
         case South:
-            dy = 1;
+            delta.y = 1;
             break;
         case SouthWest:
-            dx = -1;
-            dy = 1;
+            delta.x = -1;
+            delta.y = 1;
             break;
         case West:
-            dx = -1;
+            delta.x = -1;
             break;
         case NorthWest:
-            dx = -1;
-            dy = -1;
+            delta.x = -1;
+            delta.y = -1;
             break;
         default:
         case Stopped:
             return;
         }
         shape = dir;
-        x = x + dx;
-        y = y + dy;
-        if (x < -16) x += width + 32;
-        else if (x > width+16) x -= width + 32;
-        if (y < -16) y += height + 32;
-        else if (y > height+16) y -= height + 32;
+        position += delta;
+        if (position.x < -16) position.x += width + 32;
+        else if (position.x > width+16) position.x -= width + 32;
+        if (position.y < -16) position.y += height + 32;
+        else if (position.y > height+16) position.y -= height + 32;
 
         // Change direction at random intervals.
         if (!is_player && random.Get() % relaxed == 0)
@@ -125,96 +130,45 @@ int Application::Run()
     const int width = screenManager.GetWidth()-8;
     const int height = screenManager.GetHeight()-8;
     serial.Write("Application::Run()\r\n",20);
-    Image image[6][8] = {
-        {
-            Image (&sprites_pixels[0*16*sprites_width+8*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[0*16*sprites_width+9*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[0*16*sprites_width+10*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[0*16*sprites_width+11*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[0*16*sprites_width+12*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[0*16*sprites_width+13*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[0*16*sprites_width+14*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[0*16*sprites_width+15*16], 16, 16, 255, sprites_width),
-        },
-        {
-            Image (&sprites_pixels[1*16*sprites_width+8*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[1*16*sprites_width+9*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[1*16*sprites_width+10*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[1*16*sprites_width+11*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[1*16*sprites_width+12*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[1*16*sprites_width+13*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[1*16*sprites_width+14*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[1*16*sprites_width+15*16], 16, 16, 255, sprites_width),
-        },
-        {
-            Image (&sprites_pixels[2*16*sprites_width+8*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+9*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+10*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+11*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+12*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+13*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+14*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+15*16], 16, 16, 255, sprites_width),
-        },
-        {
-            Image (&sprites_pixels[3*16*sprites_width+8*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+9*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+10*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+11*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+12*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+13*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+14*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+15*16], 16, 16, 255, sprites_width),
-        },
-        {
-            Image (&sprites_pixels[2*16*sprites_width+0*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+1*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+2*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+3*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+4*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+5*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+6*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[2*16*sprites_width+7*16], 16, 16, 255, sprites_width),
-        },
-        {
-            Image (&sprites_pixels[3*16*sprites_width+0*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+1*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+2*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+3*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+4*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+5*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+6*16], 16, 16, 255, sprites_width),
-            Image (&sprites_pixels[3*16*sprites_width+7*16], 16, 16, 255, sprites_width),
-        },
-
-    };
+    ImageSheet image(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8);
     Random random;
-    const int spriteCount = 20;
+    const int spriteCount = 50;
     Character sprite[spriteCount];
     const int player = spriteCount - 1;
+    const int player_model = 6;
     for (int i = 0; i < spriteCount; i++)
     {
-        sprite[i].x = (random.Get()+i*4) % width;
-        sprite[i].y = random.Get() % height;
-        sprite[i].shape = random.Get() % 8;
+        sprite[i].position = Vector<int>((random.Get()+i*4) % width, random.Get() % height);
+        sprite[i].shape = random.Get() % image.GetGroupSize();
         sprite[i].dir = static_cast<Direction>(sprite[i].shape);
-        sprite[i].model = random.Get() % 6;
+
+        int model = random.Get() % 8 + 1;
+        if(model>=2) // Skip the explosion sprites
+            model++;
+        if(model>=6) // Skip the player model sprites
+            model++;
+        if(model>=9) // Skip some random sprites
+            model++;
+        if(model>=11) // Skip some random sprites
+            model++;
+        sprite[i].model = image[model];
         sprite[i].relaxed = random.Get() % 100;
         sprite[i].is_player = false;
     }
 
     sprite[player].is_player = true;
+    sprite[player].model = image[player_model];
 
     ScreenManager::ScreenRect clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
     while(true)
     {
         screenManager.Clear(10);
         screenManager.SetClip(clippedArea);
-        screenManager.Clear();
+        screenManager.Clear(0);
         sprite[player].dir = input.GetPlayerDirection();
         for (int i = 0; i < spriteCount; i++)
         {
-            screenManager.DrawImage(ScreenManager::Coordinate(sprite[i].x, sprite[i].y), image[sprite[i].model][sprite[i].shape]);
+            sprite[i].Draw(screenManager);
             sprite[i].Update(width, height, random);
         }
         screenManager.ClearClip();

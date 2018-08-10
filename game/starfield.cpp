@@ -7,6 +7,7 @@ using namespace hfh3;
 
 Starfield::Starfield(class Stage& inStage, int inDensity, u64 inSeed) :
     IActor(inStage),
+    parallaxStage(inStage.GetWidth()/2, inStage.GetHeight()/2, inStage.GetScreen()),
     density(inDensity),
     seed(inSeed)
 {
@@ -17,7 +18,11 @@ void Starfield::Draw()
 {
     // Initialize starfield randomizer with the same seed every frame
     Random random(seed);
-    Vector<int> parallax = stage.GetOffset() / 2;
+
+    // parallaxStage is a separate stage, half the size and half the offset.
+    // halfing the offset creates a parallax effect, and halfing the size makes
+    // the wrapping match the parent stage.
+    parallaxStage.SetOffset(stage.GetOffset() / 2);
 
     for (int i = 0; i < density; i++)
     {
@@ -25,10 +30,8 @@ void Starfield::Draw()
         // Use some of the bits we're going to throw away for random brightness variation
         int brightness = (star.y >> 20) & 5;
 
-        // Draw two layers of stars using the same basic coordinates, but offset the
-        // lower layer by a different offset for a parallax effect.
-        stage.DrawPixel(stage.WrapCoordinate(star)+parallax, 10+brightness);
-        stage.DrawPixel(stage.WrapCoordinate(star), 22+brightness*2);
+        parallaxStage.DrawPixel(parallaxStage.WrapCoordinate(star), 5+brightness);
+        stage.DrawPixel(stage.WrapCoordinate(star), 22+brightness);
     }
 }
 

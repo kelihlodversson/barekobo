@@ -2,6 +2,7 @@
 #include <circle/types.h>
 
 #include "game/actor.h"
+#include "game/stage.h"
 #include "util/rect.h"
 
 namespace hfh3
@@ -18,6 +19,7 @@ namespace hfh3
         virtual void Update() override;
         virtual Rect<int> GetBounds() override;
     private:
+        Stage parallaxStage;
         int density;
         u64 seed;
     };

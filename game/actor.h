@@ -10,7 +10,7 @@ namespace hfh3
     class IActor {
     public:
 
-        IActor(class ScreenManager& inScreen) : screenManager(inScreen)
+        IActor(class Stage& inStage) : stage(inStage)
         {}
 
         /** Since we're using virtual methods, the destructor needs to be virtual. */
@@ -24,6 +24,6 @@ namespace hfh3
         virtual void Draw() = 0;
         virtual Rect<int> GetBounds() = 0;
     protected:
-        class ScreenManager& screenManager;
+        class Stage& stage;
     };
 }

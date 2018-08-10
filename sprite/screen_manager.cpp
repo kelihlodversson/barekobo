@@ -39,7 +39,7 @@ bool ScreenManager::Initialize()
 
     framebuffer->SetVirtualOffset(0, 0);
     active = 1;
-    size = Coordinate(framebuffer->GetWidth(), framebuffer->GetHeight());
+    size = Vector<int>(framebuffer->GetWidth(), framebuffer->GetHeight());
     stride = framebuffer->GetPitch();
     bufferAddress = reinterpret_cast<u8*>(framebuffer->GetBuffer());
     ClearClip();
@@ -59,17 +59,17 @@ void ScreenManager::Present()
     active = (active + 1) % 2; // Swap the active screen
 }
 
-void ScreenManager::SetClip(const ScreenRect& rect)
+void ScreenManager::SetClip(const Rect<int>& rect)
 {
-    clip = ScreenRect(Coordinate(), size) & rect;
+    clip = Rect<int>(Vector<int>(), size) & rect;
 }
 
 void ScreenManager::ClearClip()
 {
-    clip = ScreenRect(Coordinate(), size);
+    clip = Rect<int>(Vector<int>(), size);
 }
 
-void ScreenManager::DrawPixel(const Coordinate& at, u8 color)
+void ScreenManager::DrawPixel(const Vector<int>& at, u8 color)
 {
     if(!bufferAddress)
     {
@@ -82,14 +82,14 @@ void ScreenManager::DrawPixel(const Coordinate& at, u8 color)
     *GetPixelAddress(at) = color;
 }
 
-void ScreenManager::DrawRect(const ScreenRect& rect, u8 color)
+void ScreenManager::DrawRect(const Rect<int>& rect, u8 color)
 {
     if(!bufferAddress)
     {
         return;
     }
     // Clip the rect to the frame buffer
-    ScreenRect clipped = clip & rect;
+    Rect<int> clipped = clip & rect;
     if(!clipped.IsValid())
     {
         return;
@@ -116,14 +116,14 @@ void ScreenManager::Clear(u8 color)
     DrawRect(clip, color);
 }
 
-void ScreenManager::DrawImage(const Coordinate& at, const Image& image)
+void ScreenManager::DrawImage(const Vector<int>& at, const Image& image)
 {
     if(!bufferAddress)
     {
         return;
     }
 
-    ScreenRect clipped = clip & ScreenRect(at, image.GetSize());
+    Rect<int> clipped = clip & Rect<int>(at, image.GetSize());
 
     if(!clipped.IsValid())
     {

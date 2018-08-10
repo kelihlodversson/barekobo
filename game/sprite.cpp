@@ -1,11 +1,11 @@
 #include "game/sprite.h"
+#include "game/stage.h"
 #include "sprite/image.h"
-#include "sprite/screen_manager.h"
 
 using namespace hfh3;
 
-Sprite::Sprite(ScreenManager& inScreen, class Image* inImages, unsigned inImageCount) :
-    IActor(inScreen),
+Sprite::Sprite(Stage& inStage, class Image* inImages, unsigned inImageCount) :
+    IActor(inStage),
     images(inImages),
     imageCount(inImageCount),
     current(0)
@@ -13,10 +13,10 @@ Sprite::Sprite(ScreenManager& inScreen, class Image* inImages, unsigned inImageC
 
 void Sprite::Draw()
 {
-    screenManager.DrawImage(position, GetImage());
+    stage.DrawImage(position, GetImage());
 }
 
 Rect<int> Sprite::GetBounds()
 {
-    return Rect<int>(position, GetImage().GetSize());
+    return {position, GetImage().GetSize()};
 }

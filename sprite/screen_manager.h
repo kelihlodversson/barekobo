@@ -13,24 +13,30 @@ namespace hfh3
     class ScreenManager
     {
     public:
-        typedef Vector<int> Coordinate;
-        typedef Rect<int> ScreenRect;
-
         ScreenManager();
         ~ScreenManager();
 
         bool Initialize();
-        void SetClip(const ScreenRect& rect);
-        void ClearClip();
-        void DrawImage(const Coordinate& at, const class Image& image);
-        void DrawPixel(const Coordinate& at, u8 color);
-        void DrawRect(const ScreenRect& rect, u8 color);
+
+        void DrawImage(const Vector<int>& at, const class Image& image);
+        void DrawPixel(const Vector<int>& at, u8 color);
+        void DrawRect(const Rect<int>& rect, u8 color);
         void Clear(u8 color=0);
 
         int GetWidth() const { return size.x; }
         int GetHeight() const { return size.y; }
-        const ScreenRect& GetBounds() const { return clip; }
+        Vector<int> GetSize() const { return size; }
 
+        /** Limits output to a rectangle
+        * The rectangle coordinates are in physical screen coordinates
+        */
+        void SetClip(const Rect<int>& rect);
+        const Rect<int>& GetClip() const { return clip; }
+        void ClearClip();
+
+        /** Present the working image buffer
+          * Use this to show the current frame after rendering.
+          */
         void Present();
     private:
         static const unsigned fbWidth = 400;
@@ -41,7 +47,7 @@ namespace hfh3
             return &bufferAddress[x + (y+active*size.y)*stride];
         }
 
-        u8* GetPixelAddress(const Coordinate& at)
+        u8* GetPixelAddress(const Vector<int>& at)
         {
             return GetPixelAddress(at.x, at.y);
         }
@@ -50,9 +56,9 @@ namespace hfh3
         int active; // Stores the currently active screen
 
         u8* bufferAddress;
-        Coordinate size;
+        Vector<int> size;
         int stride;
-        ScreenRect clip;
+        Rect<int> clip;
     };
 
 }

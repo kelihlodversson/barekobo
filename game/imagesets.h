@@ -7,7 +7,7 @@ namespace hfh3
       * The contant are laid out in the same way as the images appear in the
       * image.
       */
-    enum ImageSet
+    enum class ImageSet
     {
         MiniShot    =  0,       Bomb0       =  1,
         Explosion   =  2,       Bomb1       =  3,

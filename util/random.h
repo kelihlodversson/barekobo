@@ -1,5 +1,6 @@
 #pragma once
 #include <circle/types.h>
+#include "util/vector.h"
 
 namespace hfh3
 {
@@ -10,6 +11,13 @@ namespace hfh3
         Random(u64 inSeed = -1);
 
         u32 Get();
+
+        template <typename T>
+        Vector<T> GetVector()
+        {
+            return {static_cast<T>(Get()), static_cast<T>(Get())};
+        }
+
         void Reset(u64 inSeed);
     private:
         u64 seed;

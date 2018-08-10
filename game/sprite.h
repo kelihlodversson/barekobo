@@ -11,7 +11,7 @@ namespace hfh3
     class Sprite : public IActor {
     public:
 
-        Sprite(class ScreenManager& inScreen, class Image* inImages, unsigned inImageCount);
+        Sprite(class Stage& inStage, class Image* inImages, unsigned inImageCount);
 
         /** After updating all actors, each will get a chance to render itself to screen
           * @param screenManager the current screen manager to render to

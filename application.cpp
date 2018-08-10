@@ -4,9 +4,11 @@
 #include "graphics/sprite_data.h"
 #include "util/random.h"
 #include "util/log.h"
+#include "game/stage.h"
 #include "game/actor.h"
 #include "game/player.h"
 #include "game/enemy.h"
+#include "game/starfield.h"
 
 using namespace hfh3;
 
@@ -62,35 +64,45 @@ int Application::Run()
     INFO("Started MultiKobo. Compile time: " __DATE__ " " __TIME__);
     //TimerTest(-1, this, nullptr);
 
+    Stage stage(4096, 4096, screenManager);
     ImageSheet image(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8);
     Random random;
-    const int spriteCount = 50;
-    IActor* sprite[spriteCount];
-    const int player = spriteCount - 1;
-    for (int i = 0; i < spriteCount-1; i++)
-    {
-        sprite[i] = new Enemy(screenManager, image, random);
-    }
-    sprite[player] = new Player(screenManager, image, input);
+    Random starfieldRandom;
+    const int actorCount = 3000;
 
-    ScreenManager::ScreenRect clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
+    IActor* actor[actorCount];
+    const int background = 0;
+    const int player = actorCount - 1;
+    for (int i = 1; i < actorCount-1; i++)
+    {
+        actor[i] = new Enemy(stage, image, random);
+    }
+    actor[player] = new Player(stage, image, input);
+    actor[background] = new Starfield(stage);
+
+    Rect<int> clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
     while(true)
     {
         screenManager.Clear(10);
         screenManager.SetClip(clippedArea);
         screenManager.Clear(0);
-        for (int i = 0; i < spriteCount; i++)
+
+        for (int i = 0; i < actorCount; i++)
         {
-            sprite[i]->Update();
-            sprite[i]->Draw();
+            actor[i]->Update();
+        }
+
+        for (int i = 0; i < actorCount; i++)
+        {
+            actor[i]->Draw();
         }
         screenManager.ClearClip();
         screenManager.Present();
 
     }
-    for (int i = 0; i < spriteCount; i++)
+    for (int i = 0; i < actorCount; i++)
     {
-        delete sprite[i];
+        delete actor[i];
     }
     return EXIT_HALT;
 }

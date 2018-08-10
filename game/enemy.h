@@ -7,7 +7,7 @@ namespace hfh3
     class Enemy : public Sprite
     {
     public:
-        Enemy(class ScreenManager& inScreen, class ImageSheet& imageSheet, class Random& inRandom);
+        Enemy(class Stage& inStage, class ImageSheet& imageSheet, class Random& inRandom);
 
         virtual void Update() override;
     private:

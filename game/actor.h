@@ -18,10 +18,10 @@ namespace hfh3
         /** Update is called on each actor once per frame. */
         virtual void Update() = 0;
 
-        /** After updating all actors, each will get a chance to render itself to screen
-          * @param screenManager the current screen manager to render to
-          */
+        /** After updating all actors, each will get a chance to render itself to screen */
         virtual void Draw() = 0;
+
+        /** Return the bouding rectangle of the actor */
         virtual Rect<int> GetBounds() = 0;
     protected:
         class Stage& stage;

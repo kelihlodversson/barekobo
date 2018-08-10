@@ -3,7 +3,7 @@ CIRCLEHOME=3rd_party/circle
 # Default RaspberryPI model to build for
 RASPPI ?= 3
 # Directories containing source files for this project
-DIRS = . game sprite input util
+DIRS = . game render input util
 
 # Additional CIRCLE features to include
 CIRCLE_FEATURES = usb fs input

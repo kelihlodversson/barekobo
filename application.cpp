@@ -1,6 +1,6 @@
 #include "application.h"
-#include "sprite/imagesheet.h"
-#include "sprite/image.h"
+#include "render/imagesheet.h"
+#include "render/image.h"
 #include "graphics/sprite_data.h"
 #include "util/random.h"
 #include "util/log.h"

@@ -1,6 +1,6 @@
 #include "game/stage.h"
-#include "sprite/image.h"
-#include "sprite/screen_manager.h"
+#include "render/image.h"
+#include "render/screenmanager.h"
 
 using namespace hfh3;
 

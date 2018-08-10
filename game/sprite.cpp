@@ -1,6 +1,6 @@
 #include "game/sprite.h"
 #include "game/stage.h"
-#include "sprite/image.h"
+#include "render/image.h"
 
 using namespace hfh3;
 

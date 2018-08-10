@@ -1,8 +1,8 @@
 #include "game/player.h"
 #include "game/imagesets.h"
 #include "game/stage.h"
-#include "sprite/image.h"
-#include "sprite/imagesheet.h"
+#include "render/image.h"
+#include "render/imagesheet.h"
 #include "util/direction.h"
 #include "input/input.h"
 

@@ -13,7 +13,7 @@
 #include <circle/types.h>
 #include <circle/usb/dwhcidevice.h>
 
-#include "sprite/screen_manager.h"
+#include "render/screenmanager.h"
 #include "input/input.h"
 
 namespace hfh3

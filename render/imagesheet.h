@@ -1,6 +1,6 @@
 #pragma once
 #include <circle/types.h>
-#include "sprite/image.h"
+#include "render/image.h"
 
 namespace hfh3
 {

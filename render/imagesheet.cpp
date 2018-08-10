@@ -1,4 +1,4 @@
-#include "sprite/imagesheet.h"
+#include "render/imagesheet.h"
 #include "util/new.h" // for placement new
 
 using namespace hfh3;

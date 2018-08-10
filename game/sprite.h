@@ -2,7 +2,7 @@
 #include "game/actor.h"
 #include "util/rect.h"
 #include "util/vector.h"
-#include "sprite/image.h"
+#include "render/image.h"
 
 namespace hfh3
 {

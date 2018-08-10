@@ -1,7 +1,7 @@
 #include <circle/util.h>
 #include "graphics/sprite_data.h"
-#include "sprite/screen_manager.h"
-#include "sprite/image.h"
+#include "render/screenmanager.h"
+#include "render/image.h"
 
 using namespace hfh3;
 

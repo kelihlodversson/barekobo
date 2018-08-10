@@ -1,5 +1,5 @@
 #pragma once
-#include "sprite/screen_manager.h"
+#include "render/screenmanager.h"
 
 namespace hfh3
 {

@@ -33,8 +33,8 @@ graphics/sprite_data.gen.cpp: graphics/sprites.xpm
 # Helper target to copy the generated image to a remote tftp server.
 # It assumes the images should be stored in a directory called /tftpboot/multikobo
 # on a server called "pi" (either host name or alias in .ssh/config.)
-deploy: $(TARGET).img
-	scp $(TARGET).img pi:/tftpboot/multikobo
+deploy: $(TARGET).img config.txt
+	rsync --progress -v $(TARGET).img config.txt pi:/tftpboot/multikobo
 
 libclean:
 	@for dir in $(dir $(LIBS)) ;   	\

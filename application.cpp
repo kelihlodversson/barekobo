@@ -32,9 +32,6 @@ Application::Application() :
 
 bool Application::Initialize()
 {
-    INIT(screenManager)
-    screenManager.DrawString(screenManager.GetSize()/2-Vector<int>(80,0), "Loading MultiKobo...", 20, Font::GetDefault());
-    screenManager.Present();
     INIT(serial, 115200)
     {
         CDevice *log_device = nameService.GetDevice(options.GetLogDevice(), false);
@@ -47,6 +44,9 @@ bool Application::Initialize()
     }
     INIT(interrupts)
     INIT(timer)
+    INIT(screenManager)
+    screenManager.DrawString(screenManager.GetSize()/2-Vector<int>(80,0), "Loading MultiKobo...", 20, Font::GetDefault());
+    screenManager.Present();
     INIT(usb)
     INIT(input)
     INIT(network)
@@ -94,11 +94,12 @@ int Application::Run()
     while(true)
     {
         uint32_t ip = network.GetIPAddress();
-        message.Format("MultiKobo. IP Address: %u.%u.%u.%u",
+        message.Format("MultiKobo. IP Address: %u.%u.%u.%u. FPS: %u",
             (ip & 0xff),
             (ip & 0xff00)>>8,
             (ip & 0xff0000)>>16,
-            (ip & 0xff000000)>>24);
+            (ip & 0xff000000)>>24,
+            screenManager.GetFPS());
 
         screenManager.Clear(10);
         screenManager.DrawString({1,1}, message, 0, Font::GetDefault());

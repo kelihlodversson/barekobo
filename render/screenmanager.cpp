@@ -1,8 +1,12 @@
 #include <circle/util.h>
+#include <circle/sched/scheduler.h>
+
 #include "graphics/sprite_data.h"
 #include "render/screenmanager.h"
 #include "render/image.h"
 #include "render/font.h"
+
+#include "util/log.h"
 
 using namespace hfh3;
 
@@ -13,6 +17,9 @@ ScreenManager::ScreenManager()
     , size(0,0)
     , stride(0)
     , clip()
+    , lastSync(0)
+    , ticksPerFrame(0)
+    , frame(0)
 {
 }
 
@@ -42,20 +49,60 @@ bool ScreenManager::Initialize()
     stride = framebuffer->GetPitch();
     bufferAddress = reinterpret_cast<u8*>(framebuffer->GetBuffer());
     ClearClip();
+
+    if (!vsync.Initialize())
+    {
+        return false;
+    }
+
     return bufferAddress != nullptr;
 }
 
 // Swaps the active and visible frames and waits for vertical sync before returning.
 void ScreenManager::Present()
 {
+    // Ignore scheduler for the first STARTUP_FRAMES after boot;
+    const unsigned STARTUP_FRAMES = 5;
+    CTimer *timer = CTimer::Get();
     if(!framebuffer)
     {
         return;
     }
-
+    // switch the visible view port to the active screen
     framebuffer->SetVirtualOffset(0, active*GetHeight());
-    framebuffer->WaitForVerticalSync();
-    active = (active + 1) % 2; // Swap the active screen
+
+    // Wait for the next VSync. If the scheduler has been initialized,
+    // use the interrupt based waiting mechanism that allows other tasks
+    // to be run in the meantime.
+    if (true || frame > STARTUP_FRAMES)
+    {
+        vsync.Wait();
+    }
+    else
+    {
+        // ask the firmware to wait until the vertical sync
+        framebuffer->WaitForVerticalSync();
+    }
+
+    // Get the current timer tick count
+    unsigned currentTick = timer->GetClockTicks();
+
+    // Calculate the time from one vsync to the next
+    ticksPerFrame = currentTick - lastSync;
+
+    // save the time stamp of the start of the current frame
+    lastSync = currentTick;
+
+    // Update current frame number
+    frame ++;
+
+    // Swap the active screen so future draw commands will keep going to the off-screen buffer
+    active = (active + 1) % 2;
+}
+
+unsigned ScreenManager::GetFPS()
+{
+    return CLOCKHZ / ticksPerFrame + (CLOCKHZ % ticksPerFrame > ticksPerFrame/2 ? 1:0);
 }
 
 void ScreenManager::SetClip(const Rect<int>& rect)

@@ -4,6 +4,7 @@
 #include <circle/types.h>
 #include "util/vector.h"
 #include "util/rect.h"
+#include "util/vsync.h"
 
 namespace hfh3
 {
@@ -30,8 +31,8 @@ namespace hfh3
         Vector<int> GetSize() const { return size; }
 
         /** Limits output to a rectangle
-        * The rectangle coordinates are in physical screen coordinates
-        */
+          * The rectangle coordinates are in physical screen coordinates
+          */
         void SetClip(const Rect<int>& rect);
         const Rect<int>& GetClip() const { return clip; }
         void ClearClip();
@@ -40,6 +41,10 @@ namespace hfh3
           * Use this to show the current frame after rendering.
           */
         void Present();
+
+        /** Return the current frame rate in frames per second */
+        unsigned GetFPS();
+
     private:
         static const unsigned fbWidth = 400;
         static const unsigned fbHeight = 300;
@@ -61,6 +66,12 @@ namespace hfh3
         Vector<int> size;
         int stride;
         Rect<int> clip;
+
+        unsigned lastSync;
+        unsigned ticksPerFrame;
+        unsigned frame;
+
+        VSync    vsync;
     };
 
 }

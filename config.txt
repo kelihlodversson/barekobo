@@ -1,0 +1,13 @@
+# Firmware config file for MultiKobo
+
+# Enable firmware logging on the UART pins on the RaspberryPI
+uart_enable=1
+dtparam=uart0=on
+uart_2ndstage=1
+
+# This will cause the GPU to send an IRQ to the ARM processor on VSYNC
+# Ordinarily there is only a mailbox interface to halt execution until
+# vertical sync, but enabling this allows using the CPU core for other
+# tasks (such as networking) while waiting.
+# See: https://github.com/raspberrypi/firmware/issues/67
+fake_vsync_isr=1

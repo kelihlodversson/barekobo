@@ -45,7 +45,7 @@ bool ScreenManager::Initialize()
     return bufferAddress != nullptr;
 }
 
-// Draws the current frame and presents it.
+// Swaps the active and visible frames and waits for vertical sync before returning.
 void ScreenManager::Present()
 {
     if(!framebuffer)

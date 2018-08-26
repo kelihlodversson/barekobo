@@ -15,6 +15,7 @@
 
 #include "render/screenmanager.h"
 #include "input/input.h"
+#include "network/network.h"
 
 namespace hfh3
 {
@@ -39,10 +40,12 @@ namespace hfh3
         CTimer             timer;
         CLogger            logger;
         CDWHCIDevice       usb;
+        
         // ** Application objects:
         // Sprite manager manages rendering sprites on the screen and
         // performing page flipping to avoid flickering.
         ScreenManager screenManager;
         Input         input;
+        Network       network;
     };
 }

@@ -3,10 +3,10 @@ CIRCLEHOME=3rd_party/circle
 # Default RaspberryPI model to build for
 RASPPI ?= 3
 # Directories containing source files for this project
-DIRS = . game render input util graphics
+DIRS = . game render input util graphics network
 
-# Additional CIRCLE features to include
-CIRCLE_FEATURES = usb fs input
+# Additional CIRCLE features to include (the sched subsytem is required by the net subsystem)
+CIRCLE_FEATURES = usb fs input net sched
 
 OBJS = $(patsubst %.cpp,%.o, $(patsubst ./%,%, $(foreach  D,$(DIRS),$(filter-out %.gen.cpp,$(wildcard $D/*.cpp)))))
 LIBS = $(foreach  L,$(CIRCLE_FEATURES),$(CIRCLEHOME)/lib/$L/lib$L.a) \

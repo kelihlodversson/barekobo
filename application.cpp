@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <circle/string.h>
+
 #include "application.h"
 #include "render/imagesheet.h"
 #include "render/image.h"
@@ -10,6 +13,8 @@
 #include "game/player.h"
 #include "game/enemy.h"
 #include "game/starfield.h"
+
+#include "network/network.h"
 
 using namespace hfh3;
 
@@ -44,6 +49,7 @@ bool Application::Initialize()
     INIT(timer)
     INIT(usb)
     INIT(input)
+    INIT(network)
     return true;
 }
 
@@ -84,10 +90,18 @@ int Application::Run()
     actor[background] = new Starfield(stage);
 
     Rect<int> clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
+    CString message;
     while(true)
     {
+        uint32_t ip = network.GetIPAddress();
+        message.Format("MultiKobo. IP Address: %u.%u.%u.%u",
+            (ip & 0xff),
+            (ip & 0xff00)>>8,
+            (ip & 0xff0000)>>16,
+            (ip & 0xff000000)>>24);
+
         screenManager.Clear(10);
-        screenManager.DrawString({1,1}, "MultiKobo. Compiled: " __DATE__ " " __TIME__, 0, Font::GetDefault());
+        screenManager.DrawString({1,1}, message, 0, Font::GetDefault());
         screenManager.SetClip(clippedArea);
         screenManager.Clear(0);
 

@@ -2,10 +2,9 @@
 #include "graphics/sprite_data.h"
 #include "render/screenmanager.h"
 #include "render/image.h"
+#include "render/font.h"
 
 using namespace hfh3;
-
-
 
 ScreenManager::ScreenManager()
     : framebuffer(nullptr)
@@ -158,6 +157,55 @@ void ScreenManager::DrawImage(const Vector<int>& at, const Image& image)
                     dstRow[i] = srcRow[i];
                 }
             }
+        }
+    }
+}
+
+void ScreenManager::DrawChar(const Vector<int>& at, char c, u8 color, const Font& font)
+{
+    if(!bufferAddress)
+    {
+        return;
+    }
+
+    Rect<int> clipped = clip & Rect<int>(at, font.GetSize(c));
+    if(!clipped.IsValid())
+    {
+        return;
+    }
+
+    int cell_min_x = Max(clipped.Left() - at.x , 0);
+    int cell_min_y = Max(clipped.Top() - at.y , 0);
+    int cell_max_y = cell_min_y + clipped.Height();
+    int cell_max_x = cell_min_x + clipped.Width();
+    for (int cell_y = cell_min_y; cell_y < cell_max_y; cell_y++)
+    {
+        u8* dst = GetPixelAddress(clipped.Left(), at.y+cell_y);
+        for(int cell_x = cell_min_x; cell_x < cell_max_x; cell_x++)
+        {
+            if (font.GetPixel(c, cell_x, cell_y))
+            {
+                *dst = color;
+            }
+            dst++;
+        }
+    }
+}
+
+void ScreenManager::DrawString(const Vector<int>& at, const char* string, u8 color, const Font& font)
+{
+    Vector<int> current = at;
+    for(int i=0; string[i]; i++)
+    {
+        if(string[i] == '\n')
+        {
+            current.x = at.x;
+            current.y += font.GetHeight();
+        }
+        else
+        {
+            DrawChar(current, string[i], color, font);
+            current.x += font.GetSize(string[i]).x;
         }
     }
 }

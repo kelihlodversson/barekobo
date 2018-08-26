@@ -1,6 +1,7 @@
 #include "application.h"
 #include "render/imagesheet.h"
 #include "render/image.h"
+#include "render/font.h"
 #include "graphics/sprite_data.h"
 #include "util/random.h"
 #include "util/log.h"
@@ -27,6 +28,8 @@ Application::Application() :
 bool Application::Initialize()
 {
     INIT(screenManager)
+    screenManager.DrawString(screenManager.GetSize()/2-Vector<int>(80,0), "Loading MultiKobo...", 20, Font::GetDefault());
+    screenManager.Present();
     INIT(serial, 115200)
     {
         CDevice *log_device = nameService.GetDevice(options.GetLogDevice(), false);
@@ -84,6 +87,7 @@ int Application::Run()
     while(true)
     {
         screenManager.Clear(10);
+        screenManager.DrawString({1,1}, "MultiKobo. Compiled: " __DATE__ " " __TIME__, 0, Font::GetDefault());
         screenManager.SetClip(clippedArea);
         screenManager.Clear(0);
 

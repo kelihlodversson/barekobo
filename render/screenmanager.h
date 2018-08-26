@@ -21,6 +21,8 @@ namespace hfh3
         void DrawImage(const Vector<int>& at, const class Image& image);
         void DrawPixel(const Vector<int>& at, u8 color);
         void DrawRect(const Rect<int>& rect, u8 color);
+        void DrawChar(const Vector<int>& at, char c, u8 color, const class Font& font);
+        void DrawString(const Vector<int>& at, const char* string, u8 color, const class Font& font);
         void Clear(u8 color=0);
 
         int GetWidth() const { return size.x; }

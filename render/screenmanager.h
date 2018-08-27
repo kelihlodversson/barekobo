@@ -47,8 +47,8 @@ namespace hfh3
         unsigned GetFPS();
 
     private:
-        static const unsigned fbWidth = 400;
-        static const unsigned fbHeight = 300;
+        static const unsigned fbWidth = 640;
+        static const unsigned fbHeight = 400;
 
         // Defined in the header to inline it.
         u8* GetPixelAddress(int x, int y)

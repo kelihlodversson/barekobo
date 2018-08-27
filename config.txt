@@ -11,3 +11,15 @@ uart_2ndstage=1
 # tasks (such as networking) while waiting.
 # See: https://github.com/raspberrypi/firmware/issues/67
 fake_vsync_isr=1
+
+# Use neares neighbour scaling when scaling up graphics
+# which looks better for the pixel graphics in MultiKobo instead
+# of the default smooth scaling which causes an unwanted blurryness.
+scaling_kernel=8
+
+# Disable overscan and select a native output resolution of 1280x800@60Hz,
+# meaning that each pixel in the game will occupy 4 pixels on screen.
+# This assumes a computer monitor connected to the PI.
+disable_overscan=1
+hdmi_group=2
+hdmi_mode=28

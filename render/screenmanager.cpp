@@ -83,21 +83,7 @@ void ScreenManager::Flip()
 
 void ScreenManager::WaitForVerticalSync()
 {
-    // Ignore scheduler for the first STARTUP_FRAMES after boot;
-    const unsigned STARTUP_FRAMES = 5;
-
-    // Wait for the next VSync. If the scheduler has been initialized,
-    // use the interrupt based waiting mechanism that allows other tasks
-    // to be run in the meantime.
-    if (true || frame > STARTUP_FRAMES)
-    {
-        vsync.Wait();
-    }
-    else if (framebuffer)
-    {
-        // ask the firmware to wait until the vertical sync
-        framebuffer->WaitForVerticalSync();
-    }
+    vsync.Wait();
 }
 
 void ScreenManager::UpdateFrameStats()

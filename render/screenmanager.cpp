@@ -61,15 +61,30 @@ bool ScreenManager::Initialize()
 // Swaps the active and visible frames and waits for vertical sync before returning.
 void ScreenManager::Present()
 {
-    // Ignore scheduler for the first STARTUP_FRAMES after boot;
-    const unsigned STARTUP_FRAMES = 5;
-    CTimer *timer = CTimer::Get();
+    Flip();
+    WaitForVerticalSync();
+    UpdateFrameStats();
+}
+
+// Swaps the visible frames immediately without synchronizing
+void ScreenManager::Flip()
+{
     if(!framebuffer)
     {
         return;
     }
+
     // switch the visible view port to the active screen
     framebuffer->SetVirtualOffset(0, active*GetHeight());
+
+    // Swap the active screen so future draw commands will keep going to the off-screen buffer
+    active = (active + 1) % 2;
+}
+
+void ScreenManager::WaitForVerticalSync()
+{
+    // Ignore scheduler for the first STARTUP_FRAMES after boot;
+    const unsigned STARTUP_FRAMES = 5;
 
     // Wait for the next VSync. If the scheduler has been initialized,
     // use the interrupt based waiting mechanism that allows other tasks
@@ -78,12 +93,16 @@ void ScreenManager::Present()
     {
         vsync.Wait();
     }
-    else
+    else if (framebuffer)
     {
         // ask the firmware to wait until the vertical sync
         framebuffer->WaitForVerticalSync();
     }
+}
 
+void ScreenManager::UpdateFrameStats()
+{
+    CTimer *timer = CTimer::Get();
     // Get the current timer tick count
     unsigned currentTick = timer->GetClockTicks();
 
@@ -95,9 +114,6 @@ void ScreenManager::Present()
 
     // Update current frame number
     frame ++;
-
-    // Swap the active screen so future draw commands will keep going to the off-screen buffer
-    active = (active + 1) % 2;
 }
 
 unsigned ScreenManager::GetFPS()

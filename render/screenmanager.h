@@ -9,7 +9,8 @@
 namespace hfh3
 {
 
-    /** Class for managing a list of images to be drawn on-screen.
+    /** Class for managing rendering to the screen using a double buffer
+      * technique to avoid tearing and flickering artefacts.
       */
     class ScreenManager
     {
@@ -48,6 +49,7 @@ namespace hfh3
     private:
         static const unsigned fbWidth = 400;
         static const unsigned fbHeight = 300;
+
         // Defined in the header to inline it.
         u8* GetPixelAddress(int x, int y)
         {
@@ -58,6 +60,21 @@ namespace hfh3
         {
             return GetPixelAddress(at.x, at.y);
         }
+
+        /** Implements swapping of the active and visible frame.
+          * Called by Present()
+          */
+        void Flip();
+
+        /** Used by Present() to ensure the game is in sync with
+          * the screen frame rate.
+          */
+        void WaitForVerticalSync();
+
+        /** Bookkeeping method used to calculate the current FPS,
+          * which should be equal to the physical screen update rate
+          */
+        void UpdateFrameStats();
 
         CBcmFrameBuffer	*framebuffer;
         int active; // Stores the currently active screen

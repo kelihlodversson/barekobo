@@ -9,8 +9,28 @@
 // frame buffers in GPU memory. The GPU will be used to page between them.
 // If set to 0 rendering will be to a temporary buffer in CPU ram and
 // page flipping will be implemented by memcpy-ing the contents to GPU ram.
+// Due to CPU memory being cached and GPU not, the latter is actually
+// around 3 times faster than the former despite the final memcpy.
 #ifndef CONFIG_GPU_PAGE_FLIPPING
-#define CONFIG_GPU_PAGE_FLIPPING 0
+#   define CONFIG_GPU_PAGE_FLIPPING 0
+#endif
+
+// If CONFIG_DMA_FRAME_COPY is set (and CONFIG_GPU_PAGE_FLIPPING is not set)
+// the final memory copy from CPU to GPU ram is done using a DMA transfer instead
+// of using the CPU. This is approximately 5 times slower thant the CPU methhod,
+// but further refinements could be done to allow non-rendering code to run
+// in parallel with the copying.
+#ifndef CONFIG_DMA_FRAME_COPY
+#   define CONFIG_DMA_FRAME_COPY 0
+#endif
+
+#if CONFIG_GPU_PAGE_FLIPPING && CONFIG_DMA_FRAME_COPY
+#   error "CONFIG_GPU_PAGE_FLIPPING and CONFIG_DMA_FRAME_COPY are mutually exclusive"
+#endif
+
+
+#if CONFIG_DMA_FRAME_COPY
+#   include <circle/dmachannel.h>
 #endif
 
 namespace hfh3
@@ -95,7 +115,7 @@ namespace hfh3
         // Defined in the header to inline it.
         u8* GetPixelAddress(int x, int y, frame_t frame = ACTIVE)
         {
-#if CONFIG_GPU_PAGE_FLIPPING == 1
+#if CONFIG_GPU_PAGE_FLIPPING
             // The frame buffer is twice as tall as the visible area.
             // Offset the y coordinate based on the currently active
             // frame.
@@ -112,7 +132,7 @@ namespace hfh3
             return GetPixelAddress(at.x, at.y, frame);
         }
 
-#if CONFIG_GPU_PAGE_FLIPPING == 1
+#if CONFIG_GPU_PAGE_FLIPPING
         /** Implements swapping of the active and visible frame.
           * Called by Present()
           */
@@ -137,7 +157,10 @@ namespace hfh3
         void UpdateStatsPostCopy();
 
         CBcmFrameBuffer	*framebuffer;
-#if CONFIG_GPU_PAGE_FLIPPING == 1
+#if CONFIG_DMA_FRAME_COPY
+        CDMAChannel dma;
+#endif
+#if CONFIG_GPU_PAGE_FLIPPING
         int active; // Stores the currently active screen
 #else
         u8* renderBuffer;
@@ -152,7 +175,6 @@ namespace hfh3
         unsigned gameTicks;
         unsigned presentTicks;
         unsigned frame;
-
         VSync    vsync;
     };
 

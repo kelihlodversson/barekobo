@@ -19,7 +19,10 @@ static inline unsigned DivRound(unsigned a, unsigned b)
 
 ScreenManager::ScreenManager()
     : framebuffer(nullptr)
-#if CONFIG_GPU_PAGE_FLIPPING == 1
+#if CONFIG_DMA_FRAME_COPY
+    , dma(DMA_CHANNEL_SCREEN)
+#endif
+#if CONFIG_GPU_PAGE_FLIPPING
     , active(0)
 #else
     , renderBuffer(nullptr)
@@ -50,7 +53,7 @@ ScreenManager::~ScreenManager()
 
 bool ScreenManager::Initialize()
 {
-#if CONFIG_GPU_PAGE_FLIPPING == 1
+#if CONFIG_GPU_PAGE_FLIPPING
     const unsigned virtualHeight = fbHeight * 2;
     active = 1;
 #else
@@ -84,6 +87,10 @@ bool ScreenManager::Initialize()
     Clear();
 #endif
 
+#if CONFIG_DMA_FRAME_COPY
+    dma.SetupMemCopy2D(bufferAddress, renderBuffer, size.x, size.y, stride-size.x);
+#endif
+
     return bufferAddress != nullptr;
 }
 
@@ -91,7 +98,7 @@ bool ScreenManager::Initialize()
 void ScreenManager::Present()
 {
     UpdateStatsPreSync();
-#if CONFIG_GPU_PAGE_FLIPPING == 1
+#if CONFIG_GPU_PAGE_FLIPPING
     // Flip the logical and physical frame buffers
     // The GPU won't do the switch until the vertical sync period, so
     // we'll have to request it BEFORE we wait for VSync
@@ -111,7 +118,7 @@ void ScreenManager::Present()
     UpdateStatsPostCopy();
 }
 
-#if CONFIG_GPU_PAGE_FLIPPING == 1
+#if CONFIG_GPU_PAGE_FLIPPING
 // Swaps the visible frames
 void ScreenManager::Flip()
 {
@@ -139,8 +146,12 @@ void ScreenManager::CopyFrameData()
 
     assert(bufferAddress);
     assert(renderBuffer);
-
+#if CONFIG_DMA_FRAME_COPY
+    dma.Start();
+    dma.Wait();
+#else
     memcpy(bufferAddress, renderBuffer, size.y * stride);
+#endif
 }
 #endif
 

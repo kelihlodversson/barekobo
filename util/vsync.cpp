@@ -16,6 +16,7 @@ const uintptr  ARM_SMI_CS =(ARM_IO_BASE + 0x600000);
 VSync::VSync()
     : syncEvent(false)
     , isWaiting(false)
+    , missedFrames(0)
 {}
 
 bool VSync::Initialize()
@@ -23,6 +24,7 @@ bool VSync::Initialize()
     CInterruptSystem* interrupts = CInterruptSystem::Get();
     assert(interrupts);
     interrupts->ConnectIRQ(VSYNC_IRQ, VSync::VsyncIntStub, this);
+    return true;
 }
 
 VSync::~VSync()
@@ -35,7 +37,10 @@ VSync::~VSync()
 void VSync::Wait()
 {
     isWaiting = true;
-	DataSyncBarrier();
+
+    // This is needed for some reason to ensure isWaiting is written back to
+    // memory before calling Wait.
+    CompilerBarrier();
 
     syncEvent.Wait();
     syncEvent.Clear(); // immediately clear the event so the next call will block again
@@ -62,5 +67,9 @@ void VSync::VsyncInt()
     {
         isWaiting = false;
         syncEvent.Set();
+    }
+    else
+    {
+        missedFrames ++;
     }
 }

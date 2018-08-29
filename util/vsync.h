@@ -20,15 +20,41 @@ namespace hfh3
         VSync();
         ~VSync();
 
+        /** Initialization routine that will register an interrupt handler
+          * with the interrupt system for the GPU SMI interrupt.
+          */
         bool Initialize();
 
+        /** Calling Wait will block the current thread until the next vertical
+          * sync interrupt request is received.
+          */
         void Wait();
 
+        /** Returns the number of vsync interrupts received while no threads
+          * were waiting. This can be used as an indication of missed frames
+          * during rendering
+          */
+        unsigned GetMissed() { return missedFrames; }
+
     private:
-        static void VsyncIntStub(void* param);
+
+        /** The interrupt service routine that handles the SMI interrupt
+          * sent from the GPU.
+          */
         void VsyncInt();
 
+        /** Static stub needed to forward calls to VsyncInt, as the intterrupt
+          * subsystem only can call static methods.
+          */
+        static void VsyncIntStub(void* param);
+
+        // The synchronization event used to block and then re-enable the
+        // thread of execution when waiting for vertical sync
         CSynchronizationEvent syncEvent;
+
+        // The following two are accessed from interrupt context and are marked
+        // as volatile to prevent the compiler from optimizing access to them.
         volatile bool isWaiting;
+        volatile unsigned missedFrames;
     };
 }

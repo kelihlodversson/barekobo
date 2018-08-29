@@ -14,7 +14,6 @@ namespace hfh3
         Sprite(class Stage& inStage, class Image* inImages, unsigned inImageCount);
 
         /** After updating all actors, each will get a chance to render itself to screen
-          * @param screenManager the current screen manager to render to
           */
         virtual void Draw() override;
 

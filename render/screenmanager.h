@@ -1,10 +1,17 @@
-
 #pragma once
 #include <circle/bcmframebuffer.h>
 #include <circle/types.h>
 #include "util/vector.h"
 #include "util/rect.h"
 #include "util/vsync.h"
+
+// Set CONFIG_GPU_PAGE_FLIPPING to 1 to allocate both the active and visible
+// frame buffers in GPU memory. The GPU will be used to page between them.
+// If set to 0 rendering will be to a temporary buffer in CPU ram and
+// page flipping will be implemented by memcpy-ing the contents to GPU ram.
+#ifndef CONFIG_GPU_PAGE_FLIPPING
+#define CONFIG_GPU_PAGE_FLIPPING 0
+#endif
 
 namespace hfh3
 {
@@ -66,6 +73,16 @@ namespace hfh3
         /** Return the current frame rate in frames per second */
         unsigned GetFPS();
 
+        /** Return the amount of time spent between each call to Present
+          * in percent of frame time. */
+        unsigned GetGameTimePCT();
+
+        /** Return the amount of CPU time spent copying the current frame to
+          * the GPU in percent of frame time.
+          * If CONFIG_GPU_PAGE_FLIPPING is 1 this will be zero as
+          * no extra copying is done. */
+        unsigned GetFlipTimePCT();
+
         /** Return the number of frames missed due to too much time spent between
           * calls to Present
           */
@@ -78,11 +95,16 @@ namespace hfh3
         // Defined in the header to inline it.
         u8* GetPixelAddress(int x, int y, frame_t frame = ACTIVE)
         {
+#if CONFIG_GPU_PAGE_FLIPPING == 1
             // The frame buffer is twice as tall as the visible area.
             // Offset the y coordinate based on the currently active
             // frame.
             int frame_offset = size.y * (frame == ACTIVE ? active : ((active + 1) % 2));
             return &bufferAddress[x + (y+frame_offset)*stride];
+#else
+            u8* buffer = (frame == ACTIVE ? renderBuffer : bufferAddress);
+            return &buffer[x + y*stride];
+#endif
         }
 
         u8* GetPixelAddress(const Vector<int>& at, frame_t frame = ACTIVE)
@@ -90,10 +112,17 @@ namespace hfh3
             return GetPixelAddress(at.x, at.y, frame);
         }
 
+#if CONFIG_GPU_PAGE_FLIPPING == 1
         /** Implements swapping of the active and visible frame.
           * Called by Present()
           */
         void Flip();
+#else
+        /** Presents the render buffer by copying the contents to
+          * the frame buffer
+          */
+        void CopyFrameData();
+#endif
 
         /** Used by Present() to ensure the game is in sync with
           * the screen frame rate.
@@ -103,11 +132,16 @@ namespace hfh3
         /** Bookkeeping method used to calculate the current FPS,
           * which should be equal to the physical screen update rate
           */
-        void UpdateFrameStats();
+        void UpdateStatsPreSync();
+        void UpdateStatsPostSync();
+        void UpdateStatsPostCopy();
 
         CBcmFrameBuffer	*framebuffer;
+#if CONFIG_GPU_PAGE_FLIPPING == 1
         int active; // Stores the currently active screen
-
+#else
+        u8* renderBuffer;
+#endif
         u8* bufferAddress;
         Vector<int> size;
         int stride;
@@ -115,6 +149,8 @@ namespace hfh3
 
         unsigned lastSync;
         unsigned ticksPerFrame;
+        unsigned gameTicks;
+        unsigned presentTicks;
         unsigned frame;
 
         VSync    vsync;

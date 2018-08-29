@@ -10,21 +10,39 @@
 
 using namespace hfh3;
 
+/** Integer division with rounding to the nearest integer.
+  */
+static inline unsigned DivRound(unsigned a, unsigned b)
+{
+    return (a / b) + ((a % b) >= (b / 2)?1:0);
+}
+
 ScreenManager::ScreenManager()
     : framebuffer(nullptr)
+#if CONFIG_GPU_PAGE_FLIPPING == 1
     , active(0)
+#else
+    , renderBuffer(nullptr)
+#endif
     , bufferAddress(nullptr)
     , size(0,0)
     , stride(0)
     , clip()
     , lastSync(0)
     , ticksPerFrame(0)
+    , gameTicks(0)
+    , presentTicks(0)
     , frame(0)
 {
 }
 
 ScreenManager::~ScreenManager()
 {
+#if CONFIG_GPU_PAGE_FLIPPING == 0
+    delete[] renderBuffer;
+    renderBuffer = nullptr;
+#endif
+
     delete framebuffer;
     framebuffer = nullptr;
     bufferAddress = nullptr;
@@ -32,7 +50,14 @@ ScreenManager::~ScreenManager()
 
 bool ScreenManager::Initialize()
 {
-    framebuffer = new CBcmFrameBuffer(fbWidth, fbHeight, 8, fbWidth, fbHeight*2);
+#if CONFIG_GPU_PAGE_FLIPPING == 1
+    const unsigned virtualHeight = fbHeight * 2;
+    active = 1;
+#else
+    const unsigned virtualHeight = fbHeight;
+#endif
+
+    framebuffer = new CBcmFrameBuffer(fbWidth, fbHeight, 8, fbWidth, virtualHeight);
     for(int i = 0; i<256; i++)
     {
         framebuffer->SetPalette32(i, sprites_palette[i]);
@@ -44,7 +69,6 @@ bool ScreenManager::Initialize()
 	}
 
     framebuffer->SetVirtualOffset(0, 0);
-    active = 1;
     size = Vector<int>(framebuffer->GetWidth(), framebuffer->GetHeight());
     stride = framebuffer->GetPitch();
     bufferAddress = reinterpret_cast<u8*>(framebuffer->GetBuffer());
@@ -55,22 +79,40 @@ bool ScreenManager::Initialize()
         return false;
     }
 
+#if CONFIG_GPU_PAGE_FLIPPING == 0
+    renderBuffer = new u8[size.y*stride];
+    Clear();
+#endif
+
     return bufferAddress != nullptr;
 }
 
 // Swaps the active and visible frames and waits for vertical sync before returning.
 void ScreenManager::Present()
 {
+    UpdateStatsPreSync();
+#if CONFIG_GPU_PAGE_FLIPPING == 1
     // Flip the logical and physical frame buffers
+    // The GPU won't do the switch until the vertical sync period, so
+    // we'll have to request it BEFORE we wait for VSync
     Flip();
-    // The switch won't happen until the vertical sync period, so
-    // we'll have to wait until it has happened.
+#endif
+
     WaitForVerticalSync();
+
     // Update frame rate statistics, etc.
-    UpdateFrameStats();
+    UpdateStatsPostSync();
+#if CONFIG_GPU_PAGE_FLIPPING == 0
+    // Copy the logical frame buffer to the physical
+    // This has to happen immediately AFTER waiting for VSYNC so it will
+    // happen during the vertical blank period.
+    CopyFrameData();
+#endif
+    UpdateStatsPostCopy();
 }
 
-// Swaps the visible frames immediately without synchronizing
+#if CONFIG_GPU_PAGE_FLIPPING == 1
+// Swaps the visible frames
 void ScreenManager::Flip()
 {
     if(!framebuffer)
@@ -86,17 +128,40 @@ void ScreenManager::Flip()
     // Swap the active screen so future draw commands will keep going to the off-screen buffer
     active = (active + 1) % 2;
 }
+#else
+// Copy the frame data to the screen
+void ScreenManager::CopyFrameData()
+{
+    if(!framebuffer)
+    {
+        return;
+    }
+
+    assert(bufferAddress);
+    assert(renderBuffer);
+
+    memcpy(bufferAddress, renderBuffer, size.y * stride);
+}
+#endif
 
 void ScreenManager::WaitForVerticalSync()
 {
     vsync.Wait();
 }
 
-void ScreenManager::UpdateFrameStats()
+void ScreenManager::UpdateStatsPreSync()
 {
     CTimer *timer = CTimer::Get();
     // Get the current timer tick count
-    unsigned currentTick = timer->GetClockTicks();
+    const unsigned currentTick = timer->GetClockTicks();
+    gameTicks = currentTick - lastSync - presentTicks;
+}
+
+void ScreenManager::UpdateStatsPostSync()
+{
+    CTimer *timer = CTimer::Get();
+    // Get the current timer tick count
+    const unsigned currentTick = timer->GetClockTicks();
 
     // Calculate the time from one vsync to the next
     ticksPerFrame = currentTick - lastSync;
@@ -108,10 +173,27 @@ void ScreenManager::UpdateFrameStats()
     frame ++;
 }
 
+void ScreenManager::UpdateStatsPostCopy()
+{
+    CTimer *timer = CTimer::Get();
+    // Get the current timer tick count
+    const unsigned currentTick = timer->GetClockTicks();
+    presentTicks = currentTick - lastSync;
+}
+
 unsigned ScreenManager::GetFPS()
 {
-    // Integer division, rounding up if the remainder is more than half the divisor
-    return CLOCKHZ / ticksPerFrame + (CLOCKHZ % ticksPerFrame >= ticksPerFrame/2 ? 1:0);
+    return DivRound(CLOCKHZ, ticksPerFrame);
+}
+
+unsigned ScreenManager::GetGameTimePCT()
+{
+    return DivRound(100 * gameTicks, ticksPerFrame);
+}
+
+unsigned ScreenManager::GetFlipTimePCT()
+{
+    return DivRound(100 * presentTicks, ticksPerFrame);
 }
 
 void ScreenManager::SetClip(const Rect<int>& rect)

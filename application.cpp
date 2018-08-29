@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <circle/string.h>
 
 #include "application.h"
@@ -93,13 +92,14 @@ int Application::Run()
     CString message;
     while(true)
     {
-        uint32_t ip = network.GetIPAddress();
-        message.Format("MultiKobo. IP Address: %u.%u.%u.%u. FPS: %u",
+        u32 ip = network.GetIPAddress();
+        message.Format("MultiKobo. IP Address: %u.%u.%u.%u. FPS: %u. Missed: %d",
             (ip & 0xff),
             (ip & 0xff00)>>8,
             (ip & 0xff0000)>>16,
             (ip & 0xff000000)>>24,
-            screenManager.GetFPS());
+            screenManager.GetFPS(),
+            screenManager.GetMissedFrames());
 
         screenManager.Clear(10);
         screenManager.DrawString({1,1}, message, 0, Font::GetDefault());

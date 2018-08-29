@@ -61,8 +61,12 @@ bool ScreenManager::Initialize()
 // Swaps the active and visible frames and waits for vertical sync before returning.
 void ScreenManager::Present()
 {
+    // Flip the logical and physical frame buffers
     Flip();
+    // The switch won't happen until the vertical sync period, so
+    // we'll have to wait until it has happened.
     WaitForVerticalSync();
+    // Update frame rate statistics, etc.
     UpdateFrameStats();
 }
 
@@ -74,7 +78,9 @@ void ScreenManager::Flip()
         return;
     }
 
-    // switch the visible view port to the active screen
+    // Request the GPU to switch the visible view port to the active screen.
+    // Note that the GPU will not actually perform the switch until during the next
+    // vertical sync.
     framebuffer->SetVirtualOffset(0, active*GetHeight());
 
     // Swap the active screen so future draw commands will keep going to the off-screen buffer
@@ -104,17 +110,18 @@ void ScreenManager::UpdateFrameStats()
 
 unsigned ScreenManager::GetFPS()
 {
-    return CLOCKHZ / ticksPerFrame + (CLOCKHZ % ticksPerFrame > ticksPerFrame/2 ? 1:0);
+    // Integer division, rounding up if the remainder is more than half the divisor
+    return CLOCKHZ / ticksPerFrame + (CLOCKHZ % ticksPerFrame >= ticksPerFrame/2 ? 1:0);
 }
 
 void ScreenManager::SetClip(const Rect<int>& rect)
 {
-    clip = Rect<int>(Vector<int>(), size) & rect;
+    clip = GetScreenRect() & rect;
 }
 
 void ScreenManager::ClearClip()
 {
-    clip = Rect<int>(Vector<int>(), size);
+    clip = GetScreenRect();
 }
 
 void ScreenManager::DrawPixel(const Vector<int>& at, u8 color)
@@ -162,6 +169,14 @@ void ScreenManager::DrawRect(const Rect<int>& rect, u8 color)
 void ScreenManager::Clear(u8 color)
 {
     DrawRect(clip, color);
+}
+
+Image ScreenManager::GetImageRect(const Rect<int>& rect, frame_t source)
+{
+    // Note that the Image returned refers directly to the framebuffer
+    // data and it will not update when swapping buffers.
+    u8* image_pixels = GetPixelAddress(rect.origin, source);
+    return Image(image_pixels, rect.size.x, rect.size.y, -1, stride);
 }
 
 void ScreenManager::DrawImage(const Vector<int>& at, const Image& image)

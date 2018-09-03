@@ -85,6 +85,15 @@ namespace hfh3
             return Vector<T>(Max(a.x, b.x), Max(a.y,b.y));
         }
 
+        /** Explicit type conversion between two vectors with different
+          * inner types T and U when there exist a type conversion for the
+          * types themselves.
+          */
+        template<typename U> explicit operator Vector<U>() const
+        {
+            return {static_cast<U>(x), static_cast<U>(y)};
+        }
+
         T x;
         T y;
     };

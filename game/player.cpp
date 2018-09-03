@@ -23,10 +23,10 @@ void Player::Update()
     Direction direction = input.GetPlayerDirection();
     // The view should move with the player (delayed by one frame)
     stage.SetCenterOffset(position+GetImage().GetSize()/2);
-    if(direction != Stopped)
+    if(direction != Direction::Stopped)
     {
         SetImageIndex(static_cast<int>(direction));
-        Vector<int> delta = ToDelta(direction);
+        Vector<int> delta = direction.ToDelta();
         position = stage.WrapCoordinate(position + delta);
 
     }

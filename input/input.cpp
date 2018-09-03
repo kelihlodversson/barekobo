@@ -13,7 +13,7 @@ using namespace hfh3;
 Input* Input::instance;
 
 Input::Input()
-    : playerDirection(Stopped)
+    : playerDirection(Direction::Stopped)
     , lastDevice(0)
 {
     instance = this;
@@ -69,29 +69,29 @@ static Direction AxisToDirection(int x, int y)
     if (x < 0)
     {
         if (y < 0)
-            return NorthWest;
+            return Direction::NorthWest;
         else if (y > 0)
-            return SouthWest;
+            return Direction::SouthWest;
         else
-            return West;
+            return Direction::West;
     }
     else if (x > 0)
     {
         if (y < 0)
-            return NorthEast;
+            return Direction::NorthEast;
         else if (y > 0)
-            return SouthEast;
+            return Direction::SouthEast;
         else
-            return East;
+            return Direction::East;
     }
     else
     {
         if (y < 0)
-            return North;
+            return Direction::North;
         else if (y > 0)
-            return South;
+            return Direction::South;
         else
-            return Stopped;
+            return Direction::Stopped;
     }
 }
 
@@ -130,7 +130,7 @@ void Input::KeyboardStatusHandler(unsigned char modifiers, const unsigned char k
     static const unsigned kbd_device = (unsigned)-1;
     assert(instance != nullptr);
     // Ignore input from the keyboard if another controller is already controlling the player
-    if (instance->playerDirection != Stopped && instance->lastDevice != kbd_device)
+    if (instance->playerDirection != Direction::Stopped && instance->lastDevice != kbd_device)
     {
         return;
     }
@@ -192,23 +192,23 @@ void Input::GamePadStatusHandler (unsigned device, const TGamePadState *state)
     assert(instance != nullptr);
 
     // Ignore input from this controller if another controller is already controlling the player
-    if (instance->playerDirection != Stopped && instance->lastDevice != device)
+    if (instance->playerDirection != Direction::Stopped && instance->lastDevice != device)
     {
         return;
     }
 
-    Direction newDirection = Stopped;
+    Direction newDirection = Direction::Stopped;
     if (state->nhats > 0) // Prefer hats over axes
     {
         for (int i = 0 ; i<state->nhats; i++)
         {
-            if (state->hats[i] != Stopped)
+            if (state->hats[i] != Direction::Stopped)
             {
                 newDirection = (Direction)state->hats[i];
             }
         }
     }
-    if (newDirection == Stopped && state->naxes >= 2)
+    if (newDirection == Direction::Stopped && state->naxes >= 2)
     {
         int found=-1;
         // Find the first pair of X/Y axes

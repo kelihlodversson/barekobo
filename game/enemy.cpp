@@ -27,7 +27,7 @@ Enemy::Enemy(Stage& inStage, ImageSheet& imageSheet, Random& inRandom) :
 
 void Enemy::Update()
 {
-    Vector<int> delta = ToDelta(direction);
+    Vector<int> delta = direction.ToDelta();
     position = stage.WrapCoordinate(position + delta);
 
     // Change direction at random intervals.

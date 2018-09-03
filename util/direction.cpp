@@ -2,13 +2,13 @@
 
 using namespace hfh3;
 
-Vector<int> hfh3::ToDelta(Direction dir, int speed)
+Vector<int> Direction::ToDelta(int speed)
 {
     // Note when travelling diagonally, the speed will be approx. 41% too fast,
     // as the magnitude of the vector will actually be SQRT(2*(speed**2))
     // this is already visible with speed==1, but acceptable for this game, as
     // all positions are represented by integers.
-    switch(dir)
+    switch(value)
     {
     case North:
         return { 0,     -speed};

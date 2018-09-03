@@ -11,7 +11,7 @@ bool Network::Initialize()
         return false;
     }
 
-    beacon = new Beacon(&netSubsystem);
+    //beacon = new Beacon(&netSubsystem);
 
     return true;
 }

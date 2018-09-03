@@ -3,18 +3,41 @@
 
 namespace hfh3
 {
-    enum Direction
-    {
-        North,
-        NorthEast,
-        East,
-        SouthEast,
-        South,
-        SouthWest,
-        West,
-        NorthWest,
-        Stopped
-    };
 
-    Vector<int> ToDelta(Direction dir, int speed=1);
+    class Direction
+    {
+    public:
+        enum Value
+        {
+            North,
+            NorthEast,
+            East,
+            SouthEast,
+            South,
+            SouthWest,
+            West,
+            NorthWest,
+            Stopped
+        };
+
+        Direction(Value v) : value(v)
+        {}
+
+        Direction(int i) : value(static_cast<Value>(i))
+        {}
+
+        operator Value ()
+        {
+            return value;
+        }
+
+        explicit operator int ()
+        {
+            return static_cast<int>(value);
+        }
+
+        Vector<int> ToDelta(int speed=1);
+    private:
+        Value value;
+    };
 }

@@ -25,9 +25,14 @@ namespace hfh3
             current = newCurrent;
         }
 
-        unsigned GetImageIndex()
+        unsigned GetImageIndex() const
         {
             return current;
+        }
+
+        unsigned GetImageCount() const
+        {
+            return imageCount;
         }
 
         class Image& GetImage()

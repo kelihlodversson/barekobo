@@ -1,9 +1,9 @@
 #pragma once
-#include "game/sprite.h"
+#include "game/mover.h"
 
 namespace hfh3
 {
-    class Player : public Sprite
+    class Player : public Mover
     {
     public:
         Player(class Stage& inStage, class ImageSheet& imageSheet, class Input& inInput);

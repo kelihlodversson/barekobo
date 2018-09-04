@@ -7,34 +7,33 @@
 
 using namespace hfh3;
 
-static const ImageSet enemyImages[9] = {
+static const ImageSet enemyImages[7] = {
     ImageSet::Bomb0, ImageSet::Bomb1, ImageSet::Bomb2, ImageSet::Bomb3,
-    ImageSet::Arch0, ImageSet::Arch1, ImageSet::Arch2,
-    ImageSet::Missile, ImageSet::MiniShot
+    ImageSet::Arch0, ImageSet::Arch1, ImageSet::Arch2
 };
 
 Enemy::Enemy(Stage& inStage, ImageSheet& imageSheet, Random& inRandom) :
-    Sprite(inStage,
-           imageSheet[(int)enemyImages[inRandom.Get() % 9]],
-           imageSheet.GetGroupSize()),
+    Mover(inStage,
+          imageSheet[(int)enemyImages[inRandom.Get() % 7]],
+          imageSheet.GetGroupSize(),
+          static_cast<Direction>(inRandom.Get() % 8)),
     random(inRandom),
-    direction(static_cast<Direction>(inRandom.Get() % 8)),
-    relaxed(inRandom.Get() % 100)
+    relaxed(inRandom.Get() % 100 + 10)
 {
-    SetImageIndex(static_cast<unsigned>(direction));
     position = stage.WrapCoordinate(random.GetVector<int>());
 }
 
 void Enemy::Update()
 {
-    Vector<int> delta = direction.ToDelta();
-    position = stage.WrapCoordinate(position + delta);
+    UpdatePosition();
 
-    // Change direction at random intervals.
+    // Change direction at random intervals by + or - 45 degrees.
     if (random.Get() % relaxed == 0)
     {
-        unsigned r = random.Get();
-        direction = static_cast<Direction>((direction + (r%3)-1) % 8);
-        SetImageIndex(static_cast<unsigned>(direction));
+        //      __________ -1 or +1 ______
+        //      _______ 0 or 2 _______
+        //      ____ 0 or 1  ____
+        int r = (random.Get() % 2) * 2 - 1; // Chose -1 or +1 at random
+        SetDirection(GetDirection() + r); // Add it to the current direction to rotate it
     }
 }

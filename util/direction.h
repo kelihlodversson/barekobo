@@ -20,10 +20,16 @@ namespace hfh3
             Stopped
         };
 
+        Direction() : value(Stopped)
+        {}
+
         Direction(Value v) : value(v)
         {}
 
         Direction(int i) : value(static_cast<Value>(i))
+        {}
+
+        Direction(unsigned i) : value(static_cast<Value>(i))
         {}
 
         operator Value ()
@@ -31,10 +37,36 @@ namespace hfh3
             return value;
         }
 
-        explicit operator int ()
+        explicit operator int () const
         {
             return static_cast<int>(value);
         }
+
+        explicit operator unsigned int () const
+        {
+            return static_cast<unsigned>(value);
+        }
+
+        // Adding to a direction will rotate
+        // clockwise 45 degrees.
+        Direction operator+(int other) const
+        {
+            if(value != Stopped)
+            {
+                return Direction((value + other) & 7);
+            }
+            else
+            {
+                return *this;
+            }
+        }
+
+        // Subtracting will rotate counter-clockwise
+        Direction operator-(int other) const
+        {
+            return *this + (-other);
+        }
+
 
         Vector<int> ToDelta(int speed=1);
     private:

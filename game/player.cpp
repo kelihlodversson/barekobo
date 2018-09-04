@@ -9,9 +9,10 @@
 using namespace hfh3;
 
 Player::Player(class Stage& inStage, class ImageSheet& imageSheet, class Input& inInput) :
-    Sprite(inStage,
-           imageSheet[(int)ImageSet::Player0],
-           imageSheet.GetGroupSize()),
+    Mover(inStage,
+          imageSheet[(int)ImageSet::Player0],
+          imageSheet.GetGroupSize(),
+          Direction::Stopped),
     input(inInput)
 {
     SetImageIndex(0);
@@ -20,14 +21,12 @@ Player::Player(class Stage& inStage, class ImageSheet& imageSheet, class Input& 
 
 void Player::Update()
 {
-    Direction direction = input.GetPlayerDirection();
-    // The view should move with the player (delayed by one frame)
-    stage.SetCenterOffset(position+GetImage().GetSize()/2);
-    if(direction != Direction::Stopped)
-    {
-        SetImageIndex(static_cast<int>(direction));
-        Vector<int> delta = direction.ToDelta();
-        position = stage.WrapCoordinate(position + delta);
+    // Update player direction based on input
+    SetDirection(input.GetPlayerDirection());
 
-    }
+    // Update position based on current heading
+    UpdatePosition();
+
+    // Move the view with the player
+    stage.SetCenterOffset(position+GetImage().GetSize()/2);
 }

@@ -1,10 +1,10 @@
 #pragma once
-#include "game/sprite.h"
+#include "game/mover.h"
 #include "util/direction.h"
 
 namespace hfh3
 {
-    class Enemy : public Sprite
+    class Enemy : public Mover
     {
     public:
         Enemy(class Stage& inStage, class ImageSheet& imageSheet, class Random& inRandom);
@@ -12,7 +12,6 @@ namespace hfh3
         virtual void Update() override;
     private:
         class Random& random;
-        Direction direction;
         int relaxed;
     };
 }

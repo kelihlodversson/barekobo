@@ -11,6 +11,7 @@
 #include "game/actor.h"
 #include "game/player.h"
 #include "game/enemy.h"
+#include "game/shot.h"
 #include "game/starfield.h"
 
 #include "network/network.h"
@@ -81,9 +82,18 @@ int Application::Run()
     IActor* actor[actorCount];
     const int background = 0;
     const int player = actorCount - 1;
-    for (int i = 1; i < actorCount-1; i++)
+    const int shotCount = actorCount/4;
+    const int enemyCount = actorCount - shotCount - 1;
+    for (int i = 1; i < enemyCount; i++)
     {
         actor[i] = new Enemy(stage, image, random);
+    }
+    for (int i = enemyCount; i < shotCount + enemyCount ; i++)
+    {
+        ImageSet imageSet = i % 2 ? ImageSet::MiniShot : ImageSet::Missile;
+        Direction dir = Direction(random.Get() % 8);
+        int speed = random.Get() % 3 + 1;
+        actor[i] = new Shot(stage, image, imageSet, random.GetVector<int>(), dir, speed);
     }
     actor[player] = new Player(stage, image, input);
     actor[background] = new Starfield(stage);

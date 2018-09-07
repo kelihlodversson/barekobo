@@ -30,10 +30,15 @@ void Enemy::Update()
     // Change direction at random intervals by + or - 45 degrees.
     if (random.Get() % relaxed == 0)
     {
-        //      __________ -1 or +1 ______
+        //       ___ 0 or 1  ___
         //      _______ 0 or 2 _______
-        //      ____ 0 or 1  ____
+        //      ________ -1 or +1 ________
         int r = (random.Get() % 2) * 2 - 1; // Chose -1 or +1 at random
         SetDirection(GetDirection() + r); // Add it to the current direction to rotate it
     }
+}
+
+void Enemy::OnCollision(class Actor* other)
+{
+    delete this;
 }

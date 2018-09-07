@@ -12,7 +12,10 @@ namespace hfh3
         Shot(class Stage& inStage, class ImageSheet& imageSheet, ImageSet imageSet, const Vector<int>& inPosition, Direction direction, int speed = 1);
 
         virtual void Update() override;
+        virtual void Draw() override;
+        virtual void OnCollision(class Actor* other) override;
     private:
         bool rotator;
+        unsigned ttl;
     };
 }

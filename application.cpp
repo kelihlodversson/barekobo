@@ -13,6 +13,7 @@
 #include "game/enemy.h"
 #include "game/shot.h"
 #include "game/starfield.h"
+#include "game/world.h"
 
 #include "network/network.h"
 
@@ -53,17 +54,6 @@ bool Application::Initialize()
     return true;
 }
 
-#if 0
-static void TimerTest (unsigned hTimer, void *pParam, void *pContext)
-{
-    INFO("Timer %u, %p, %p", hTimer, pParam, pContext);
-    if (!CTimer::Get()->StartKernelTimer (MSEC2HZ(1000), TimerTest, pParam, pContext))
-    {
-        ERROR("Could not schedule kernel timer");
-    }
-}
-#endif
-
 /**
 * This is the main run loop for the application.
 * Should update game state and present each frame.
@@ -77,29 +67,21 @@ int Application::Run()
     ImageSheet image(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8);
     Random random;
     Random starfieldRandom;
-    const int actorCount = 3000;
 
-    IActor* actor[actorCount];
-    const int background = 0;
-    const int player = actorCount - 1;
-    const int shotCount = actorCount/4;
-    const int enemyCount = actorCount - shotCount - 1;
-    for (int i = 1; i < enemyCount; i++)
+    const int enemyCount = 3000;
+
+    World world;
+    for (int i = 0; i < enemyCount; i++)
     {
-        actor[i] = new Enemy(stage, image, random);
+        world.Append(new Enemy(stage, image, random));
     }
-    for (int i = enemyCount; i < shotCount + enemyCount ; i++)
-    {
-        ImageSet imageSet = i % 2 ? ImageSet::MiniShot : ImageSet::Missile;
-        Direction dir = Direction(random.Get() % 8);
-        int speed = random.Get() % 3 + 1;
-        actor[i] = new Shot(stage, image, imageSet, random.GetVector<int>(), dir, speed);
-    }
-    actor[player] = new Player(stage, image, input);
-    actor[background] = new Starfield(stage);
+
+    world.Append(new Player(stage, image, input));
+    world.Prepend(new Starfield(stage));
 
     Rect<int> clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
     CString message;
+
     while(true)
     {
         u32 ip = network.GetIPAddress();
@@ -114,27 +96,18 @@ int Application::Run()
             screenManager.GetFlipTimePCT()
         );
 
+        world.Update();
+
         screenManager.Clear(10);
         screenManager.DrawString({1,1}, message, 0, Font::GetDefault());
         screenManager.SetClip(clippedArea);
         screenManager.Clear(0);
 
-        for (int i = 0; i < actorCount; i++)
-        {
-            actor[i]->Update();
-        }
+        world.Draw();
 
-        for (int i = 0; i < actorCount; i++)
-        {
-            actor[i]->Draw();
-        }
         screenManager.ClearClip();
         screenManager.Present();
+    }
 
-    }
-    for (int i = 0; i < actorCount; i++)
-    {
-        delete actor[i];
-    }
     return EXIT_HALT;
 }

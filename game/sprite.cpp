@@ -5,7 +5,7 @@
 using namespace hfh3;
 
 Sprite::Sprite(Stage& inStage, class Image* inImages, unsigned inImageCount) :
-    IActor(inStage),
+    Actor(inStage),
     images(inImages),
     imageCount(inImageCount),
     current(0)

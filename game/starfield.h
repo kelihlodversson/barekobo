@@ -10,7 +10,7 @@ namespace hfh3
 
     /** Utility class for rendering a simple star field in the background.
       */
-    class Starfield : public IActor
+    class Starfield : public Actor
     {
     public:
         Starfield(class Stage& inStage, int inDensity=2500, u64 inSeed=999);

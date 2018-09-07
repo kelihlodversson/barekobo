@@ -9,7 +9,11 @@ namespace hfh3
         Player(class Stage& inStage, class ImageSheet& imageSheet, class Input& inInput);
 
         virtual void Update() override;
+
     private:
+        void Fire();
+
         class Input& input;
+        class ImageSheet& imageSheet;
     };
 }

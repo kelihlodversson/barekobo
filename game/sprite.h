@@ -8,7 +8,7 @@ namespace hfh3
 {
     /** Base class for game actors that consist of a single sprite on-screen.
       */
-    class Sprite : public IActor {
+    class Sprite : public Actor {
     public:
 
         Sprite(class Stage& inStage, class Image* inImages, unsigned inImageCount);

@@ -6,7 +6,7 @@
 using namespace hfh3;
 
 Starfield::Starfield(class Stage& inStage, int inDensity, u64 inSeed) :
-    IActor(inStage),
+    Actor(inStage),
     parallaxStage(inStage.GetWidth()/2, inStage.GetHeight()/2, inStage.GetScreen()),
     density(inDensity),
     seed(inSeed)
@@ -20,7 +20,7 @@ void Starfield::Draw()
     Random random(seed);
 
     // parallaxStage is a separate stage, half the size and half the offset.
-    // halfing the offset creates a parallax effect, and halfing the size makes
+    // halfing the offset creates a parallax effect, and halving the size makes
     // the wrapping match the parent stage.
     parallaxStage.SetOffset(stage.GetOffset() / 2);
 

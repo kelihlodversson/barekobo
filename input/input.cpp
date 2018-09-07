@@ -4,6 +4,7 @@
 #include <circle/usb/usbgamepad.h>
 #include <circle/usb/usbkeyboard.h>
 #include <circle/startup.h>
+#include <circle/util.h>
 
 #include "input/input.h"
 #include "util/log.h"
@@ -16,6 +17,8 @@ Input::Input()
     : playerDirection(Direction::Stopped)
     , lastDevice(0)
 {
+    memset(buttons, 0, sizeof(buttons));
+    memset(buttonLastDevice, 0, sizeof(buttons));
     instance = this;
 }
 
@@ -125,10 +128,21 @@ enum ModfierMask {
     AnyMeta     = LeftMeta  | RightMeta
 };
 
+static const unsigned kbdModifierButtonDecode[] =
+{
+    AnyShift, // ButtonA
+    AnyCtrl,  // ButtonB
+    AnyAlt,   // ButtonStart
+    AnyMeta   // ButtonSelect
+};
+
 void Input::KeyboardStatusHandler(unsigned char modifiers, const unsigned char keys[6])
 {
     static const unsigned kbd_device = (unsigned)-1;
     assert(instance != nullptr);
+
+    instance->UpdateButtonState(kbd_device, modifiers, kbdModifierButtonDecode);
+
     // Ignore input from the keyboard if another controller is already controlling the player
     if (instance->playerDirection != Direction::Stopped && instance->lastDevice != kbd_device)
     {
@@ -174,6 +188,7 @@ void Input::KeyboardStatusHandler(unsigned char modifiers, const unsigned char k
         reboot();
     }
 
+
     instance->playerDirection = AxisToDirection(x,y);
     instance->lastDevice = kbd_device;
 }
@@ -186,10 +201,18 @@ int Input::NormalizeAxisValue(int value, int min, int max)
     return value < low_threshold ? -1 : value > high_threshold ? 1 : 0;
 }
 
+static const unsigned defaultButtonDecode[] =
+{
+    0x0080, // ButtonA
+    0x0100, // ButtonB
+    0x0020, // ButtonStart
+    0x0010  // ButtonSelect
+};
 
 void Input::GamePadStatusHandler (unsigned device, const TGamePadState *state)
 {
     assert(instance != nullptr);
+    instance->UpdateButtonState(device, state->buttons, defaultButtonDecode);
 
     // Ignore input from this controller if another controller is already controlling the player
     if (instance->playerDirection != Direction::Stopped && instance->lastDevice != device)
@@ -232,4 +255,33 @@ void Input::GamePadStatusHandler (unsigned device, const TGamePadState *state)
 
     instance->playerDirection = newDirection;
     instance->lastDevice = device;
+}
+
+void Input::UpdateButtonState(unsigned device, unsigned buttonMask, const unsigned* decode)
+{
+    for(int i = 0; i<4; i++)
+    {
+        int newState = buttonMask & decode[i]?ButtonDown:ButtonUp;
+
+        // Ignore additional button presses coming from tjis devices
+        // while other devices are holding it down
+        if(buttons[i] != ButtonUp && buttonLastDevice[i] != device)
+        {
+            continue;
+        }
+
+        if(newState != (buttons[i] & 1))
+        {
+            newState |= ButtonStateChanged;
+        }
+        buttons[i] = static_cast<ButtonState>(newState);
+        buttonLastDevice[i] = device;
+    }
+}
+
+enum Input::ButtonState Input::GetButtonState(enum Input::Button button)
+{
+    enum ButtonState result = buttons[button];
+    buttons[button] = static_cast<ButtonState>(buttons[button] & ButtonDown); // Clear ButtonStateChanged
+    return result;
 }

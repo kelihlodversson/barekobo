@@ -1,20 +1,17 @@
 #pragma once
+#include "util/vector.h"
 #include "util/rect.h"
-#include "util/dlinklist.h"
-#include "util/dlinkitem.h"
-#include "game/world.h"
+#include "game/partition.h"
 
 namespace hfh3
 {
     /** Base class for game actors.
       * game actors represent object in the world that optionally perform actions.
       */
-    class Actor : public DLinkItem<Actor, World>
+    class Actor
     {
     public:
-        Actor(class Stage& inStage)
-            : stage(inStage)
-        {}
+        Actor(class World& inWorld);
 
         /** Since we're using virtual methods, the destructor needs to be virtual. */
         virtual ~Actor() = default;
@@ -32,12 +29,14 @@ namespace hfh3
           */
         virtual void OnCollision(class Actor* other) {}
 
-        /** Returns the current world */
-        World* GetWorld() const
-        {
-            return parent;
-        }
     protected:
+        class World& world;
         class Stage& stage;
+        Vector<int> position;
+
+        // Store the current partition iterator for easy removal
+        // should only be modified by the World class
+        Partition::Iterator partitionIterator;
+        friend class World;
     };
 }

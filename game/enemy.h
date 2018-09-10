@@ -7,7 +7,7 @@ namespace hfh3
     class Enemy : public Mover
     {
     public:
-        Enemy(class Stage& inStage, class ImageSheet& imageSheet, class Random& inRandom);
+        Enemy(class World& inWorld, class ImageSheet& imageSheet, class Random& inRandom);
 
         virtual void Update() override;
         virtual void OnCollision(class Actor* other) override;

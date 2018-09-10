@@ -9,7 +9,8 @@ namespace hfh3
     class Shot : public Mover
     {
     public:
-        Shot(class Stage& inStage, class ImageSheet& imageSheet, ImageSet imageSet, const Vector<int>& inPosition, Direction direction, int speed = 1);
+        Shot(class World& inWorld, class ImageSheet& imageSheet, ImageSet imageSet,
+             const Vector<int>& inPosition, Direction direction, int speed = 1);
 
         virtual void Update() override;
         virtual void Draw() override;

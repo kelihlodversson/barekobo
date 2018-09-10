@@ -1,5 +1,6 @@
 #pragma once
 #include "render/screenmanager.h"
+#include "util/log.h"
 
 namespace hfh3
 {
@@ -30,7 +31,7 @@ namespace hfh3
         void SetCenterOffset(const Vector<int>& offset)
         {
             Vector<int> center = screen.GetSize()/2;
-            screenOffset = offset - center;
+            screenOffset = WrapCoordinate(offset - center);
         }
 
         Vector<int> GetOffset()
@@ -74,6 +75,21 @@ namespace hfh3
         int GetWidth() { return maskX+1; }
         int GetHeight() { return maskY+1; }
         Vector<int> GetSize() { return {GetWidth(), GetHeight()}; }
+
+        /** Returns true if the rect passed in is within the visible screen area
+          */
+        bool IsVisible(const Rect<int>& stageRect)
+        {
+            Rect<int> shifted (stageRect.origin - screenOffset, stageRect.size);
+            Rect<int> wrapped (WrapCoordinate(shifted.origin), stageRect.size);
+
+            const int scrW = screen.GetWidth();
+            const int scrH = screen.GetHeight();
+            bool res = ((shifted.Left() < scrW && shifted.Right()  > 0) || (wrapped.Left() < scrW && wrapped.Right()  > 0)) &&
+                       ((shifted.Top()  < scrH && shifted.Bottom() > 0) || (wrapped.Top()  < scrH && wrapped.Bottom() > 0)) ;
+
+            return res;
+        }
 
     private:
         class ScreenManager& screen;

@@ -2,6 +2,9 @@
 #include "game/imagesets.h"
 #include "game/stage.h"
 #include "game/shot.h"
+#include "game/partition.h"
+#include "game/world.h"
+
 #include "render/image.h"
 #include "render/imagesheet.h"
 #include "util/direction.h"
@@ -9,8 +12,8 @@
 
 using namespace hfh3;
 
-Player::Player(class Stage& inStage, class ImageSheet& inImageSheet, class Input& inInput) :
-    Mover(inStage,
+Player::Player(class World& inWorld, class ImageSheet& inImageSheet, class Input& inInput) :
+    Mover(inWorld,
           inImageSheet[(int)ImageSet::Player0],
           inImageSheet.GetGroupSize(),
           Direction::Stopped),
@@ -18,7 +21,7 @@ Player::Player(class Stage& inStage, class ImageSheet& inImageSheet, class Input
     imageSheet(inImageSheet)
 {
     SetImageIndex(0);
-    position = (stage.GetSize() - GetImage().GetSize())/2;
+    position = {0,0};//(stage.GetSize() - GetImage().GetSize())/2;
 }
 
 void Player::Update()
@@ -42,7 +45,7 @@ void Player::Fire()
 {
     const int shotSpeed = 3;
     Direction shotDirection = static_cast<Direction>(GetImageIndex());
-    Vector<int> shotPosition = position + shotDirection.ToDelta(16);
+    Vector<int> shotPosition = stage.WrapCoordinate(position + shotDirection.ToDelta(16));
 
-    InsertAfter(new Shot(stage, imageSheet, ImageSet::Missile, shotPosition, shotDirection, shotSpeed));
+    world.SpawnMissile(shotPosition, shotDirection, shotSpeed);
 }

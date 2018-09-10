@@ -11,13 +11,13 @@ namespace hfh3
     class Sprite : public Actor {
     public:
 
-        Sprite(class Stage& inStage, class Image* inImages, unsigned inImageCount);
+        Sprite(class World& inWorld, class Image* inImages, unsigned inImageCount);
 
         /** After updating all actors, each will get a chance to render itself to screen
           */
         virtual void Draw() override;
-
         virtual Rect<int> GetBounds() override;
+
     protected:
 
         void SetImageIndex(unsigned newCurrent)
@@ -40,7 +40,6 @@ namespace hfh3
             return images[current];
         }
 
-        Vector<int> position;
     private:
         class Image* images;
         unsigned imageCount;

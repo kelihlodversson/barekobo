@@ -1,58 +1,63 @@
 #pragma once
+#include "util/dlinkitem.h"
 #include "util/dlinkiterator.h"
 #include "util/log.h"
 #include <assert.h>
 
 namespace hfh3
 {
-    /** Utility class that implements a simple double link list.
-      * The type T must have the members T* previous and T* next for instance
-      * by extending DLinkItem<T, LT>.
-      *
-      * When added, the list takes ownership of the item. Any items on the list
-      * during destruction will be destroyed. If an item must survive past the
-      * lifetime of the list, it must be removed first.
+    /** Templated container class that implements a simple double link list.
       */
-    template<typename T, typename LT>
+    template<typename T>
     class DLinkList
     {
     public:
+        typedef DLinkItem<T, DLinkList<T>> Item;
+        typedef DLinkIterator<T, Item, DLinkList<T>> Iterator;
 
         /** The number of items in the list.
           * Since the count is stored and updated on insertion and removal,
           * this is a constant time operation.
           */
-        bool Size() const
+        unsigned Size() const
         {
             return count;
         }
 
         /** Removes all elements from the list.
-          * If destroy is true (the default), each element on the list will
-          * be destroyed.
           */
-        void Clear(bool destroy = true)
+        void Clear()
         {
-            if(destroy)
+            for(Item* item = first; item != nullptr;)
             {
-                for(auto iter = begin(); iter != end();)
-                {
-                    // This is a destructive loop, so we have to fetch the next item
-                    // before we destroy the current.
-                    auto current = iter++;
+                // This is a destructive loop, so we have to fetch the next item
+                // before we destroy the current.
+                Item* current = item;
+                item = item->next;
 
-                    // Break the connection with the current list.
-                    current->parent = nullptr;
-                    current->previous = current->next = nullptr;
-
-                    // Destroy and deallocate the item
-                    delete &*current;
-                }
+                // Destroy and deallocate the item
+                delete current;
             }
 
             // Mark the list as empty
             count = 0;
             first = last = nullptr;
+        }
+
+        /** Remove all elements from the list.
+          * If Item pools are enabled, this will deallocate the list members
+          * without calling any destructors. Otherwise it is the same as calling
+          * Clear.
+          */
+        void ClearFast()
+        {
+#           if CONFIG_USE_ITEM_POOL
+                Item::DeallocateRange_NoDestruct(first, last);
+                count = 0;
+                first = last = nullptr;
+#           else
+                Clear();
+#           endif
         }
 
         /** Returns true if the list is empty
@@ -63,13 +68,14 @@ namespace hfh3
             return !count;
         }
 
-        /** Returns true if the item is contained in the current list
-          * Since the items contain a pointer to their parent,
-          * this is a constant time operation
+        /** Returns true if the item is contained in the current list.
+          * This is a O(n) operation, since it needs to scan through
+          * the entire list, comparing each element to the item.
+          * (or until found)
           */
-        bool Contains(const T* item) const
+        bool Contains(const T& item) const
         {
-            return item->parent == this;
+            return Contains([&item](const T& other){ return item == other; });
         }
 
         /** Searches through the list for items matchin a predicate.
@@ -86,37 +92,119 @@ namespace hfh3
         /** Appends an item to the end of the list.
           * If the item is already a member of a list, it will be removed first.
           */
-        void Append(T* item)
+        template<typename... Args>
+        Iterator Append(Args&&... args)
         {
-            InsertAfter(last, item);
+            return InsertAfter(last, args...);
         }
 
         /** Prepends an item to the start of the list.
           * If the item is already a member of a list, it will be removed first.
           */
-        void Prepend(T* item)
+        template<typename... Args>
+        Iterator Prepend(Args&&... args)
         {
-            InsertBefore(first, item);
+            return InsertBefore(first, args...);
         }
 
+
+        /** Find an element in the list, invoking predicate on each element
+          * until found. Returns this->end() if the item was not found
+          */
+        template<typename F>
+        Iterator FindFirst(F predicate)
+        {
+            Iterator result = begin();
+            for(; result != end(); ++result)
+            {
+                if(predicate(result))
+                {
+                    break;
+                }
+            }
+            return result;
+        }
+
+        /** Find an element in the list, invoking predicate on each element
+          * starting from the last element until found.
+          * Returns this->rend() if the item was not found.
+          */
+        template<typename F>
+        Iterator FindLast(F predicate)
+        {
+            Iterator result = rbegin();
+            for(; result != rend(); ++result)
+            {
+                if(predicate(result))
+                {
+                    break;
+                }
+            }
+            return result;
+        }
+
+        /** Creates an iterator for iterating through the list from
+          * the beginning to the end.
+          */
+        Iterator begin()
+        {
+            return Iterator(first);
+        }
+
+        /** Returns an empty iterator indicating a position one past
+          * the end of the list.
+          */
+        Iterator end()
+        {
+            return Iterator(nullptr);
+        }
+
+        /** Creates an iterator for iterating through the list from
+          * the end to the beginning.
+          */
+        Iterator rbegin()
+        {
+            return Iterator(last, true);
+        }
+
+        /** Returns an empty iterator indicating a position one past
+          * the beginning of the list.
+          */
+        Iterator rend()
+        {
+            return Iterator(nullptr, true);
+        }
+
+        DLinkList()
+            : first(nullptr)
+            , last(nullptr)
+            , count(0)
+        {}
+
+        ~DLinkList()
+        {
+            Clear();
+        }
+
+    private:
         /** Removes an item from the list.
           * The item must already be a part of the list.
+          * Returns the value stored at the location.
           */
-        void Remove(T* item)
+        void Remove(Item* item)
         {
-            assert(item);
-
             // The item passed in must be already a part of this list
             assert(item->parent == this);
 
             // Get the internal pointers from the item object
-            T* next = item->next;
-            T* previous = item->previous;
+            Item* next = item->next;
+            Item* previous = item->previous;
 
             // Fix up the pointers in the surrounding objects
             if(next)
             {
                 assert(next->previous == item);
+                assert(next->parent == this);
                 next->previous = previous;
             }
             else
@@ -130,6 +218,7 @@ namespace hfh3
             if(previous)
             {
                 assert(previous->next == item);
+                assert(previous->parent == this);
                 previous->next = next;
             }
             else
@@ -137,28 +226,23 @@ namespace hfh3
                 // if previous is null, it means that this is the first object in the chain
                 // and we need to fix up our first pointer
                 assert(first == item);
-                first = item;
+                first = next;
             }
 
+            // Deallocate the item
+            delete item;
             // Update the item count
             count--;
-
-            // Clear the internal pointers in the object
-            item->parent = nullptr;
-            item->previous = item->next = nullptr;
         }
 
         /** Inserts item after the item at position.
           * The position item must already be a member of the list. If position is
           * null, the list must be empty.
-          * If the item is already a member of a list, it will be removed first.
-          * This can be used to move items within a list.
           */
-        void InsertAfter(T* position, T* item)
+        template<typename... Args>
+        Iterator InsertAfter(Item* position, Args&&... args)
         {
-            assert(position != item);
-
-            PreInsert(item);
+            Item* item = new Item(this, args...);
 
             if(position == nullptr)
             {
@@ -167,7 +251,7 @@ namespace hfh3
             else
             {
                 // Patch in the item between position and its next object
-                T* oldNext = position->next;
+                Item* oldNext = position->next;
                 position->next = item;
                 item->previous = position;
                 item->next = oldNext;
@@ -183,11 +267,10 @@ namespace hfh3
                     assert(last == position);
                     last = item;
                 }
-
-                item->parent = static_cast<LT*>(this);
             }
 
             PostInsert(item);
+            return Iterator(item);
         }
 
         /** Inserts item before the item at position.
@@ -196,11 +279,10 @@ namespace hfh3
           * If the item is already a member of a list, it will be removed first.
           * This can be used to move items within a list.
           */
-        void InsertBefore(T* position, T* item)
+        template<typename... Args>
+        Iterator InsertBefore(Item* position, Args&&... args)
         {
-            assert(position != item);
-
-            PreInsert(item);
+            Item* item = new Item(this, args...);
 
             if(position == nullptr)
             {
@@ -209,13 +291,12 @@ namespace hfh3
             else
             {
                 // Patch in the item between position and its previous object
-                T* oldPrevious = position->previous;
+                Item* oldPrevious = position->previous;
                 position->previous = item;
                 item->next = position;
                 item->previous = oldPrevious;
                 if(oldPrevious)
                 {
-                    DEBUG("oldPrevious: %p, oldPrevious->next: %p pos: %p, item: %p", oldPrevious, oldPrevious->next, position, item);
                     assert(oldPrevious->next == position);
                     oldPrevious->next = item;
                 }
@@ -229,119 +310,27 @@ namespace hfh3
             }
 
             PostInsert(item);
+            return Iterator(item);
         }
-
-        /** Find an element in the list, invoking predicate on each element
-          * until found. Returns this->end() if the item was not found
-          */
-        template<typename F>
-        DLinkIterator<T> FindFirst(F predicate)
-        {
-            DLinkIterator<T> result = begin();
-            for(; result != end(); ++result)
-            {
-                if(predicate(&*result))
-                {
-                    break;
-                }
-            }
-            return result;
-        }
-
-        /** Find an element in the list, invoking predicate on each element
-          * starting from the last element until found.
-          * Returns this->rend() if the item was not found.
-          */
-        template<typename F>
-        DLinkIterator<T> FindLast(F predicate)
-        {
-            DLinkIterator<T> result = rbegin();
-            for(; result != rend(); ++result)
-            {
-                if(predicate(&*result))
-                {
-                    break;
-                }
-            }
-            return result;
-        }
-
-        /** Creates an iterator for iterating through the list from
-          * the beginning to the end.
-          */
-        DLinkIterator<T> begin()
-        {
-            return DLinkIterator<T>(first);
-        }
-
-        /** Returns an empty iterator indicating a position one past
-          * the end of the list.
-          */
-        DLinkIterator<T> end()
-        {
-            return DLinkIterator<T>(nullptr);
-        }
-
-        /** Creates an iterator for iterating through the list from
-          * the end to the beginning.
-          */
-        DLinkIterator<T> rbegin()
-        {
-            return DLinkIterator<T>(last, true);
-        }
-
-        /** Returns an empty iterator indicating a position one past
-          * the beginning of the list.
-          */
-        DLinkIterator<T> rend()
-        {
-            return DLinkIterator<T>(nullptr, true);
-        }
-
-    protected:
-
-        DLinkList()
-            : first(nullptr)
-            , last(nullptr)
-            , count(0)
-        {}
-
-        ~DLinkList()
-        {
-            Clear();
-        }
-
-    private:
 
         // If the list is empty, this will make item the only element
-        void InsertFirstItem(T* item)
+        void InsertFirstItem(Item* item)
         {
             assert(IsEmpty());
-
             first = last = item;
-            item->parent = static_cast<LT*>(this);
-        }
-
-        // Remove the item from a parent list if it's already in one
-        void PreInsert(T* item)
-        {
-            assert(item);
-            if(item->parent)
-            {
-                item->parent->Remove(item);
-            }
         }
 
         // Ensure the item is marked as belonging to the current list
         // and update the count of elements
-        void PostInsert(T* item)
+        void PostInsert(Item* item)
         {
-            item->parent = static_cast<LT*>(this);
-            ++count;
+            count++;
         }
 
-        T* first;
-        T* last;
+        Item* first;
+        Item* last;
         unsigned count;
+
+        friend Iterator;
     };
 }

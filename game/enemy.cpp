@@ -1,6 +1,7 @@
 #include "game/enemy.h"
 #include "game/imagesets.h"
 #include "game/stage.h"
+#include "game/world.h"
 #include "render/image.h"
 #include "render/imagesheet.h"
 #include "util/random.h"
@@ -12,8 +13,8 @@ static const ImageSet enemyImages[7] = {
     ImageSet::Arch0, ImageSet::Arch1, ImageSet::Arch2
 };
 
-Enemy::Enemy(Stage& inStage, ImageSheet& imageSheet, Random& inRandom) :
-    Mover(inStage,
+Enemy::Enemy(World& inWorld, ImageSheet& imageSheet, Random& inRandom) :
+    Mover(inWorld,
           imageSheet[(int)enemyImages[inRandom.Get() % 7]],
           imageSheet.GetGroupSize(),
           static_cast<Direction>(inRandom.Get() % 8)),
@@ -40,5 +41,5 @@ void Enemy::Update()
 
 void Enemy::OnCollision(class Actor* other)
 {
-    delete this;
+    world.RequestDelete(this);
 }

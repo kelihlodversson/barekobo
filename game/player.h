@@ -6,7 +6,7 @@ namespace hfh3
     class Player : public Mover
     {
     public:
-        Player(class Stage& inStage, class ImageSheet& imageSheet, class Input& inInput);
+        Player(class World& world, class ImageSheet& imageSheet, class Input& inInput);
 
         virtual void Update() override;
 

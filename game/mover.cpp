@@ -3,9 +3,9 @@
 
 using namespace hfh3;
 
-Mover::Mover(class Stage& inStage, class Image* inImages, unsigned inImageCount,
+Mover::Mover(class World& inWorld, class Image* inImages, unsigned inImageCount,
              Direction inDirection, int inSpeed) :
-    Sprite(inStage,
+    Sprite(inWorld,
            inImages,
            inImageCount),
     direction(inDirection),

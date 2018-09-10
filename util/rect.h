@@ -41,7 +41,7 @@ namespace hfh3
         /** Returns true if the rectangle has a valid size.
           * For signed types, assumes negative sizes are invalid.
           */
-        bool IsValid()
+        bool IsValid() const
         {
             return size.x > 0 && size.y > 0;
         }
@@ -106,6 +106,14 @@ namespace hfh3
                    vector.x < Right() && vector.y < Bottom();
         }
 
+        /** returns true if two rectangles intersect each other
+          */
+        bool Overlaps(const Rect<T>& other) const
+        {
+            return other.Left() < Right() && Left() < other.Right()  &&
+                   other.Top() < Bottom() && Top() < other.Bottom();
+        }
+
         /** Returns the intersection between two rectangles.
           * Overides the (bitwise) AND operator as logical AND is also called Intersection.
           */
@@ -120,6 +128,15 @@ namespace hfh3
         Rect<T>& operator&=(const Rect<T>& other)
         {
             return (*this = (*this & other));
+        }
+
+        /** Returns a new rect extended by N on each edge, moving the origin by
+          * N units up and left and the bottom edge by the same amount in the
+          * opposite direction.
+          */
+        Rect<T> Inflate(T n) const
+        {
+            return Rect<T>(origin - Vector<T>(n, n), size + Vector<T>(n+n, n+n));
         }
 
         Vector<T> origin;

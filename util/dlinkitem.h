@@ -1,68 +1,103 @@
 #pragma once
-#include "util/dlinklist.h"
+#include <circle/types.h>
+
+// Set CONFIG_USE_ITEM_POOL to 0 use the standard memory allocator for link list
+// items. When set to 1, freed items will be added to a pool of items to be reused
+// instead of deallocating the memory.
+#ifndef CONFIG_USE_ITEM_POOL
+#define CONFIG_USE_ITEM_POOL 1
+#endif
 
 namespace hfh3
 {
-    /** Utility base class to implement item classes
-      * that can be contained in a linked list.
-      * The template parameters specify the elemtent type
-      * and the container class. The second parameter you must use a class
-      * that is derived from DLinkList<T, LT>.
-      */
-    template<typename T, typename LT>
-    class DLinkItem
+    template <typename T, typename P>
+    struct DLinkItem
     {
-
-    public:
-
-        void InsertAfter(T* other)
-        {
-            assert(parent);
-            parent->InsertAfter(DerivedThis(), other);
-        }
-
-        void InsertBefore(T* other)
-        {
-            assert(parent);
-            parent->InsertBefore(DerivedThis(), other);
-        }
-
-    protected:
-        /* Even though this class is non-virtual, it is meant as a mix-in
-         * class to be derived by other classes. Therefore the constructor
-         * is defined as protected.
-         */
-        DLinkItem()
-            : parent(nullptr)
+        template <typename... Args>
+        DLinkItem(P* inParent, Args&&... args)
+            : parent(inParent)
             , previous(nullptr)
             , next(nullptr)
+            , payload(args...)
         {}
 
-        /* Deleting DLinkItem derived objects will automatically remove them
-         * from their lists. Note: since this destructor is non-virtual,
-         * one should never delete derived virtual instances through pointers
-         * of this class. Therefore the destructor is declared as protected.
-         */
-        ~DLinkItem()
-        {
-            if(parent != nullptr)
-            {
-                parent->Remove(DerivedThis());
-            }
-        }
+        P*              parent;
+        DLinkItem<T,P>* previous;
+        DLinkItem<T,P>* next;
+        T               payload;
 
-        LT* parent;
-        T*  previous;
-        T*  next;
+#if CONFIG_USE_ITEM_POOL
+        static void* operator new (size_t size);
+        static void operator delete (void* memory, size_t size);
+
+        // An optimization for deallocating a whole range of items.
+        // Note: it will not iterate through the items and call any destructors
+        static void DeallocateRange_NoDestruct(DLinkItem<T,P>* first, DLinkItem<T,P>* last);
     private:
+        /* reuse previously allocated items to save on allocations */
+        static DLinkItem<T,P>* itemPool;
+#endif
+    };
 
-        T* DerivedThis()
+#if CONFIG_USE_ITEM_POOL
+    template <typename T, typename P>
+    DLinkItem<T,P>* DLinkItem<T,P>::itemPool = nullptr;
+
+    template <typename T, typename P>
+    void* DLinkItem<T,P>::operator new (size_t size)
+    {
+        if(itemPool && size == sizeof(DLinkItem<T,P>))
         {
-            return static_cast<T*>(this);
+            DLinkItem<T,P>* result = itemPool;
+            // Reuse the next pointer to link together unallocated items in the pool
+            itemPool = result->next;
+            return result;
+        }
+        else
+        {
+            // Use the default new operator for unsupported sizes or when the item pool is empty
+            return ::operator new(size);
+        }
+    }
+
+    template <typename T, typename P>
+    void DLinkItem<T,P>::operator delete (void* memory, size_t size)
+    {
+        if(memory == nullptr)
+        {
+            return;
         }
 
-        // Grant the list and iterator classes access to double linked list elements.
-        friend class DLinkList<T, LT>;
-        friend class DLinkIterator<T>;
-    };
+        if(size == sizeof(DLinkItem<T,P>))
+        {
+            // instead of deallocating the item, push it back to the item pool
+            DLinkItem<T,P>* item = reinterpret_cast<DLinkItem<T,P>*>(memory);
+            item->next = itemPool;
+            itemPool = item;
+        }
+        else
+        {
+            // If the size doesn't match our object size, forward the object to the default deallocator
+            // This can happen if the Item class has been extended without overriding the custom allocators.
+            ::operator delete(memory);
+        }
+    }
+
+    template <typename T, typename P>
+    void DLinkItem<T,P>::DeallocateRange_NoDestruct(DLinkItem<T,P>* first, DLinkItem<T,P>* last)
+    {
+        if (first != nullptr)
+        {
+            assert(last != nullptr);
+            last->next = itemPool;
+            itemPool = first;
+        }
+        else
+        {
+            assert(last == nullptr);
+        }
+    }
+
+#endif
+
 }

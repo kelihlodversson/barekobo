@@ -13,7 +13,7 @@ namespace hfh3
     class Starfield : public Actor
     {
     public:
-        Starfield(class Stage& inStage, int inDensity=2500, u64 inSeed=999);
+        Starfield(class World& inWorld, int inDensity=2500, u64 inSeed=999);
 
         virtual void Draw() override;
         virtual void Update() override;

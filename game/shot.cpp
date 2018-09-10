@@ -1,5 +1,6 @@
 #include "game/shot.h"
 #include "game/imagesets.h"
+#include "game/world.h"
 #include "game/stage.h"
 #include "render/image.h"
 #include "render/imagesheet.h"
@@ -7,10 +8,11 @@
 
 using namespace hfh3;
 
-Shot::Shot(Stage& inStage, ImageSheet& imageSheet, ImageSet imageSet, const Vector<int>& inPosition, Direction direction, int speed) :
-    Mover(inStage, imageSheet[(int)imageSet], imageSheet.GetGroupSize(), direction, speed),
-    rotator(imageSet == ImageSet::MiniShot),
-    ttl(inStage.GetScreen().GetWidth() / speed)
+Shot::Shot(class World& inWorld, ImageSheet& imageSheet, ImageSet imageSet,
+           const Vector<int>& inPosition, Direction direction, int speed)
+    : Mover(inWorld, imageSheet[(int)imageSet], imageSheet.GetGroupSize(), direction, speed)
+    , rotator(imageSet == ImageSet::MiniShot)
+    , ttl(inWorld.GetStage().GetScreen().GetWidth() / speed)
 {
     position = inPosition;
 }
@@ -20,7 +22,7 @@ void Shot::Update()
     if(--ttl)
     {
         UpdatePosition();
-        GetWorld()->CollisionCheck(this);
+        world.CollisionCheck(this);
 
         // rotating shots switch image each frame instead of following direction
         if (rotator)
@@ -30,7 +32,7 @@ void Shot::Update()
     }
     else
     {
-        delete this;
+        world.RequestDelete(this);
     }
 }
 
@@ -45,5 +47,5 @@ void Shot::Draw()
 
 void Shot::OnCollision(class Actor* other)
 {
-    delete this;
+    world.RequestDelete(this);
 }

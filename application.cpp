@@ -1,18 +1,10 @@
 #include <circle/string.h>
 
 #include "application.h"
-#include "render/imagesheet.h"
-#include "render/image.h"
-#include "render/font.h"
-#include "graphics/sprite_data.h"
-#include "util/random.h"
 #include "util/log.h"
-#include "game/stage.h"
-#include "game/actor.h"
-#include "game/player.h"
-#include "game/enemy.h"
-#include "game/shot.h"
-#include "game/starfield.h"
+
+#include "render/font.h"
+
 #include "game/world.h"
 
 #include "network/network.h"
@@ -62,52 +54,17 @@ int Application::Run()
 {
     INFO("Started MultiKobo. Compile time: " __DATE__ " " __TIME__);
     //TimerTest(-1, this, nullptr);
-
-    Stage stage(4096, 4096, screenManager);
-    ImageSheet image(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8);
-    Random random;
-    Random starfieldRandom;
+        DEBUG("Screenmanager: %p", &screenManager);
 
     const int enemyCount = 3000;
 
-    World world;
+    World world(screenManager, input, network);
     for (int i = 0; i < enemyCount; i++)
     {
-        world.Append(new Enemy(stage, image, random));
+        world.SpawnEnemy();
     }
 
-    world.Append(new Player(stage, image, input));
-    world.Prepend(new Starfield(stage));
-
-    Rect<int> clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
-    CString message;
-
-    while(true)
-    {
-        u32 ip = network.GetIPAddress();
-        message.Format("IP: %u.%u.%u.%u. FPS: %u. Missed: %d. Render:%3u%% Copy:%3u%%",
-            (ip & 0xff),
-            (ip & 0xff00)>>8,
-            (ip & 0xff0000)>>16,
-            (ip & 0xff000000)>>24,
-            screenManager.GetFPS(),
-            screenManager.GetMissedFrames(),
-            screenManager.GetGameTimePCT(),
-            screenManager.GetFlipTimePCT()
-        );
-
-        world.Update();
-
-        screenManager.Clear(10);
-        screenManager.DrawString({1,1}, message, 0, Font::GetDefault());
-        screenManager.SetClip(clippedArea);
-        screenManager.Clear(0);
-
-        world.Draw();
-
-        screenManager.ClearClip();
-        screenManager.Present();
-    }
-
+    world.SpawnPlayer();
+    world.GameLoop();
     return EXIT_HALT;
 }

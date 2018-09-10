@@ -4,8 +4,8 @@
 
 using namespace hfh3;
 
-Sprite::Sprite(Stage& inStage, class Image* inImages, unsigned inImageCount) :
-    Actor(inStage),
+Sprite::Sprite(class World& inWorld, class Image* inImages, unsigned inImageCount) :
+    Actor(inWorld),
     images(inImages),
     imageCount(inImageCount),
     current(0)

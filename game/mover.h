@@ -12,7 +12,7 @@ namespace hfh3
     {
     public:
 
-        Mover(class Stage& inStage, class Image* inImages, unsigned inImageCount,
+        Mover(class World& inWorld, class Image* inImages, unsigned inImageCount,
               Direction inDir = Direction::Stopped, int inSpeed = 1);
 
         /** The default update will simply call UpdatePosition

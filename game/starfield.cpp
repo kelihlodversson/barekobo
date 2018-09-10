@@ -1,13 +1,14 @@
 #include "game/starfield.h"
 #include "game/stage.h"
+#include "game/world.h"
 #include "util/vector.h"
 #include "util/random.h"
 
 using namespace hfh3;
 
-Starfield::Starfield(class Stage& inStage, int inDensity, u64 inSeed) :
-    Actor(inStage),
-    parallaxStage(inStage.GetWidth()/2, inStage.GetHeight()/2, inStage.GetScreen()),
+Starfield::Starfield(class World& inWorld, int inDensity, u64 inSeed) :
+    Actor(inWorld),
+    parallaxStage(inWorld.GetStage().GetWidth()/2, inWorld.GetStage().GetHeight()/2, inWorld.GetStage().GetScreen()),
     density(inDensity),
     seed(inSeed)
 {

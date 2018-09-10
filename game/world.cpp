@@ -114,7 +114,7 @@ Actor* World::CollisionCheck(Actor* collider)
 {
     const Rect<int> bounds = collider->GetBounds();
 
-    DLinkList<Actor*>::Iterator found;
+    List<Actor*>::ReverseIterator found;
     for(Partition& partition : partitions)
     {
         if( partition.GetExtendedBounds().Overlaps(bounds) )

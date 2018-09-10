@@ -4,25 +4,25 @@
 // iterators. When set to 1, freed items will be added to a pool of items to be reused
 // instead of deallocating the memory.
 #ifndef CONFIG_USE_ITER_POOL
-#define CONFIG_USE_ITER_POOL 0
+#define CONFIG_USE_ITER_POOL 1
 #endif
 
 namespace hfh3
 {
-    /** Utility class to iterate through doubly linked lists
+    /** Utility class to iterate through doubly linked lists.
+      * Should be referenced through the typedef in List<T>, such
+      * as List<T>::Iterator or List<T>::ReverseIterator
       */
-    template<typename T, typename Item, typename List>
-    class DLinkIterator
+    template<typename T, typename Item, bool reverse>
+    class _ListIterator
     {
     public:
-        DLinkIterator(Item* inCurrent=nullptr, bool inReverse=false)
+        _ListIterator(Item* inCurrent=nullptr)
             : current(inCurrent)
-            , reverse(inReverse)
         {}
 
-        DLinkIterator(const DLinkIterator& other)
+        _ListIterator(const _ListIterator& other)
             : current(other.current)
-            , reverse(other.reverse)
         {}
 
         void Remove()
@@ -33,39 +33,39 @@ namespace hfh3
         }
 
         template<typename... Args>
-        DLinkIterator<T,Item,List> InsertAfter(Args&&... args)
+        _ListIterator<T,Item,reverse> InsertAfter(Args&&... args)
         {
             assert(current != nullptr);
             return current->parent->InsertAfter(current, args...);
         }
 
         template<typename... Args>
-        DLinkIterator<T,Item,List> InsertBefore(Args&&... args)
+        _ListIterator<T,Item,reverse> InsertBefore(Args&&... args)
         {
             assert(current != nullptr);
             return current->parent->InsertBefore(current, args...);
         }
 
-        DLinkIterator<T,Item,List>& operator++()
+        _ListIterator<T,Item,reverse>& operator++()
         {
             Forward();
             return *this;
         }
 
-        DLinkIterator<T,Item,List> operator++(int)
+        _ListIterator<T,Item,reverse> operator++(int)
         {
             auto tmp = *this;
             Forward();
             return tmp;
         }
 
-        DLinkIterator<T,Item,List>& operator--()
+        _ListIterator<T,Item,reverse>& operator--()
         {
             Backward();
             return *this;
         }
 
-        DLinkIterator<T,Item,List> operator--(int)
+        _ListIterator<T,Item,reverse> operator--(int)
         {
             auto tmp = *this;
             Backward();
@@ -77,12 +77,12 @@ namespace hfh3
             return current != nullptr;
         }
 
-        bool operator==(const DLinkIterator<T,Item,List>& other) const
+        bool operator==(const _ListIterator<T,Item,reverse>& other) const
         {
             return current == other.current;
         }
 
-        bool operator!=(const DLinkIterator<T,Item,List>& other) const
+        bool operator!=(const _ListIterator<T,Item,reverse>& other) const
         {
             return current != other.current;
         }
@@ -146,26 +146,24 @@ namespace hfh3
         }
 
         Item* current;
-        bool reverse;
-        friend List;
 #if CONFIG_USE_ITER_POOL
         /* reuse previously allocated iterators to save on allocations */
-        static DLinkIterator<T,Item,List>* iterPool;
+        static _ListIterator<T,Item,reverse>* iterPool;
 #endif
     };
 
 #if CONFIG_USE_ITER_POOL
-    template<typename T, typename Item, typename List>
-    DLinkIterator<T,Item,List>* DLinkIterator<T,Item,List>::iterPool = nullptr;
+    template<typename T, typename Item, bool reverse>
+    _ListIterator<T,Item,reverse>* _ListIterator<T,Item,reverse>::iterPool = nullptr;
 
-    template<typename T, typename Item, typename List>
-    void* DLinkIterator<T,Item,List>::operator new (size_t size)
+    template<typename T, typename Item, bool reverse>
+    void* _ListIterator<T,Item,reverse>::operator new (size_t size)
     {
-        if(iterPool && size == sizeof(DLinkIterator<T,Item,List>))
+        if(iterPool && size == sizeof(_ListIterator<T,Item,reverse>))
         {
-            DLinkIterator<T,Item,List>* result = iterPool;
+            _ListIterator<T,Item,reverse>* result = iterPool;
             // Reuse the current pointer to link together unallocated items in the pool
-            iterPool = reinterpret_cast<DLinkIterator<T,Item,List>*>(result->current);
+            iterPool = reinterpret_cast<_ListIterator<T,Item,reverse>*>(result->current);
             return result;
         }
         else
@@ -175,18 +173,18 @@ namespace hfh3
         }
     }
 
-    template<typename T, typename Item, typename List>
-    void DLinkIterator<T,Item,List>::operator delete (void* memory, size_t size)
+    template<typename T, typename Item, bool reverse>
+    void _ListIterator<T,Item,reverse>::operator delete (void* memory, size_t size)
     {
         if(memory == nullptr)
         {
             return;
         }
 
-        if(size == sizeof(DLinkIterator<T,Item,List>))
+        if(size == sizeof(_ListIterator<T,Item,reverse>))
         {
             // instead of deallocating the item, push it back to the item pool
-            DLinkIterator<T,Item,List>* iter = reinterpret_cast<DLinkIterator<T,Item,List>*>(memory);
+            _ListIterator<T,Item,reverse>* iter = reinterpret_cast<_ListIterator<T,Item,reverse>*>(memory);
             iter->current = reinterpret_cast<Item*>(iterPool);
             iterPool = iter;
         }

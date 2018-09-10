@@ -1,6 +1,6 @@
 #pragma once
-#include "util/dlinkitem.h"
-#include "util/dlinkiterator.h"
+#include "util/listitem.h"
+#include "util/listiterator.h"
 #include "util/log.h"
 #include <assert.h>
 
@@ -9,11 +9,12 @@ namespace hfh3
     /** Templated container class that implements a simple double link list.
       */
     template<typename T>
-    class DLinkList
+    class List
     {
     public:
-        typedef DLinkItem<T, DLinkList<T>> Item;
-        typedef DLinkIterator<T, Item, DLinkList<T>> Iterator;
+        typedef _ListItem<T, List<T>> Item;
+        typedef _ListIterator<T, Item, false> Iterator;
+        typedef _ListIterator<T, Item, true> ReverseIterator;
 
         /** The number of items in the list.
           * Since the count is stored and updated on insertion and removal,
@@ -130,9 +131,9 @@ namespace hfh3
           * Returns this->rend() if the item was not found.
           */
         template<typename F>
-        Iterator FindLast(F predicate)
+        ReverseIterator FindLast(F predicate)
         {
-            Iterator result = rbegin();
+            ReverseIterator result = rbegin();
             for(; result != rend(); ++result)
             {
                 if(predicate(result))
@@ -162,26 +163,26 @@ namespace hfh3
         /** Creates an iterator for iterating through the list from
           * the end to the beginning.
           */
-        Iterator rbegin()
+        ReverseIterator rbegin()
         {
-            return Iterator(last, true);
+            return ReverseIterator(last);
         }
 
         /** Returns an empty iterator indicating a position one past
           * the beginning of the list.
           */
-        Iterator rend()
+        ReverseIterator rend()
         {
-            return Iterator(nullptr, true);
+            return ReverseIterator(nullptr);
         }
 
-        DLinkList()
+        List()
             : first(nullptr)
             , last(nullptr)
             , count(0)
         {}
 
-        ~DLinkList()
+        ~List()
         {
             Clear();
         }

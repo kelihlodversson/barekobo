@@ -10,11 +10,14 @@
 
 namespace hfh3
 {
+    /** Internal utility class used by List<T>. Contains the payload
+      * and the internal links between items.
+      */
     template <typename T, typename P>
-    struct DLinkItem
+    struct _ListItem
     {
         template <typename... Args>
-        DLinkItem(P* inParent, Args&&... args)
+        _ListItem(P* inParent, Args&&... args)
             : parent(inParent)
             , previous(nullptr)
             , next(nullptr)
@@ -22,8 +25,8 @@ namespace hfh3
         {}
 
         P*              parent;
-        DLinkItem<T,P>* previous;
-        DLinkItem<T,P>* next;
+        _ListItem<T,P>* previous;
+        _ListItem<T,P>* next;
         T               payload;
 
 #if CONFIG_USE_ITEM_POOL
@@ -32,23 +35,23 @@ namespace hfh3
 
         // An optimization for deallocating a whole range of items.
         // Note: it will not iterate through the items and call any destructors
-        static void DeallocateRange_NoDestruct(DLinkItem<T,P>* first, DLinkItem<T,P>* last);
+        static void DeallocateRange_NoDestruct(_ListItem<T,P>* first, _ListItem<T,P>* last);
     private:
         /* reuse previously allocated items to save on allocations */
-        static DLinkItem<T,P>* itemPool;
+        static _ListItem<T,P>* itemPool;
 #endif
     };
 
 #if CONFIG_USE_ITEM_POOL
     template <typename T, typename P>
-    DLinkItem<T,P>* DLinkItem<T,P>::itemPool = nullptr;
+    _ListItem<T,P>* _ListItem<T,P>::itemPool = nullptr;
 
     template <typename T, typename P>
-    void* DLinkItem<T,P>::operator new (size_t size)
+    void* _ListItem<T,P>::operator new (size_t size)
     {
-        if(itemPool && size == sizeof(DLinkItem<T,P>))
+        if(itemPool && size == sizeof(_ListItem<T,P>))
         {
-            DLinkItem<T,P>* result = itemPool;
+            _ListItem<T,P>* result = itemPool;
             // Reuse the next pointer to link together unallocated items in the pool
             itemPool = result->next;
             return result;
@@ -61,17 +64,17 @@ namespace hfh3
     }
 
     template <typename T, typename P>
-    void DLinkItem<T,P>::operator delete (void* memory, size_t size)
+    void _ListItem<T,P>::operator delete (void* memory, size_t size)
     {
         if(memory == nullptr)
         {
             return;
         }
 
-        if(size == sizeof(DLinkItem<T,P>))
+        if(size == sizeof(_ListItem<T,P>))
         {
             // instead of deallocating the item, push it back to the item pool
-            DLinkItem<T,P>* item = reinterpret_cast<DLinkItem<T,P>*>(memory);
+            _ListItem<T,P>* item = reinterpret_cast<_ListItem<T,P>*>(memory);
             item->next = itemPool;
             itemPool = item;
         }
@@ -84,7 +87,7 @@ namespace hfh3
     }
 
     template <typename T, typename P>
-    void DLinkItem<T,P>::DeallocateRange_NoDestruct(DLinkItem<T,P>* first, DLinkItem<T,P>* last)
+    void _ListItem<T,P>::DeallocateRange_NoDestruct(_ListItem<T,P>* first, _ListItem<T,P>* last)
     {
         if (first != nullptr)
         {

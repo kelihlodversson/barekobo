@@ -1,7 +1,7 @@
 #pragma once
 #include "util/rect.h"
 #include "util/vector.h"
-#include "util/dlinklist.h"
+#include "util/list.h"
 
 namespace hfh3
 {
@@ -12,7 +12,7 @@ namespace hfh3
       * that overlap the area of interest.
       */
     class Partition
-        : public DLinkList<class Actor*>
+        : public List<class Actor*>
     {
     public:
 

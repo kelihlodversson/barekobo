@@ -27,8 +27,6 @@ namespace hfh3
         void SpawnEnemy();
         void SpawnPlayer();
         void SpawnMissile(const Vector<int>& position, const class Direction& direction , int speed);
-        void RequestDelete(class Actor* actor) { pendingDelete.Append(actor); }
-
         Stage& GetStage() { return stage; }
 
     private:

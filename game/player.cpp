@@ -21,7 +21,7 @@ Player::Player(class World& inWorld, class ImageSheet& inImageSheet, class Input
     imageSheet(inImageSheet)
 {
     SetImageIndex(0);
-    position = {0,0};//(stage.GetSize() - GetImage().GetSize())/2;
+    SetPosition({0,0});//(stage.GetSize() - GetImage().GetSize())/2;
 }
 
 void Player::Update()
@@ -38,14 +38,14 @@ void Player::Update()
     UpdatePosition();
 
     // Move the view with the player
-    stage.SetCenterOffset(position+GetImage().GetSize()/2);
+    stage.SetCenterOffset(GetPosition()+GetImage().GetSize()/2);
 }
 
 void Player::Fire()
 {
     const int shotSpeed = 3;
     Direction shotDirection = static_cast<Direction>(GetImageIndex());
-    Vector<int> shotPosition = stage.WrapCoordinate(position + shotDirection.ToDelta(16));
+    Vector<int> shotPosition = stage.WrapCoordinate(GetPosition() + shotDirection.ToDelta(16));
 
     world.SpawnMissile(shotPosition, shotDirection, shotSpeed);
 }

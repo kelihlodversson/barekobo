@@ -21,7 +21,7 @@ Enemy::Enemy(World& inWorld, ImageSheet& imageSheet, Random& inRandom) :
     random(inRandom),
     relaxed(inRandom.Get() % 100 + 10)
 {
-    position = stage.WrapCoordinate(random.GetVector<int>());
+    SetPosition(random.GetVector<int>());
 }
 
 void Enemy::Update()
@@ -41,5 +41,5 @@ void Enemy::Update()
 
 void Enemy::OnCollision(class Actor* other)
 {
-    world.RequestDelete(this);
+    Destroy();
 }

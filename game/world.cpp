@@ -67,10 +67,18 @@ void World::Update()
             assert(actor);
             actor->Update();
 
-            // Check if item has moved out of the partition
-            if(! bounds.Contains(actor->position) )
+            if( actor->shouldDestruct)
             {
-                needsNewPartition.Prepend(actor);
+                pendingDelete.Append(actor);
+            }
+            // Check if item has moved out of the partition
+            else if(actor->positionDirty)
+            {
+                actor->positionDirty = false;
+                if(!bounds.Contains(actor->position) )
+                {
+                    needsNewPartition.Prepend(actor);
+                }
             }
         }
     }
@@ -152,6 +160,7 @@ void World::PerformPendingDeletes()
 {
     for(Actor* actor : pendingDelete)
     {
+        assert(actor->shouldDestruct);
         if(actor->partitionIterator)
         {
             assert(*actor->partitionIterator == actor);
@@ -194,6 +203,7 @@ void World::GameLoop()
 
     Rect<int> clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
     CString message;
+    CString pos;
 
     while(true)
     {
@@ -211,8 +221,10 @@ void World::GameLoop()
 
         Update();
 
+        pos.Format("Offset: (%d,%d)", stage.GetOffset().x, stage.GetOffset().y);
         screenManager.Clear(10);
         screenManager.DrawString({1,1}, message, 0, Font::GetDefault());
+        screenManager.DrawString({1,clippedArea.Bottom()}, pos, 0, Font::GetDefault());
         screenManager.SetClip(clippedArea);
         screenManager.Clear(0);
 

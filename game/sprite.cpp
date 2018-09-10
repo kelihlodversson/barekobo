@@ -13,10 +13,10 @@ Sprite::Sprite(class World& inWorld, class Image* inImages, unsigned inImageCoun
 
 void Sprite::Draw()
 {
-    stage.DrawImage(position, GetImage());
+    stage.DrawImage(GetPosition(), GetImage());
 }
 
 Rect<int> Sprite::GetBounds()
 {
-    return {position, GetImage().GetSize()};
+    return {GetPosition(), GetImage().GetSize()};
 }

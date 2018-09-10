@@ -82,6 +82,8 @@ namespace hfh3
         {
             Rect<int> shifted (stageRect.origin - screenOffset, stageRect.size);
             Rect<int> wrapped (WrapCoordinate(shifted.origin), stageRect.size);
+            shifted.origin.x %= GetWidth();
+            shifted.origin.y %= GetHeight();
 
             const int scrW = screen.GetWidth();
             const int scrH = screen.GetHeight();

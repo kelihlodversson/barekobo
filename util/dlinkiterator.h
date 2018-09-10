@@ -4,7 +4,7 @@
 // iterators. When set to 1, freed items will be added to a pool of items to be reused
 // instead of deallocating the memory.
 #ifndef CONFIG_USE_ITER_POOL
-#define CONFIG_USE_ITER_POOL 1
+#define CONFIG_USE_ITER_POOL 0
 #endif
 
 namespace hfh3

@@ -24,7 +24,7 @@ Mover::Mover(class World& inWorld, class Image* inImages, unsigned inImageCount,
 void Mover::UpdatePosition()
 {
     Vector<int> delta = direction.ToDelta(speed);
-    position = stage.WrapCoordinate(position + delta);
+    SetPosition(GetPosition() + delta);
 }
 
 void Mover::Update()

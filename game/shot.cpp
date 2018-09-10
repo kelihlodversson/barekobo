@@ -14,7 +14,7 @@ Shot::Shot(class World& inWorld, ImageSheet& imageSheet, ImageSet imageSet,
     , rotator(imageSet == ImageSet::MiniShot)
     , ttl(inWorld.GetStage().GetScreen().GetWidth() / speed)
 {
-    position = inPosition;
+    SetPosition(inPosition);
 }
 
 void Shot::Update()
@@ -32,7 +32,7 @@ void Shot::Update()
     }
     else
     {
-        world.RequestDelete(this);
+        Destroy();
     }
 }
 
@@ -47,5 +47,5 @@ void Shot::Draw()
 
 void Shot::OnCollision(class Actor* other)
 {
-    world.RequestDelete(this);
+    Destroy();
 }

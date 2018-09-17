@@ -15,11 +15,11 @@ namespace hfh3
     public:
         Starfield(class World& inWorld, int inDensity=2500, u64 inSeed=999);
 
-        virtual void Draw() override;
+        virtual void Draw(class View& view) override;
         virtual void Update() override;
         virtual Rect<int> GetBounds() override;
     private:
-        Stage parallaxStage;
+        Stage parallax[2];
         int density;
         u64 seed;
     };

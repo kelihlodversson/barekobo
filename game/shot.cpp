@@ -14,7 +14,7 @@ Shot::Shot(class World &inWorld, ImageSheet &imageSheet, ImageSet imageSet,
     : Mover(inWorld, imageSheet[(int)imageSet], imageSheet.GetGroupSize(),
             direction, speed,
             CollisionMask::None, imageSet == ImageSet::MiniShot?CollisionMask::Player:CollisionMask::Enemy),
-      rotator(imageSet == ImageSet::MiniShot), ttl(inWorld.GetStage().GetScreen().GetWidth() / speed)
+      rotator(imageSet == ImageSet::MiniShot), ttl(800 / speed)
 {
     SetPosition(inPosition);
 }
@@ -37,12 +37,12 @@ void Shot::Update()
     }
 }
 
-void Shot::Draw()
+void Shot::Draw(class View& view)
 {
     // Flash the shot the last 15 frames of its lifetime
     if ( ttl > 15 || ttl % 2)
     {
-        Mover::Draw();
+        Mover::Draw(view);
     }
 }
 

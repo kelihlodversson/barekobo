@@ -40,7 +40,7 @@ void Player::Update()
     UpdatePosition();
 
     // Move the view with the player
-    stage.SetCenterOffset(GetPosition()+GetImage().GetSize()/2);
+    //stage.SetCenterOffset(GetPosition()+GetImage().GetSize()/2);
 }
 
 void Player::Fire()

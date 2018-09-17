@@ -13,11 +13,13 @@
 #include "game/enemy.h"
 #include "game/player.h"
 #include "game/shot.h"
+#include "game/view.h"
 
 using namespace hfh3;
 
 World::World(ScreenManager& inScreen, class Input& inInput, Network& inNetwork)
-    : stage(4096, 4096, inScreen)
+    : stage(8192, 8192)
+    , screen(inScreen)
     , input(inInput)
     , network(inNetwork)
     , imageSheet(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8)
@@ -90,21 +92,29 @@ void World::Update()
 
 void World::Draw()
 {
+    if(!player)
+    {
+        return;
+    }
+
+    Rect<int> playerBounds = player->GetBounds();
+    View view = View(stage, screen);
+    view.SetCenterOffset(playerBounds.origin+playerBounds.size/2);
     // The background object is special and is not stored in a partition
     // it should always be rendered first.
-    background.Draw();
+    background.Draw(view);
 
     // Loop trhough all partitions and call render on actors in partitions that
     // extend into the visible area.
     int x_min,x_max,y_min,y_max;
-    GetPartitionRange(stage.GetVisibleRect(),x_min,x_max,y_min,y_max);
+    GetPartitionRange(view.GetVisibleRect(),x_min,x_max,y_min,y_max);
     for (int y = y_min; y < y_max; y++)
     {
         for (int x=x_min; x < x_max; x++)
         {
             for(Actor* actor : GetPartition(x,y))
             {
-                actor->Draw();
+                actor->Draw(view);
             }
 
         }
@@ -151,7 +161,8 @@ void World::SpawnEnemy()
 
 void World::SpawnPlayer()
 {
-    AddActor(new Player(*this, imageSheet, input));
+    player = new Player(*this, imageSheet, input);
+    AddActor(player);
 }
 
 void World::SpawnMissile(const Vector<int>& startPosition, const Direction& direction, int speed)
@@ -178,6 +189,11 @@ void World::PerformPendingDeletes()
             auto found = collisionSources.FindFirst([&actor](Actor* other){ return actor == other; });
             assert(found);
             found.Remove();
+        }
+
+        if(actor == player)
+        {
+            player = nullptr;
         }
 
         if(actor->partitionIterator)
@@ -228,9 +244,7 @@ void World::GetPartitionRange(const Rect<int>& rect, int& x1, int& x2, int& y1, 
 
 void World::GameLoop()
 {
-    ScreenManager& screenManager = stage.GetScreen();
-
-    Rect<int> clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
+    Rect<int> clippedArea(10, 10, screen.GetWidth()-20, screen.GetHeight()-20);
     CString message;
     CString pos;
     CString tmp;
@@ -243,37 +257,22 @@ void World::GameLoop()
             (ip & 0xff00)>>8,
             (ip & 0xff0000)>>16,
             (ip & 0xff000000)>>24,
-            screenManager.GetFPS(),
-            screenManager.GetMissedFrames(),
-            screenManager.GetGameTimePCT(),
-            screenManager.GetFlipTimePCT()
+            screen.GetFPS(),
+            screen.GetMissedFrames(),
+            screen.GetGameTimePCT(),
+            screen.GetFlipTimePCT()
         );
 
-        int x_min,x_max,y,y_max;
-        GetPartitionRange(stage.GetVisibleRect(),x_min,x_max,y,y_max);
-
-        pos.Format("Offset: (%d,%d) (%d..%d),(%d..%d)",
-            stage.GetOffset().x, stage.GetOffset().y,
-            x_min, x_max,
-            y, y_max);
-
-        for(;y < y_max;y++) {for(int x = x_min;x < x_max;x++)
-        {
-            tmp.Format(" %d", (y & partitionGridMask)*partitionGridCount + (x & partitionGridMask));
-            //tmp.Format(" %d,%d", (y & partitionGridMask), (x & partitionGridMask));
-            pos.Append(tmp);
-        }}
-        screenManager.Clear(10);
-        screenManager.DrawString({1,1}, message, 0, Font::GetDefault());
-        screenManager.DrawString({1,clippedArea.Bottom()}, pos, 0, Font::GetDefault());
-        screenManager.SetClip(clippedArea);
-        screenManager.Clear(0);
+        screen.Clear(10);
+        screen.DrawString({1,1}, message, 0, Font::GetDefault());
+        screen.SetClip(clippedArea);
+        screen.Clear(0);
 
         Update();
         Draw();
 
-        screenManager.ClearClip();
-        screenManager.Present();
+        screen.ClearClip();
+        screen.Present();
     }
 
 }

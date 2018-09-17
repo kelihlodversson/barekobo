@@ -3,6 +3,8 @@
 #include "render/imagesheet.h"
 #include "util/list.h"
 #include "util/random.h"
+#include "util/vector.h"
+#include "util/rect.h"
 
 #include "game/partition.h"
 #include "game/starfield.h"
@@ -25,7 +27,12 @@ namespace hfh3
         void SpawnEnemy();
         void SpawnPlayer();
         void SpawnMissile(const Vector<int>& position, const class Direction& direction , int speed);
-        Stage& GetStage() { return stage; }
+
+        
+        class Stage& GetStage() 
+        {
+            return stage;
+        }
 
     private:
 
@@ -35,12 +42,13 @@ namespace hfh3
 
         Random random;
         Stage stage;
+        ScreenManager& screen;
         class Input& input;
         class Network& network;
         ImageSheet imageSheet;
         Starfield background;
         static const int maxActorSize = 16;
-        static const int partitionGridCount = 4;
+        static const int partitionGridCount = 8;
         static const int partitionGridMask = partitionGridCount-1;
         static const int partitionCount = partitionGridCount*partitionGridCount;
         
@@ -68,5 +76,6 @@ namespace hfh3
         List<class Actor*> needsNewPartition;
         List<class Actor*> pendingDelete;
         List<class Actor*> collisionSources;
+        class Actor* player;
     };
 }

@@ -16,7 +16,7 @@ namespace hfh3
 
       /** After updating all actors, each will get a chance to render itself to screen
           */
-      virtual void Draw() override;
+      virtual void Draw(class View& view) override;
       virtual Rect<int> GetBounds() override;
 
     protected:

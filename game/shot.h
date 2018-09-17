@@ -13,7 +13,7 @@ namespace hfh3
              const Vector<int>& inPosition, Direction direction, int speed = 1);
 
         virtual void Update() override;
-        virtual void Draw() override;
+        virtual void Draw(class View& view) override;
         virtual void OnCollision(class Actor* other) override;
         virtual Rect<int> GetBounds() override;
 

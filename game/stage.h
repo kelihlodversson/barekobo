@@ -1,6 +1,6 @@
 #pragma once
-#include "render/screenmanager.h"
 #include "util/log.h"
+#include "util/vector.h"
 
 namespace hfh3
 {
@@ -15,41 +15,8 @@ namespace hfh3
         /** Creates a new stage of size width x height
           * The width and heights must be power of two.
           */
-        Stage(int width, int height, class ScreenManager& inScreen);
+        Stage(int width, int height);
 
-        /** Changes the virtual offset added to any coordinates passed in
-          * via DrawImage, DrawRect and DrawPixel
-          */
-        void SetOffset(const Vector<int>& offset)
-        {
-            screenOffset = offset;
-        }
-
-        /** Same as setOffset, but moves the center of the screen
-          * of the top left corner.
-          */
-        void SetCenterOffset(const Vector<int>& offset)
-        {
-            Vector<int> center = screen.GetSize()/2;
-            screenOffset = WrapCoordinate(offset - center);
-        }
-
-        Vector<int> GetOffset()
-        {
-            return screenOffset;
-        }
-
-        Rect<int> GetVisibleRect()
-        {
-            return {screenOffset, screen.GetSize()};
-        }
-
-        /** The following methods map a stage coordinate to a screen coordinate
-          * before passing the argumetns to the screen manager
-          */
-        void DrawImage(const Vector<int>& at, const class Image& image);
-        void DrawPixel(const Vector<int>& at, u8 color);
-        void DrawRect(const Rect<int>& rect, u8 color);
 
         /** Modifies the vector reference passed in so it is within
           * the play area.
@@ -59,41 +26,13 @@ namespace hfh3
             return {vector.x & maskX, vector.y & maskY};
         }
 
-        /** Translates a stage coordinate to a screen coordinate.
-          * (no pun intended.)
-          */
-        Vector<int> StageToScreen(const Vector<int>& stage) const
-        {
-            return WrapCoordinate(stage - screenOffset);
-        }
-
-        Rect<int> StageToScreen(const Rect<int>& stageRect) const
-        {
-            return {StageToScreen(stageRect.origin), stageRect.size};
-        }
-
-        class ScreenManager& GetScreen()
-        {
-            return screen;
-        }
-
-        int GetWidth() { return maskX+1; }
-        int GetHeight() { return maskY+1; }
-        Vector<int> GetSize() { return {GetWidth(), GetHeight()}; }
-
-        /** Returns true if the rect passed in is within the visible screen area
-          */
-        bool IsVisible(const Rect<int>& stageRect)
-        {
-            return GetVisibleRect().OverlapsMod(stageRect, GetSize());
-        }
+        int GetWidth() { return size.x; }
+        int GetHeight() { return size.y; }
+        const Vector<int>& GetSize() { return size; }
 
     private:
-        class ScreenManager& screen;
+        Vector<int> size;
         int maskX;
         int maskY;
-        Vector<int> screenOffset;
-
-
     };
 }

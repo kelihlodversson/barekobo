@@ -36,6 +36,9 @@ namespace hfh3
         // An optimization for deallocating a whole range of items.
         // Note: it will not iterate through the items and call any destructors
         static void DeallocateRange_NoDestruct(_ListItem<T,P>* first, _ListItem<T,P>* last);
+
+        // Allocates memory for count items and adds them to the item pool
+        static void PreallocItemPool(unsigned count);
     private:
         /* reuse previously allocated items to save on allocations */
         static _ListItem<T,P>* itemPool;
@@ -99,6 +102,30 @@ namespace hfh3
         {
             assert(last == nullptr);
         }
+    }
+
+    template <typename T, typename P>
+    void _ListItem<T,P>::PreallocItemPool(unsigned count)
+    {
+        if(count < 1)
+        {
+            return;
+        }
+
+        // Allocate memory for count items in one block
+        _ListItem<T,P>* newItems = static_cast<_ListItem<T,P>*>(::operator new(count * sizeof(_ListItem<T,P>)));
+
+        // Make sure the last item points to the current head of the item pool
+        newItems[count-1].next = itemPool;
+
+        // Link the remaining items to each other
+        for(unsigned i = 1; i < count; i++)
+        {
+            newItems[i-1].next = &newItems[i];
+        }
+
+        // Update the head of the item pool
+        itemPool = newItems;
     }
 
 #endif

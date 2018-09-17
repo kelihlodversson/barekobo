@@ -10,13 +10,14 @@ namespace hfh3
       */
     class Sprite : public Actor {
     public:
+      Sprite(class World &inWorld, class Image *inImages,
+             unsigned inImageCount, 
+             CollisionMask inCollisionTargetMask, CollisionMask inCollisionSourceMask = CollisionMask::None);
 
-        Sprite(class World& inWorld, class Image* inImages, unsigned inImageCount);
-
-        /** After updating all actors, each will get a chance to render itself to screen
+      /** After updating all actors, each will get a chance to render itself to screen
           */
-        virtual void Draw() override;
-        virtual Rect<int> GetBounds() override;
+      virtual void Draw() override;
+      virtual Rect<int> GetBounds() override;
 
     protected:
 

@@ -17,7 +17,8 @@ Enemy::Enemy(World& inWorld, ImageSheet& imageSheet, Random& inRandom) :
     Mover(inWorld,
           imageSheet[(int)enemyImages[inRandom.Get() % 7]],
           imageSheet.GetGroupSize(),
-          static_cast<Direction>(inRandom.Get() % 8)),
+          static_cast<Direction>(inRandom.Get() % 8), 1,
+          CollisionMask::Enemy, CollisionMask::None),
     random(inRandom),
     relaxed(inRandom.Get() % 100 + 10)
 {

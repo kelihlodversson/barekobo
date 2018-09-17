@@ -39,6 +39,11 @@ namespace hfh3
             return screenOffset;
         }
 
+        Rect<int> GetVisibleRect()
+        {
+            return {screenOffset, screen.GetSize()};
+        }
+
         /** The following methods map a stage coordinate to a screen coordinate
           * before passing the argumetns to the screen manager
           */
@@ -80,17 +85,7 @@ namespace hfh3
           */
         bool IsVisible(const Rect<int>& stageRect)
         {
-            Rect<int> shifted (stageRect.origin - screenOffset, stageRect.size);
-            Rect<int> wrapped (WrapCoordinate(shifted.origin), stageRect.size);
-            shifted.origin.x %= GetWidth();
-            shifted.origin.y %= GetHeight();
-
-            const int scrW = screen.GetWidth();
-            const int scrH = screen.GetHeight();
-            bool res = ((shifted.Left() < scrW && shifted.Right()  > 0) || (wrapped.Left() < scrW && wrapped.Right()  > 0)) &&
-                       ((shifted.Top()  < scrH && shifted.Bottom() > 0) || (wrapped.Top()  < scrH && wrapped.Bottom() > 0)) ;
-
-            return res;
+            return GetVisibleRect().OverlapsMod(stageRect, GetSize());
         }
 
     private:

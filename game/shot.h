@@ -15,6 +15,8 @@ namespace hfh3
         virtual void Update() override;
         virtual void Draw() override;
         virtual void OnCollision(class Actor* other) override;
+        virtual Rect<int> GetBounds() override;
+
     private:
         bool rotator;
         unsigned ttl;

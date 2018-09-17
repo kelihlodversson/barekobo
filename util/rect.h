@@ -114,6 +114,31 @@ namespace hfh3
                    other.Top() < Bottom() && Top() < other.Bottom();
         }
 
+        /** returns true if two rectangles intersect when taking into account
+          * wrapping around a passed in modulo.
+          */
+        bool OverlapsMod(const Rect<int>& other, const Vector<int>& modulo)
+        {
+            Rect<int> shifted (other.origin - origin, other.size);
+            shifted.origin.x %= modulo.x;
+            shifted.origin.y %= modulo.y;
+
+            Rect<int> wrapped = shifted;
+            if (wrapped.origin.x < 0)
+            {
+                wrapped.origin.x += modulo.x;
+            }
+            if (wrapped.origin.y < 0)
+            {
+                wrapped.origin.y += modulo.y;
+            }
+
+            return ((shifted.Left() < size.x && shifted.Right()  > 0) || (wrapped.Left() < size.x && wrapped.Right()  > 0)) &&
+                   ((shifted.Top()  < size.y && shifted.Bottom() > 0) || (wrapped.Top()  < size.y && wrapped.Bottom() > 0)) ;
+
+        }
+    
+
         /** Returns the intersection between two rectangles.
           * Overides the (bitwise) AND operator as logical AND is also called Intersection.
           */

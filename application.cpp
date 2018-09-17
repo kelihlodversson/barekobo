@@ -2,6 +2,7 @@
 
 #include "application.h"
 #include "util/log.h"
+#include "util/list.h"
 
 #include "render/font.h"
 
@@ -58,6 +59,7 @@ int Application::Run()
 
     const int enemyCount = 3000;
 
+    List<class Actor*>::Reserve(3100);
     World world(screenManager, input, network);
     for (int i = 0; i < enemyCount; i++)
     {

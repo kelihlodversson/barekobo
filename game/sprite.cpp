@@ -4,11 +4,12 @@
 
 using namespace hfh3;
 
-Sprite::Sprite(class World& inWorld, class Image* inImages, unsigned inImageCount) :
-    Actor(inWorld),
-    images(inImages),
-    imageCount(inImageCount),
-    current(0)
+Sprite::Sprite(class World &inWorld, class Image *inImages, 
+               unsigned inImageCount, CollisionMask inCollisionTargetMask, CollisionMask inCollisionSourceMask) 
+    : Actor(inWorld, inCollisionTargetMask, inCollisionSourceMask)
+    , images(inImages)
+    , imageCount(inImageCount)
+    , current(0)
 {}
 
 void Sprite::Draw()

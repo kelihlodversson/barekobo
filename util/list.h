@@ -61,6 +61,16 @@ namespace hfh3
 #           endif
         }
 
+        /** If item pools are enabled, reserves memory for count
+          * items and adds them to the pool.
+          */
+        static void Reserve(unsigned count)
+        {
+#           if CONFIG_USE_ITEM_POOL
+            Item::PreallocItemPool(count);
+#           endif
+        }
+
         /** Returns true if the list is empty
           */
         bool IsEmpty() const
@@ -118,7 +128,7 @@ namespace hfh3
             Iterator result = begin();
             for(; result != end(); ++result)
             {
-                if(predicate(result))
+                if(predicate(*result))
                 {
                     break;
                 }
@@ -136,7 +146,7 @@ namespace hfh3
             ReverseIterator result = rbegin();
             for(; result != rend(); ++result)
             {
-                if(predicate(result))
+                if(predicate(*result))
                 {
                     break;
                 }
@@ -174,6 +184,51 @@ namespace hfh3
         ReverseIterator rend()
         {
             return ReverseIterator(nullptr);
+        }
+
+        /** Wrapper around List<T> that swaps begin/end() with rbegin/rend()
+          * Useful for iterating backwards through a list using the C++11
+          * for each syntax:
+          *  for(auto item : list.Reverse()) { ... } 
+          */
+        class ReverseAdapter
+        {
+        public:
+            ReverseIterator begin() 
+            {
+                return list.rbegin();
+            }
+
+            ReverseIterator end() 
+            {
+                return list.rend();
+            }
+
+            Iterator rbegin() 
+            {
+                return list.begin();
+            }
+
+            Iterator rend() 
+            {
+                return list.end();
+            }
+
+        private:
+            ReverseAdapter(List<T>& inList) : list(inList)
+            {}
+            List<T>& list;
+            friend List<T>;
+        };
+
+        /** Returns a wrapper around List<T> that swaps begin/end() with rbegin/rend()
+          * Useful for iterating backwards through a list using the C++11
+          * for each syntax:
+          *  for(auto item : list.Reverse()) { ... } 
+          */
+        ReverseAdapter Reverse()
+        {
+            return ReverseAdapter(*this);
         }
 
         List()

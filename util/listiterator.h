@@ -1,16 +1,9 @@
 #pragma once
 
-// Set CONFIG_USE_ITER_POOL to 0 use the standard memory allocator for link list
-// iterators. When set to 1, freed items will be added to a pool of items to be reused
-// instead of deallocating the memory.
-#ifndef CONFIG_USE_ITER_POOL
-#define CONFIG_USE_ITER_POOL 1
-#endif
-
 namespace hfh3
 {
     /** Utility class to iterate through doubly linked lists.
-      * Should be referenced through the typedef in List<T>, such
+      * Should be referenced through the typedefs in List<T>, such
       * as List<T>::Iterator or List<T>::ReverseIterator
       */
     template<typename T, typename Item, bool reverse>
@@ -25,6 +18,11 @@ namespace hfh3
             : current(other.current)
         {}
 
+        explicit operator _ListIterator<T,Item,!reverse> ()
+        {
+            return _ListIterator<T,Item,!reverse>(current);
+        }
+
         void Remove()
         {
             assert(current != nullptr);
@@ -36,14 +34,18 @@ namespace hfh3
         _ListIterator<T,Item,reverse> InsertAfter(Args&&... args)
         {
             assert(current != nullptr);
-            return current->parent->InsertAfter(current, args...);
+            return static_cast<_ListIterator<T,Item,reverse>> (
+                   reverse?current->parent->InsertBefore(current, args...)
+                          :current->parent->InsertAfter(current, args...));
         }
 
         template<typename... Args>
         _ListIterator<T,Item,reverse> InsertBefore(Args&&... args)
         {
             assert(current != nullptr);
-            return current->parent->InsertBefore(current, args...);
+            return static_cast<_ListIterator<T,Item,reverse>> (
+                   reverse?current->parent->InsertAfter(current, args...)
+                          :current->parent->InsertBefore(current, args...));
         }
 
         _ListIterator<T,Item,reverse>& operator++()
@@ -129,10 +131,6 @@ namespace hfh3
             return current != nullptr?&current->payload:nullptr;
         }
 
-#if CONFIG_USE_ITER_POOL
-        static void* operator new (size_t size);
-        static void operator delete (void* memory, size_t size);
-#endif
     private:
 
         void Forward()
@@ -146,54 +144,5 @@ namespace hfh3
         }
 
         Item* current;
-#if CONFIG_USE_ITER_POOL
-        /* reuse previously allocated iterators to save on allocations */
-        static _ListIterator<T,Item,reverse>* iterPool;
-#endif
     };
-
-#if CONFIG_USE_ITER_POOL
-    template<typename T, typename Item, bool reverse>
-    _ListIterator<T,Item,reverse>* _ListIterator<T,Item,reverse>::iterPool = nullptr;
-
-    template<typename T, typename Item, bool reverse>
-    void* _ListIterator<T,Item,reverse>::operator new (size_t size)
-    {
-        if(iterPool && size == sizeof(_ListIterator<T,Item,reverse>))
-        {
-            _ListIterator<T,Item,reverse>* result = iterPool;
-            // Reuse the current pointer to link together unallocated items in the pool
-            iterPool = reinterpret_cast<_ListIterator<T,Item,reverse>*>(result->current);
-            return result;
-        }
-        else
-        {
-            // Use the default new operator for unsupported sizes or when the item pool is empty
-            return ::operator new(size);
-        }
-    }
-
-    template<typename T, typename Item, bool reverse>
-    void _ListIterator<T,Item,reverse>::operator delete (void* memory, size_t size)
-    {
-        if(memory == nullptr)
-        {
-            return;
-        }
-
-        if(size == sizeof(_ListIterator<T,Item,reverse>))
-        {
-            // instead of deallocating the item, push it back to the item pool
-            _ListIterator<T,Item,reverse>* iter = reinterpret_cast<_ListIterator<T,Item,reverse>*>(memory);
-            iter->current = reinterpret_cast<Item*>(iterPool);
-            iterPool = iter;
-        }
-        else
-        {
-            // If the size doesn't match our object size, forward the object to the default deallocator
-            // This can happen if the iterator class has been extended without overriding the custom allocators.
-            ::operator delete(memory);
-        }
-    }
-#endif
 }

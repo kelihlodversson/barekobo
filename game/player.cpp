@@ -4,6 +4,7 @@
 #include "game/shot.h"
 #include "game/partition.h"
 #include "game/world.h"
+#include "game/collisionmask.h"
 
 #include "render/image.h"
 #include "render/imagesheet.h"
@@ -16,7 +17,8 @@ Player::Player(class World& inWorld, class ImageSheet& inImageSheet, class Input
     Mover(inWorld,
           inImageSheet[(int)ImageSet::Player0],
           inImageSheet.GetGroupSize(),
-          Direction::Stopped),
+          Direction::Stopped, 1,
+          CollisionMask::Player, CollisionMask::Enemy),
     input(inInput),
     imageSheet(inImageSheet)
 {

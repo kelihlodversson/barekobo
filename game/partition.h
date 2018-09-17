@@ -11,16 +11,20 @@ namespace hfh3
       * hit tests, as one only has to consider actors in partitions
       * that overlap the area of interest.
       */
-    class Partition
-        : public List<class Actor*>
+    class Partition : public List<class Actor*>
     {
     public:
 
-        Partition(class World& inWorld, const Rect<int>& inBounds)
-            : world(inWorld)
-            , bounds(inBounds)
-            , extendedBounds(inBounds.IsValid()?inBounds.Inflate(16):inBounds)
+        Partition()
+            : bounds()
+            , extendedBounds()
         {}
+
+        void SetBounds(const Rect<int>& inBounds)
+        {
+            bounds = inBounds;
+            extendedBounds = inBounds.IsValid()?inBounds.Inflate(16):inBounds;
+        }
 
         // Returns the nominal bounds for the partition
         const Rect<int>& GetBounds() const { return bounds; }
@@ -29,10 +33,7 @@ namespace hfh3
         // plus a padding to cover children that extend beyond the inner bounds
         const Rect<int>& GetExtendedBounds() const { return extendedBounds; }
 
-        class World& GetWorld() { return world; }
-
     private:
-        class World& world;
         Rect<int> bounds;
         Rect<int> extendedBounds;
     };

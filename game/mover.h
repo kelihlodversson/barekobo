@@ -11,13 +11,13 @@ namespace hfh3
     class Mover : public Sprite
     {
     public:
+      Mover(class World &inWorld, class Image *inImages, unsigned inImageCount,
+            Direction inDir = Direction::Stopped, int inSpeed = 1,
+            CollisionMask inCollisionTargetMask = CollisionMask::Any, CollisionMask inCollisionSourceMask = CollisionMask::None);
 
-        Mover(class World& inWorld, class Image* inImages, unsigned inImageCount,
-              Direction inDir = Direction::Stopped, int inSpeed = 1);
-
-        /** The default update will simply call UpdatePosition
+      /** The default update will simply call UpdatePosition
           */
-        virtual void Update() override;
+      virtual void Update() override;
 
     protected:
 

@@ -22,27 +22,25 @@ World::World(ScreenManager& inScreen, class Input& inInput, Network& inNetwork)
     , network(inNetwork)
     , imageSheet(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8)
     , background(*this)
+    , partitionSize(stage.GetSize() / partitionGridCount)
 {
     // Initial partitioning: partition the world into 8x8+1 partitions:
-    const Vector<int> stageSize = stage.GetSize();
-    const Vector<int> partitionSize = stageSize /8;
-
     Rect<int> bounds ({0,0}, partitionSize);
-    for(bounds.origin.y = 0; bounds.origin.y < stageSize.y; bounds.origin.y += partitionSize.y)
+    for(int y = 0; y < partitionGridCount; y++,  bounds.origin.y += partitionSize.y)
     {
-        for(bounds.origin.x = 0; bounds.origin.x < stageSize.x; bounds.origin.x += partitionSize.x)
+        bounds.origin.x = 0;
+        for(int x = 0; x < partitionGridCount; x++, bounds.origin.x += partitionSize.x)
         {
-            partitions.Append(*this, bounds);
+            GetPartition(x,y).SetBounds(bounds);
         }
     }
-    assert(partitions.Size() == 8*8);
 }
 
 World::~World()
 {
-    for(auto partitionIter = partitions.begin(); partitionIter != partitions.end(); ++partitionIter)
+    for(Partition& partition : partitions)
     {
-        for(auto iter = partitionIter->begin(); iter != partitionIter->end(); ++iter)
+        for(auto iter = partition.begin(); iter != partition.end(); ++iter)
         {
             Actor* actor = *iter;
             if(actor == nullptr)
@@ -61,9 +59,8 @@ void World::Update()
     for(Partition& partition : partitions)
     {
         Rect<int> bounds = partition.GetBounds();
-        for(auto iter = partition.rbegin(); iter != partition.rend(); ++iter)
+        for(Actor* actor : partition.Reverse())
         {
-            Actor* actor = *iter;
             assert(actor);
             actor->Update();
 
@@ -85,7 +82,8 @@ void World::Update()
 
     AssignPartitions();
     PerformPendingDeletes();
-
+    PerformCollisionCheck();
+    
     // The background object is special and is not stored in a partition
     background.Update();
 }
@@ -98,62 +96,76 @@ void World::Draw()
 
     // Loop trhough all partitions and call render on actors in partitions that
     // extend into the visible area.
-    for(Partition& partition : partitions)
+    int x_min,x_max,y_min,y_max;
+    GetPartitionRange(stage.GetVisibleRect(),x_min,x_max,y_min,y_max);
+    for (int y = y_min; y < y_max; y++)
     {
-        if(stage.IsVisible(partition.GetExtendedBounds()))
+        for (int x=x_min; x < x_max; x++)
         {
-            for(Actor* actor : partition)
+            for(Actor* actor : GetPartition(x,y))
             {
                 actor->Draw();
+            }
+
+        }
+    }
+}
+
+void World::PerformCollisionCheck()
+{
+    int x_min,x_max,y_min,y_max;
+    List<Actor*>::ReverseIterator found;
+
+    for(Actor* collider : collisionSources)
+    {
+        if(collider->collisionSourceMask != CollisionMask::None)
+        {
+            const Rect<int> bounds = collider->GetBounds();
+            GetPartitionRange(bounds, x_min, x_max, y_min, y_max);
+            for (int y = y_min; y < y_max; y++)
+            {
+                for (int x=x_min; x < x_max; x++)
+                {
+                    found = GetPartition(x,y).FindLast([collider, &bounds](Actor* other)
+                    {
+                        assert(other);
+                        return collider->CollisionCheck(other);
+                    });
+                }
+            }
+
+            if(found)
+            {
+                Actor* collided = *found;
+                collided->OnCollision(collider);
+                collider->OnCollision(collided);
             }
         }
     }
 }
 
-Actor* World::CollisionCheck(Actor* collider)
-{
-    const Rect<int> bounds = collider->GetBounds();
-
-    List<Actor*>::ReverseIterator found;
-    for(Partition& partition : partitions)
-    {
-        if( partition.GetExtendedBounds().Overlaps(bounds) )
-        {
-             found = partition.FindLast([collider, &bounds](Actor** other) -> bool
-             {
-                 assert(other);
-                 assert(*other);
-                 return (*other != collider) && (*other)->GetBounds().Overlaps(bounds);
-             });
-        }
-    }
-
-    if(found)
-    {
-        Actor* collided = *found;
-        collided->OnCollision(collider);
-        collider->OnCollision(collided);
-        return collided;
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
 void World::SpawnEnemy()
 {
-    needsNewPartition.Append(new Enemy(*this, imageSheet, random));
+    AddActor(new Enemy(*this, imageSheet, random));
 }
 
 void World::SpawnPlayer()
 {
-    needsNewPartition.Append(new Player(*this, imageSheet, input));
+    AddActor(new Player(*this, imageSheet, input));
 }
 
 void World::SpawnMissile(const Vector<int>& startPosition, const Direction& direction, int speed)
 {
-    needsNewPartition.Append(new Shot(*this, imageSheet, ImageSet::Missile, startPosition, direction, speed));
+    AddActor(new Shot(*this, imageSheet, ImageSet::Missile, startPosition, direction, speed));
+}
+
+void World::AddActor(Actor* newActor)
+{
+    if(newActor->collisionSourceMask != CollisionMask::None)
+    {
+        collisionSources.Prepend(newActor);
+    }
+    needsNewPartition.Append(newActor);
 }
 
 void World::PerformPendingDeletes()
@@ -161,6 +173,13 @@ void World::PerformPendingDeletes()
     for(Actor* actor : pendingDelete)
     {
         assert(actor->shouldDestruct);
+        if(actor->collisionSourceMask != CollisionMask::None)
+        {
+            auto found = collisionSources.FindFirst([&actor](Actor* other){ return actor == other; });
+            assert(found);
+            found.Remove();
+        }
+
         if(actor->partitionIterator)
         {
             assert(*actor->partitionIterator == actor);
@@ -175,15 +194,6 @@ void World::AssignPartitions()
 {
     for(Actor* actor : needsNewPartition)
     {
-        const Vector<int> position = actor->GetBounds().origin;
-        auto found = partitions.FindFirst([&position](Partition* partition)
-        {
-            return partition->GetBounds().Contains(position);
-        });
-
-        assert(found);
-
-        // If the actor was already assigned to a partition, remove it from it
         if (actor->partitionIterator)
         {
             assert(*actor->partitionIterator == actor);
@@ -191,11 +201,30 @@ void World::AssignPartitions()
         }
 
         // Add it to the new partition and save the returned iterator
-        actor->partitionIterator = found->Append(actor);
+        actor->partitionIterator = GetPartition(actor->position).Append(actor);
     }
     needsNewPartition.ClearFast();
 }
 
+void World::GetPartitionRange(const Rect<int>& rect, int& x1, int& x2, int& y1, int& y2)
+{
+    x1 = rect.Left() / partitionSize.x;
+    x2 = 1 + rect.Right() / partitionSize.x;
+    y1 = rect.Top() / partitionSize.y;
+    y2 = 1 + rect.Bottom() / partitionSize.y;
+
+    int remainder_x1 =  rect.Left() % partitionSize.x;
+    int remainder_y1 =  rect.Top() % partitionSize.y;
+
+    if (remainder_x1 < maxActorSize)
+    {
+        x1--;
+    }
+    if (remainder_y1 < maxActorSize)
+    {
+        y1--;
+    }
+}
 
 void World::GameLoop()
 {
@@ -204,6 +233,7 @@ void World::GameLoop()
     Rect<int> clippedArea(10,10,screenManager.GetWidth()-20, screenManager.GetHeight()-20);
     CString message;
     CString pos;
+    CString tmp;
 
     while(true)
     {
@@ -219,15 +249,27 @@ void World::GameLoop()
             screenManager.GetFlipTimePCT()
         );
 
-        Update();
+        int x_min,x_max,y,y_max;
+        GetPartitionRange(stage.GetVisibleRect(),x_min,x_max,y,y_max);
 
-        pos.Format("Offset: (%d,%d)", stage.GetOffset().x, stage.GetOffset().y);
+        pos.Format("Offset: (%d,%d) (%d..%d),(%d..%d)",
+            stage.GetOffset().x, stage.GetOffset().y,
+            x_min, x_max,
+            y, y_max);
+
+        for(;y < y_max;y++) {for(int x = x_min;x < x_max;x++)
+        {
+            tmp.Format(" %d", (y & partitionGridMask)*partitionGridCount + (x & partitionGridMask));
+            //tmp.Format(" %d,%d", (y & partitionGridMask), (x & partitionGridMask));
+            pos.Append(tmp);
+        }}
         screenManager.Clear(10);
         screenManager.DrawString({1,1}, message, 0, Font::GetDefault());
         screenManager.DrawString({1,clippedArea.Bottom()}, pos, 0, Font::GetDefault());
         screenManager.SetClip(clippedArea);
         screenManager.Clear(0);
 
+        Update();
         Draw();
 
         screenManager.ClearClip();

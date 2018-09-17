@@ -32,5 +32,13 @@ void Stage::DrawPixel(const Vector<int>& at, u8 color)
 
 void Stage::DrawRect(const Rect<int>& rect, u8 color)
 {
-    screen.DrawRect(StageToScreen(rect), color);
+    Vector<int> shifted = rect.origin - screenOffset;
+    Vector<int> wrapped = WrapCoordinate(shifted);
+    shifted.x %= GetWidth();
+    shifted.y %= GetHeight();
+
+    screen.DrawRect(Rect<int>(shifted, rect.size), color);
+    screen.DrawRect(Rect<int>(wrapped, rect.size), color);
+    screen.DrawRect(Rect<int>(Vector<int>(wrapped.x,shifted.y), rect.size), color);
+    screen.DrawRect(Rect<int>(Vector<int>(shifted.x,wrapped.y), rect.size), color);
 }

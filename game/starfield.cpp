@@ -7,7 +7,7 @@
 using namespace hfh3;
 
 Starfield::Starfield(class World& inWorld, int inDensity, u64 inSeed) :
-    Actor(inWorld),
+    Actor(inWorld, CollisionMask::None, CollisionMask::None),
     parallaxStage(inWorld.GetStage().GetWidth()/2, inWorld.GetStage().GetHeight()/2, inWorld.GetStage().GetScreen()),
     density(inDensity),
     seed(inSeed)

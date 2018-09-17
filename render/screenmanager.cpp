@@ -8,6 +8,10 @@
 
 #include "util/log.h"
 
+#if CONFIG_NEON_RENDER
+#include <arm_neon.h>
+#endif
+
 using namespace hfh3;
 
 /** Integer division with rounding to the nearest integer.
@@ -302,12 +306,39 @@ void ScreenManager::DrawImage(const Vector<int>& at, const Image& image)
     // else we have to compare each pixel to the transparent value before plotting it
     else
     {
+        const int width = clipped.Width();
         const u8 tcolor = (u8)transparent;
+#if CONFIG_NEON_RENDER
+        // The neon intrinsics below copy 16 pixels in one chunk
+        const int neonWidth = (width/sizeof(uint8x16_t))*sizeof(uint8x16_t);
+        const uint8x16_t tvector = vmovq_n_u8(tcolor); // 16x transparent color
+#endif
         for (int image_y = image_min_y; image_y < image_max_y; image_y++)
         {
             u8* dstRow = GetPixelAddress(at.x+image_min_x, at.y+image_y);
             const u8* srcRow = image.GetPixelAddress(image_min_x, image_y);
-            for(int i = 0; i < clipped.Width(); i++)
+            int i=0;
+#if CONFIG_NEON_RENDER
+            // There is no attempt of aligning the data, which may explain why
+            // there is little if no speed gain compared to the naive method.
+            for(; i < neonWidth; i+= sizeof(uint8x16_t))
+            {
+                // Grab 16 pixels of source and destination data
+                uint8x16_t dstChunk = vld1q_u8(&dstRow[i]);
+                uint8x16_t srcChunk = vld1q_u8(&srcRow[i]);
+
+                // Compare 16 pixesl of source data against the transparent color
+                uint8x16_t transparent = vceqq_u8(srcChunk, tvector);
+
+                // Select source where the color was not transparent and dst where it was
+                // and the result to memory
+                vst1q_u8(&dstRow[i],vbslq_u8(transparent, dstChunk, srcChunk));
+            }
+
+            // Since the clip areay may not be divisible by 16, we iterate through
+            // the remainder one pixel at a time.
+#endif
+            for(; i < width; i++)
             {
                 if (srcRow[i] != tcolor)
                 {

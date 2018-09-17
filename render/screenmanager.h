@@ -24,6 +24,13 @@
 #   define CONFIG_DMA_FRAME_COPY 0
 #endif
 
+// If set to 1, the ScreenManager class will use neon intrinsics to copy 16 pixels
+// at a time to the destination using NEON intrinsics. This is currently disabled,
+// as it seems to have a neglible effect.
+#ifndef CONFIG_NEON_RENDER
+#   define CONFIG_NEON_RENDER 0
+#endif
+
 #if CONFIG_GPU_PAGE_FLIPPING && CONFIG_DMA_FRAME_COPY
 #   error "CONFIG_GPU_PAGE_FLIPPING and CONFIG_DMA_FRAME_COPY are mutually exclusive"
 #endif
@@ -32,6 +39,7 @@
 #if CONFIG_DMA_FRAME_COPY
 #   include <circle/dmachannel.h>
 #endif
+
 
 namespace hfh3
 {

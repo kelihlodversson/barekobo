@@ -71,10 +71,10 @@ namespace hfh3
 
         // Specifies which collision layers this object can be the target of.
         // Set this to 0 to make the object immune to collisions from other objects.
-        CollisionMask collisionTargetMask;
+        const CollisionMask collisionTargetMask;
 
         // Specifies which layers this object can generate a collision events with.
-        CollisionMask collisionSourceMask;
+        const CollisionMask collisionSourceMask;
 
         friend class World;
     };

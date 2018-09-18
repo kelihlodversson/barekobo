@@ -8,7 +8,6 @@
 using namespace hfh3;
 
 Starfield::Starfield(class World& inWorld, int inDensity, u64 inSeed) :
-    Actor(inWorld, CollisionMask::None, CollisionMask::None),
     parallax({
         Stage(inWorld.GetStage().GetWidth()/2, inWorld.GetStage().GetHeight()/2),
         Stage(inWorld.GetStage().GetWidth()/4, inWorld.GetStage().GetHeight()/4),
@@ -44,14 +43,4 @@ void Starfield::Draw(class View& view)
         subviews[0].DrawPixel(star, 22+brightness);
         subviews[1].DrawPixel(star, 5+brightness);
     }
-}
-
-void Starfield::Update()
-{
-    // No update needed
-}
-
-Rect<int> Starfield::GetBounds()
-{
-    return Rect<int>();
 }

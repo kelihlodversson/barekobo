@@ -10,14 +10,12 @@ namespace hfh3
 
     /** Utility class for rendering a simple star field in the background.
       */
-    class Starfield : public Actor
+    class Starfield
     {
     public:
         Starfield(class World& inWorld, int inDensity=2500, u64 inSeed=999);
 
-        virtual void Draw(class View& view) override;
-        virtual void Update() override;
-        virtual Rect<int> GetBounds() override;
+        void Draw(class View& view);
     private:
         Stage parallax[2];
         int density;

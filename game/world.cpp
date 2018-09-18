@@ -14,6 +14,7 @@
 #include "game/player.h"
 #include "game/shot.h"
 #include "game/view.h"
+#include "game/commandbuffer.h"
 
 using namespace hfh3;
 
@@ -24,6 +25,7 @@ World::World(ScreenManager& inScreen, class Input& inInput, Network& inNetwork)
     , network(inNetwork)
     , imageSheet(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8)
     , background(*this)
+    , commands(imageSheet)
     , partitionSize(stage.GetSize() / partitionGridCount)
 {
     // Initial partitioning: partition the world into 8x8+1 partitions:
@@ -97,9 +99,7 @@ void World::Draw()
     Rect<int> playerBounds = player->GetBounds();
     View view = View(stage, screen);
     view.SetCenterOffset(playerBounds.origin+playerBounds.size/2);
-    // The background object is special and is not stored in a partition
-    // it should always be rendered first.
-    background.Draw(view);
+    commands.SetViewOffset(view.GetOffset());
 
     // Loop trhough all partitions and call render on actors in partitions that
     // extend into the visible area.
@@ -111,11 +111,18 @@ void World::Draw()
         {
             for(Actor* actor : GetPartition(x,y))
             {
-                actor->Draw(view);
+                if(view.IsVisible(actor->GetBounds()))
+                {
+                    actor->Draw(commands);
+                }
             }
 
         }
     }
+    // The background object is special and is not stored in a partition
+    // it should always be rendered first.
+    background.Draw(view);
+    commands.Run(view);
 }
 
 void World::PerformCollisionCheck()

@@ -15,7 +15,7 @@ using namespace hfh3;
 
 Player::Player(class World& inWorld, class ImageSheet& inImageSheet, class Input& inInput) :
     Mover(inWorld,
-          inImageSheet[(int)ImageSet::Player0],
+          (u8)ImageSet::Player0,
           inImageSheet.GetGroupSize(),
           Direction::Stopped, 1,
           CollisionMask::Player, CollisionMask::Enemy),

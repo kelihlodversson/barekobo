@@ -24,7 +24,7 @@ namespace hfh3
         virtual void Update() = 0;
 
         /** After updating all actors, each will get a chance to render itself to screen */
-        virtual void Draw(class View& view) = 0;
+        virtual void Draw(class CommandBuffer& commands) = 0;
 
         /** Return the bounding rectangle of the actor */
         virtual Rect<int> GetBounds() = 0;

@@ -3,10 +3,10 @@
 
 using namespace hfh3;
 
-Mover::Mover(class World &inWorld, class Image *inImages, unsigned inImageCount,
+Mover::Mover(class World &inWorld, u8 inImageGroup, u8 inImageCount,
              Direction inDirection, int inSpeed,
              CollisionMask inCollisionTargetMask, CollisionMask inCollisionSourceMask)
-    : Sprite(inWorld, inImages, inImageCount, inCollisionTargetMask, inCollisionSourceMask)
+    : Sprite(inWorld, inImageGroup, inImageCount, inCollisionTargetMask, inCollisionSourceMask)
     , direction(inDirection)
     , speed(inSpeed)
 {

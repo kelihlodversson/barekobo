@@ -9,6 +9,7 @@
 
 #include "game/partition.h"
 #include "game/starfield.h"
+#include "game/commandbuffer.h"
 
 namespace hfh3
 {
@@ -48,6 +49,8 @@ namespace hfh3
         class Network& network;
         ImageSheet imageSheet;
         Starfield background;
+        CommandBuffer commands;
+
         static const int maxActorSize = 16;
         static const int partitionGridCount = 8;
         static const int partitionGridMask = partitionGridCount-1;
@@ -78,5 +81,6 @@ namespace hfh3
         Array<class Actor*> pendingDelete;
         List<class Actor*> collisionSources;
         class Actor* player;
+        
     };
 }

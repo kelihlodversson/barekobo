@@ -1,25 +1,29 @@
 #include "game/sprite.h"
 #include "game/stage.h"
-#include "game/view.h"
+#include "game/commandbuffer.h"
 
 #include "render/image.h"
 
 using namespace hfh3;
 
-Sprite::Sprite(class World &inWorld, class Image *inImages, 
-               unsigned inImageCount, CollisionMask inCollisionTargetMask, CollisionMask inCollisionSourceMask) 
+Sprite::Sprite(class World &inWorld, 
+                u8 inImageGroup, u8 inImageCount, 
+                CollisionMask inCollisionTargetMask, 
+                CollisionMask inCollisionSourceMask,
+                const Vector<int> inSize) 
     : Actor(inWorld, inCollisionTargetMask, inCollisionSourceMask)
-    , images(inImages)
+    , imageGroup(inImageGroup)
     , imageCount(inImageCount)
     , current(0)
+    , size(inSize)
 {}
 
-void Sprite::Draw(class View& view)
+void Sprite::Draw(CommandBuffer& commands)
 {
-    view.DrawImage(GetPosition(), GetImage());
+    commands.DrawSprite(GetPosition(), imageGroup, current);
 }
 
 Rect<int> Sprite::GetBounds()
 {
-    return {GetPosition(), GetImage().GetSize()};
+    return {GetPosition(), size};
 }

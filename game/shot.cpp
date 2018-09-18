@@ -11,7 +11,7 @@ using namespace hfh3;
 
 Shot::Shot(class World &inWorld, ImageSheet &imageSheet, ImageSet imageSet,
            const Vector<int> &inPosition, Direction direction, int speed)
-    : Mover(inWorld, imageSheet[(int)imageSet], imageSheet.GetGroupSize(),
+    : Mover(inWorld, (u8)imageSet, imageSheet.GetGroupSize(),
             direction, speed,
             CollisionMask::None, imageSet == ImageSet::MiniShot?CollisionMask::Player:CollisionMask::Enemy),
       rotator(imageSet == ImageSet::MiniShot), ttl(800 / speed)
@@ -37,12 +37,12 @@ void Shot::Update()
     }
 }
 
-void Shot::Draw(class View& view)
+void Shot::Draw(class CommandBuffer& commands)
 {
     // Flash the shot the last 15 frames of its lifetime
     if ( ttl > 15 || ttl % 2)
     {
-        Mover::Draw(view);
+        Mover::Draw(commands);
     }
 }
 

@@ -15,7 +15,7 @@ namespace hfh3
     class ImageSheet
     {
     public:
-        /** Initializes an image sheet from a rawy byte buffer. It assumes that
+        /** Initializes an image sheet from a raw byte buffer. It assumes that
           * all images in the sheet are of equal size and are tiled next to each other.
           *
           * @param inData The raw byte buffer containing a sheet of images.

@@ -180,7 +180,6 @@ void World::PerformPendingDeletes()
 {
     for(Actor* actor : pendingDelete)
     {
-        DEBUG("Delete actor (%p)",actor);
         assert(actor->shouldDestruct);
         if(actor->collisionSourceMask != CollisionMask::None)
         {

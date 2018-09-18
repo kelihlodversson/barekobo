@@ -2,6 +2,7 @@
 #include "render/screenmanager.h"
 #include "render/imagesheet.h"
 #include "util/list.h"
+#include "util/array.h"
 #include "util/random.h"
 #include "util/vector.h"
 #include "util/rect.h"
@@ -73,8 +74,8 @@ namespace hfh3
 
         // When actors are spawned or moved out of the bounding box of a partition,
         // they will be added to this list.
-        List<class Actor*> needsNewPartition;
-        List<class Actor*> pendingDelete;
+        Array<class Actor*> needsNewPartition;
+        Array<class Actor*> pendingDelete;
         List<class Actor*> collisionSources;
         class Actor* player;
     };

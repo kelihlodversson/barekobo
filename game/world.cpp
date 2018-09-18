@@ -76,7 +76,7 @@ void World::Update()
                 actor->positionDirty = false;
                 if(!bounds.Contains(actor->position) )
                 {
-                    needsNewPartition.Prepend(actor);
+                    needsNewPartition.Append(actor);
                 }
             }
         }
@@ -85,9 +85,6 @@ void World::Update()
     AssignPartitions();
     PerformPendingDeletes();
     PerformCollisionCheck();
-    
-    // The background object is special and is not stored in a partition
-    background.Update();
 }
 
 void World::Draw()
@@ -183,6 +180,7 @@ void World::PerformPendingDeletes()
 {
     for(Actor* actor : pendingDelete)
     {
+        DEBUG("Delete actor (%p)",actor);
         assert(actor->shouldDestruct);
         if(actor->collisionSourceMask != CollisionMask::None)
         {
@@ -203,7 +201,7 @@ void World::PerformPendingDeletes()
         }
         delete actor;
     }
-    pendingDelete.ClearFast();
+    pendingDelete.Clear();
 }
 
 void World::AssignPartitions()
@@ -219,7 +217,7 @@ void World::AssignPartitions()
         // Add it to the new partition and save the returned iterator
         actor->partitionIterator = GetPartition(actor->position).Append(actor);
     }
-    needsNewPartition.ClearFast();
+    needsNewPartition.Clear();
 }
 
 void World::GetPartitionRange(const Rect<int>& rect, int& x1, int& x2, int& y1, int& y2)

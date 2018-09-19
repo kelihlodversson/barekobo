@@ -1,4 +1,6 @@
 #pragma once
+#include "circle/types.h"
+
 #include "util/vector.h"
 #include "util/rect.h"
 #include "game/partition.h"
@@ -27,7 +29,7 @@ namespace hfh3
         virtual void Draw(class CommandBuffer& commands) = 0;
 
         /** Return the bounding rectangle of the actor */
-        virtual Rect<int> GetBounds() = 0;
+        virtual Rect<s16> GetBounds() = 0;
 
         /** Performs a collision check with the passed in actor object.
           * The collision source mask has to match bits in the other object's target mask 
@@ -48,15 +50,15 @@ namespace hfh3
         class World& world;
         class Stage& stage;
 
-        const Vector<int>& GetPosition() const
+        const Vector<s16>& GetPosition() const
         {
             return position;
         }
 
-        void SetPosition(const Vector<int>& newPosition);
+        void SetPosition(const Vector<s16>& newPosition);
 
     private:
-        Vector<int> position;
+        Vector<s16> position;
         // Store the current partition iterator for easy removal
         // should only be modified by the World class
         Partition::Iterator partitionIterator;

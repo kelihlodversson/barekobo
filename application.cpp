@@ -39,7 +39,7 @@ bool Application::Initialize()
     INIT(interrupts)
     INIT(timer)
     INIT(screenManager)
-    screenManager.DrawString(screenManager.GetSize()/2-Vector<int>(80,0), "Loading MultiKobo...", 20, Font::GetDefault());
+    screenManager.DrawString(screenManager.GetSize()/2-Vector<s16>(80,0), "Loading MultiKobo...", 20, Font::GetDefault());
     screenManager.Present();
     INIT(usb)
     INIT(input)

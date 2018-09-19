@@ -17,7 +17,7 @@ namespace hfh3
     public:
         Image(u8* inData, int inWidth, int inHeight, int inTransparent=-1, int inRowStride=0);
 
-        const Vector<int>& GetSize() const
+        const Vector<s16>& GetSize() const
         {
             return size;
         }
@@ -35,7 +35,7 @@ namespace hfh3
     private:
         void VerifyTransparency();
         u8	*imageData;
-        Vector<int> size;
+        Vector<s16> size;
         int stride;
         int transparent;
 

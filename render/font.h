@@ -16,7 +16,7 @@ namespace hfh3
 
         static Font& GetDefault();
 
-        const Vector<int>& GetSize(char c) const
+        const Vector<s16>& GetSize(char c) const
         {
             return cellSize;
         }
@@ -41,7 +41,7 @@ namespace hfh3
     private:
         const u8 *fontData;
         int stride;
-        Vector<int> cellSize;
+        Vector<s16> cellSize;
         char offset;
         static Font* defaultFont;
     };

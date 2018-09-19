@@ -36,7 +36,7 @@ void Starfield::Draw(class View& view)
 
     for (int i = 0; i < density; i++)
     {
-        Vector<int> star = random.GetVector<int>();
+        Vector<s16> star = random.GetVector<s16>();
         // Use some of the bits we're going to throw away for random brightness variation
         int brightness = (star.y >> 20) & 5;
 

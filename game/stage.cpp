@@ -4,7 +4,7 @@
 
 using namespace hfh3;
 
-Stage::Stage(int width, int height) 
+Stage::Stage(s16 width, s16 height) 
     : size(width, height)
     , maskX(width-1)
     , maskY(height-1)

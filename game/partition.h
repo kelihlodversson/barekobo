@@ -20,21 +20,21 @@ namespace hfh3
             , extendedBounds()
         {}
 
-        void SetBounds(const Rect<int>& inBounds)
+        void SetBounds(const Rect<s16>& inBounds)
         {
             bounds = inBounds;
             extendedBounds = inBounds.IsValid()?inBounds.Inflate(16):inBounds;
         }
 
         // Returns the nominal bounds for the partition
-        const Rect<int>& GetBounds() const { return bounds; }
+        const Rect<s16>& GetBounds() const { return bounds; }
 
         // Returns the extended bounds, ie the nominal bounds
         // plus a padding to cover children that extend beyond the inner bounds
-        const Rect<int>& GetExtendedBounds() const { return extendedBounds; }
+        const Rect<s16>& GetExtendedBounds() const { return extendedBounds; }
 
     private:
-        Rect<int> bounds;
-        Rect<int> extendedBounds;
+        Rect<s16> bounds;
+        Rect<s16> extendedBounds;
     };
 }

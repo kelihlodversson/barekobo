@@ -47,7 +47,7 @@ void Player::Fire()
 {
     const int shotSpeed = 3;
     Direction shotDirection = static_cast<Direction>(GetImageIndex());
-    Vector<int> shotPosition = stage.WrapCoordinate(GetPosition() + shotDirection.ToDelta(16));
+    Vector<s16> shotPosition = stage.WrapCoordinate(GetPosition() + shotDirection.ToDelta(16));
 
     world.SpawnMissile(shotPosition, shotDirection, shotSpeed);
 }

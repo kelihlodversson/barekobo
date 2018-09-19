@@ -1,4 +1,6 @@
 #pragma once
+#include "circle/types.h"
+
 #include "util/vector.h"
 #include "util/rect.h"
 #include "util/array.h"
@@ -18,9 +20,9 @@ namespace hfh3
 
         }
 
-        void SetViewOffset(const Vector<int>& position);
+        void SetViewOffset(const Vector<s16>& position);
         void DrawBackground();
-        void DrawSprite(const Vector<int>& position, u8 imageGroup, u8 subImage);
+        void DrawSprite(const Vector<s16>& position, u8 imageGroup, u8 subImage);
 
         void Run(class View& view, class Starfield& backround);
     private:

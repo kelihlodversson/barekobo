@@ -2,7 +2,7 @@
 
 using namespace hfh3;
 
-Vector<int> Direction::ToDelta(int speed)
+Vector<s16> Direction::ToDelta(int speed)
 {
     // Note when travelling diagonally, the speed will be approx. 41% too fast,
     // as the magnitude of the vector will actually be SQRT(2*(speed**2))

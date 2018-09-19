@@ -14,12 +14,12 @@ namespace hfh3
              u8 inImageGroup, u8 inImageCount, 
              CollisionMask inCollisionTargetMask, 
              CollisionMask inCollisionSourceMask = CollisionMask::None,
-             const Vector<int> inSize = {16,16});
+             const Vector<s16> inSize = {16,16});
 
       /** After updating all actors, each will get a chance to render itself to screen
           */
       virtual void Draw(class CommandBuffer& view) override;
-      virtual Rect<int> GetBounds() override;
+      virtual Rect<s16> GetBounds() override;
 
     protected:
 
@@ -43,6 +43,6 @@ namespace hfh3
         u8 imageCount;
         u8 current;
 
-        Vector<int> size;
+        Vector<s16> size;
     };
 }

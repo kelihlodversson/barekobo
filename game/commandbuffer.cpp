@@ -39,21 +39,17 @@ static void operator << (CommandArray& array, Opcode value)
     array << static_cast<u8>(value);
 }
 
-static void operator >> (CommandIterator& iter, int& value)
+static void operator >> (CommandIterator& iter, s16& value)
 {
     u8 tmp;
     iter >> tmp; value |= tmp;
     iter >> tmp; value |= tmp << 8;
-    iter >> tmp; value |= tmp << 16;
-    iter >> tmp; value |= tmp << 24;
 }
 
-static void operator << (CommandArray& array, int value)
+static void operator << (CommandArray& array, s16 value)
 {
     array << static_cast<u8>(((value >>  0) & 0xff));
     array << static_cast<u8>(((value >>  8) & 0xff));
-    array << static_cast<u8>(((value >> 16) & 0xff));
-    array << static_cast<u8>(((value >> 24) & 0xff));
 }
 
 template<typename T>
@@ -71,7 +67,7 @@ static void operator << (CommandArray& array, const Vector<T>& value)
     array << value.y;
 }
 
-void CommandBuffer::SetViewOffset(const Vector<int>& position)
+void CommandBuffer::SetViewOffset(const Vector<s16>& position)
 {
     commands << Opcode::SetViewOffset;
     commands << position;
@@ -82,7 +78,7 @@ void CommandBuffer::DrawBackground()
     commands << Opcode::DrawBackground;
 }
 
-void CommandBuffer::DrawSprite(const Vector<int>& position, u8 imageGroup, u8 subImage)
+void CommandBuffer::DrawSprite(const Vector<s16>& position, u8 imageGroup, u8 subImage)
 {
     commands << Opcode::DrawSprite;
     commands << position;
@@ -100,14 +96,14 @@ void CommandBuffer::Run(class View& view, Starfield& background)
         {
             case Opcode::SetViewOffset:
             {
-                Vector<int> offset;
+                Vector<s16> offset;
                 iter >> offset;
                 view.SetOffset(offset);
             }
             break;
             case Opcode::DrawSprite:
             {
-                Vector<int> position;
+                Vector<s16> position;
                 u8 imageGroup;
                 u8 imageIndex;
                 iter >> position;

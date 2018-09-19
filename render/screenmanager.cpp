@@ -76,7 +76,7 @@ bool ScreenManager::Initialize()
 	}
 
     framebuffer->SetVirtualOffset(0, 0);
-    size = Vector<int>(framebuffer->GetWidth(), framebuffer->GetHeight());
+    size = Vector<s16>(framebuffer->GetWidth(), framebuffer->GetHeight());
     stride = framebuffer->GetPitch();
     bufferAddress = reinterpret_cast<u8*>(framebuffer->GetBuffer());
     ClearClip();
@@ -211,7 +211,7 @@ unsigned ScreenManager::GetFlipTimePCT()
     return DivRound(100 * presentTicks, ticksPerFrame);
 }
 
-void ScreenManager::SetClip(const Rect<int>& rect)
+void ScreenManager::SetClip(const Rect<s16>& rect)
 {
     clip = GetScreenRect() & rect;
 }
@@ -221,7 +221,7 @@ void ScreenManager::ClearClip()
     clip = GetScreenRect();
 }
 
-void ScreenManager::DrawPixel(const Vector<int>& at, u8 color)
+void ScreenManager::DrawPixel(const Vector<s16>& at, u8 color)
 {
     if(!bufferAddress)
     {
@@ -234,14 +234,14 @@ void ScreenManager::DrawPixel(const Vector<int>& at, u8 color)
     *GetPixelAddress(at) = color;
 }
 
-void ScreenManager::DrawRect(const Rect<int>& rect, u8 color)
+void ScreenManager::DrawRect(const Rect<s16>& rect, u8 color)
 {
     if(!bufferAddress)
     {
         return;
     }
     // Clip the rect to the frame buffer
-    Rect<int> clipped = clip & rect;
+    Rect<s16> clipped = clip & rect;
     if(!clipped.IsValid())
     {
         return;
@@ -268,7 +268,7 @@ void ScreenManager::Clear(u8 color)
     DrawRect(clip, color);
 }
 
-Image ScreenManager::GetImageRect(const Rect<int>& rect, frame_t source)
+Image ScreenManager::GetImageRect(const Rect<s16>& rect, frame_t source)
 {
     // Note that the Image returned refers directly to the framebuffer
     // data and it will not update when swapping buffers.
@@ -276,14 +276,14 @@ Image ScreenManager::GetImageRect(const Rect<int>& rect, frame_t source)
     return Image(image_pixels, rect.size.x, rect.size.y, -1, stride);
 }
 
-void ScreenManager::DrawImage(const Vector<int>& at, const Image& image)
+void ScreenManager::DrawImage(const Vector<s16>& at, const Image& image)
 {
     if(!bufferAddress)
     {
         return;
     }
 
-    Rect<int> clipped = clip & Rect<int>(at, image.GetSize());
+    Rect<s16> clipped = clip & Rect<s16>(at, image.GetSize());
 
     if(!clipped.IsValid())
     {
@@ -349,14 +349,14 @@ void ScreenManager::DrawImage(const Vector<int>& at, const Image& image)
     }
 }
 
-void ScreenManager::DrawChar(const Vector<int>& at, char c, u8 color, const Font& font)
+void ScreenManager::DrawChar(const Vector<s16>& at, char c, u8 color, const Font& font)
 {
     if(!bufferAddress)
     {
         return;
     }
 
-    Rect<int> clipped = clip & Rect<int>(at, font.GetSize(c));
+    Rect<s16> clipped = clip & Rect<s16>(at, font.GetSize(c));
     if(!clipped.IsValid())
     {
         return;
@@ -380,9 +380,9 @@ void ScreenManager::DrawChar(const Vector<int>& at, char c, u8 color, const Font
     }
 }
 
-void ScreenManager::DrawString(const Vector<int>& at, const char* string, u8 color, const Font& font)
+void ScreenManager::DrawString(const Vector<s16>& at, const char* string, u8 color, const Font& font)
 {
-    Vector<int> current = at;
+    Vector<s16> current = at;
     for(int i=0; string[i]; i++)
     {
         if(string[i] == '\n')

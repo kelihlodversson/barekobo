@@ -1,4 +1,6 @@
 #pragma once
+#include "circle/types.h"
+
 #include "util/vector.h"
 
 namespace hfh3
@@ -68,7 +70,7 @@ namespace hfh3
         }
 
 
-        Vector<int> ToDelta(int speed=1);
+        Vector<s16> ToDelta(int speed=1);
     private:
         Value value;
     };

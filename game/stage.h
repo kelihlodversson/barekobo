@@ -15,24 +15,24 @@ namespace hfh3
         /** Creates a new stage of size width x height
           * The width and heights must be power of two.
           */
-        Stage(int width, int height);
+        Stage(s16 width, s16 height);
 
 
         /** Modifies the vector reference passed in so it is within
           * the play area.
           */
-        Vector<int> WrapCoordinate(const Vector<int>& vector) const
+        Vector<s16> WrapCoordinate(const Vector<s16>& vector) const
         {
-            return {vector.x & maskX, vector.y & maskY};
+            return Vector<s16>(vector.x & maskX, vector.y & maskY);
         }
 
-        int GetWidth() { return size.x; }
-        int GetHeight() { return size.y; }
-        const Vector<int>& GetSize() { return size; }
+        s16 GetWidth() { return size.x; }
+        s16 GetHeight() { return size.y; }
+        const Vector<s16>& GetSize() { return size; }
 
     private:
-        Vector<int> size;
-        int maskX;
-        int maskY;
+        Vector<s16> size;
+        s16 maskX;
+        s16 maskY;
     };
 }

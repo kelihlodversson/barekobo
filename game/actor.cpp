@@ -13,7 +13,7 @@ Actor::Actor(World& inWorld, CollisionMask inCollisionTargetMask, CollisionMask 
     , collisionSourceMask(inCollisionSourceMask)
 {}
 
-void Actor::SetPosition(const Vector<int>& newPosition)
+void Actor::SetPosition(const Vector<s16>& newPosition)
 {
     position = stage.WrapCoordinate(newPosition);
     positionDirty = true;

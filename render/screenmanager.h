@@ -65,11 +65,11 @@ namespace hfh3
 
         bool Initialize();
 
-        void DrawImage(const Vector<int>& at, const class Image& image);
-        void DrawPixel(const Vector<int>& at, u8 color);
-        void DrawRect(const Rect<int>& rect, u8 color);
-        void DrawChar(const Vector<int>& at, char c, u8 color, const class Font& font);
-        void DrawString(const Vector<int>& at, const char* string, u8 color, const class Font& font);
+        void DrawImage(const Vector<s16>& at, const class Image& image);
+        void DrawPixel(const Vector<s16>& at, u8 color);
+        void DrawRect(const Rect<s16>& rect, u8 color);
+        void DrawChar(const Vector<s16>& at, char c, u8 color, const class Font& font);
+        void DrawString(const Vector<s16>& at, const char* string, u8 color, const class Font& font);
         void Clear(u8 color=0);
 
         /** Returns an image object representing a rectangle of screen area.
@@ -79,18 +79,18 @@ namespace hfh3
           * Note that partially overlapping rects from the same frame buffer
           * are currently not supported.
           */
-        class Image GetImageRect(const Rect<int>& rect, frame_t source = VISIBLE);
+        class Image GetImageRect(const Rect<s16>& rect, frame_t source = VISIBLE);
 
         int GetWidth() const { return size.x; }
         int GetHeight() const { return size.y; }
-        Vector<int> GetSize() const { return size; }
-        Rect<int> GetScreenRect() const { return Rect<int>(Vector<int>(), size); }
+        Vector<s16> GetSize() const { return size; }
+        Rect<s16> GetScreenRect() const { return Rect<s16>(Vector<s16>(), size); }
 
         /** Limits output to a rectangle
           * The rectangle coordinates are in physical screen coordinates
           */
-        void SetClip(const Rect<int>& rect);
-        const Rect<int>& GetClip() const { return clip; }
+        void SetClip(const Rect<s16>& rect);
+        const Rect<s16>& GetClip() const { return clip; }
         void ClearClip();
 
         /** Present the working image buffer
@@ -135,7 +135,7 @@ namespace hfh3
 #endif
         }
 
-        u8* GetPixelAddress(const Vector<int>& at, frame_t frame = ACTIVE)
+        u8* GetPixelAddress(const Vector<s16>& at, frame_t frame = ACTIVE)
         {
             return GetPixelAddress(at.x, at.y, frame);
         }
@@ -174,9 +174,9 @@ namespace hfh3
         u8* renderBuffer;
 #endif
         u8* bufferAddress;
-        Vector<int> size;
+        Vector<s16> size;
         int stride;
-        Rect<int> clip;
+        Rect<s16> clip;
 
         unsigned lastSync;
         unsigned ticksPerFrame;

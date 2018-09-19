@@ -10,7 +10,7 @@
 using namespace hfh3;
 
 Shot::Shot(class World &inWorld, ImageSheet &imageSheet, ImageSet imageSet,
-           const Vector<int> &inPosition, Direction direction, int speed)
+           const Vector<s16> &inPosition, Direction direction, int speed)
     : Mover(inWorld, (u8)imageSet, imageSheet.GetGroupSize(),
             direction, speed,
             CollisionMask::None, imageSet == ImageSet::MiniShot?CollisionMask::Player:CollisionMask::Enemy),
@@ -51,7 +51,7 @@ void Shot::OnCollision(class Actor* other)
     Destroy();
 }
 
-Rect<int> Shot::GetBounds()
+Rect<s16> Shot::GetBounds()
 {
     if(rotator)
     {
@@ -59,6 +59,6 @@ Rect<int> Shot::GetBounds()
     }
     else
     {
-        return {GetPosition()+Vector<int>(4,4), {8,8}};
+        return {GetPosition()+Vector<s16>(4,4), {8,8}};
     }
 }

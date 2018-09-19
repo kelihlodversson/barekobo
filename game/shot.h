@@ -10,12 +10,12 @@ namespace hfh3
     {
     public:
         Shot(class World& inWorld, class ImageSheet& imageSheet, ImageSet imageSet,
-             const Vector<int>& inPosition, Direction direction, int speed = 1);
+             const Vector<s16>& inPosition, Direction direction, int speed = 1);
 
         virtual void Update() override;
         virtual void Draw(class CommandBuffer& commands) override;
         virtual void OnCollision(class Actor* other) override;
-        virtual Rect<int> GetBounds() override;
+        virtual Rect<s16> GetBounds() override;
 
     private:
         bool rotator;

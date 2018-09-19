@@ -22,7 +22,7 @@ Mover::Mover(class World &inWorld, u8 inImageGroup, u8 inImageCount,
 
 void Mover::UpdatePosition()
 {
-    Vector<int> delta = direction.ToDelta(speed);
+    Vector<s16> delta = direction.ToDelta(speed);
     SetPosition(GetPosition() + delta);
 }
 

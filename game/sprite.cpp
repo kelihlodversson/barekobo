@@ -10,7 +10,7 @@ Sprite::Sprite(class World &inWorld,
                 u8 inImageGroup, u8 inImageCount, 
                 CollisionMask inCollisionTargetMask, 
                 CollisionMask inCollisionSourceMask,
-                const Vector<int> inSize) 
+                const Vector<s16> inSize) 
     : Actor(inWorld, inCollisionTargetMask, inCollisionSourceMask)
     , imageGroup(inImageGroup)
     , imageCount(inImageCount)
@@ -23,7 +23,7 @@ void Sprite::Draw(CommandBuffer& commands)
     commands.DrawSprite(GetPosition(), imageGroup, current);
 }
 
-Rect<int> Sprite::GetBounds()
+Rect<s16> Sprite::GetBounds()
 {
     return {GetPosition(), size};
 }

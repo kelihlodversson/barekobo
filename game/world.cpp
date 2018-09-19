@@ -29,7 +29,7 @@ World::World(ScreenManager& inScreen, class Input& inInput, Network& inNetwork)
     , partitionSize(stage.GetSize() / partitionGridCount)
 {
     // Initial partitioning: partition the world into 8x8+1 partitions:
-    Rect<int> bounds ({0,0}, partitionSize);
+    Rect<s16> bounds ({0,0}, partitionSize);
     for(int y = 0; y < partitionGridCount; y++,  bounds.origin.y += partitionSize.y)
     {
         bounds.origin.x = 0;
@@ -62,7 +62,7 @@ void World::Update()
 {
     for(Partition& partition : partitions)
     {
-        Rect<int> bounds = partition.GetBounds();
+        Rect<s16> bounds = partition.GetBounds();
         for(Actor* actor : partition.Reverse())
         {
             assert(actor);
@@ -96,7 +96,7 @@ void World::Draw()
         return;
     }
 
-    Rect<int> playerBounds = player->GetBounds();
+    Rect<s16> playerBounds = player->GetBounds();
     View view = View(stage, screen);
     view.SetCenterOffset(playerBounds.origin+playerBounds.size/2);
 
@@ -132,7 +132,7 @@ void World::PerformCollisionCheck()
     {
         if(collider->collisionSourceMask != CollisionMask::None)
         {
-            const Rect<int> bounds = collider->GetBounds();
+            const Rect<s16> bounds = collider->GetBounds();
             GetPartitionRange(bounds, x_min, x_max, y_min, y_max);
             for (int y = y_min; y < y_max; y++)
             {
@@ -167,7 +167,7 @@ void World::SpawnPlayer()
     AddActor(player);
 }
 
-void World::SpawnMissile(const Vector<int>& startPosition, const Direction& direction, int speed)
+void World::SpawnMissile(const Vector<s16>& startPosition, const Direction& direction, int speed)
 {
     AddActor(new Shot(*this, imageSheet, ImageSet::Missile, startPosition, direction, speed));
 }
@@ -224,7 +224,7 @@ void World::AssignPartitions()
     needsNewPartition.Clear();
 }
 
-void World::GetPartitionRange(const Rect<int>& rect, int& x1, int& x2, int& y1, int& y2)
+void World::GetPartitionRange(const Rect<s16>& rect, int& x1, int& x2, int& y1, int& y2)
 {
     x1 = rect.Left() / partitionSize.x;
     x2 = 1 + rect.Right() / partitionSize.x;
@@ -246,7 +246,7 @@ void World::GetPartitionRange(const Rect<int>& rect, int& x1, int& x2, int& y1, 
 
 void World::GameLoop()
 {
-    Rect<int> clippedArea(10, 10, screen.GetWidth()-20, screen.GetHeight()-20);
+    Rect<s16> clippedArea(10, 10, screen.GetWidth()-20, screen.GetHeight()-20);
     CString message;
     CString pos;
     CString tmp;

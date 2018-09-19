@@ -14,12 +14,12 @@ namespace hfh3
         /** Translates a stage coordinate to a screen coordinate.
           * (no pun intended.)
           */
-        Vector<int> StageToScreen(const Vector<int>& stageVector) const
+        Vector<s16> StageToScreen(const Vector<s16>& stageVector) const
         {
             return stage.WrapCoordinate(stageVector - screenOffset);
         }
 
-        Rect<int> StageToScreen(const Rect<int>& stageRect) const
+        Rect<s16> StageToScreen(const Rect<s16>& stageRect) const
         {
             return {StageToScreen(stageRect.origin), stageRect.size};
         }
@@ -32,7 +32,7 @@ namespace hfh3
         /** Changes the virtual offset added to any coordinates passed in
           * via DrawImage, DrawRect and DrawPixel
           */
-        void SetOffset(const Vector<int>& offset)
+        void SetOffset(const Vector<s16>& offset)
         {
             screenOffset = offset;
         }
@@ -40,25 +40,25 @@ namespace hfh3
         /** Same as setOffset, but moves the center of the screen
           * of the top left corner.
           */
-        void SetCenterOffset(const Vector<int>& offset)
+        void SetCenterOffset(const Vector<s16>& offset)
         {
-            Vector<int> center = screen.GetSize()/2;
+            Vector<s16> center = screen.GetSize()/2;
             screenOffset = stage.WrapCoordinate(offset - center);
         }
 
-        Vector<int> GetOffset()
+        Vector<s16> GetOffset()
         {
             return screenOffset;
         }
 
-        Rect<int> GetVisibleRect()
+        Rect<s16> GetVisibleRect()
         {
             return {screenOffset, screen.GetSize()};
         }
 
         /** Returns true if the rect passed in is within the visible screen area
           */
-        bool IsVisible(const Rect<int>& stageRect)
+        bool IsVisible(const Rect<s16>& stageRect)
         {
             return GetVisibleRect().OverlapsMod(stageRect, stage.GetSize());
         }
@@ -66,12 +66,12 @@ namespace hfh3
         /** The following methods map a stage coordinate to a screen coordinate
           * before passing the argumetns to the screen manager
           */
-        void DrawImage(const Vector<int>& at, const class Image& image);
-        void DrawPixel(const Vector<int>& at, u8 color);
-        void DrawRect(const Rect<int>& rect, u8 color);
+        void DrawImage(const Vector<s16>& at, const class Image& image);
+        void DrawPixel(const Vector<s16>& at, u8 color);
+        void DrawRect(const Rect<s16>& rect, u8 color);
     private:
         class Stage& stage;
         class ScreenManager& screen;
-        Vector<int> screenOffset;
+        Vector<s16> screenOffset;
     };
 }

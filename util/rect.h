@@ -117,13 +117,13 @@ namespace hfh3
         /** returns true if two rectangles intersect when taking into account
           * wrapping around a passed in modulo.
           */
-        bool OverlapsMod(const Rect<int>& other, const Vector<int>& modulo)
+        bool OverlapsMod(const Rect<s16>& other, const Vector<s16>& modulo)
         {
-            Rect<int> shifted (other.origin - origin, other.size);
+            Rect<s16> shifted (other.origin - origin, other.size);
             shifted.origin.x %= modulo.x;
             shifted.origin.y %= modulo.y;
 
-            Rect<int> wrapped = shifted;
+            Rect<s16> wrapped = shifted;
             if (wrapped.origin.x < 0)
             {
                 wrapped.origin.x += modulo.x;

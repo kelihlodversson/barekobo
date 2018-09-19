@@ -28,7 +28,7 @@ namespace hfh3
         void Draw();
         void SpawnEnemy();
         void SpawnPlayer();
-        void SpawnMissile(const Vector<int>& position, const class Direction& direction , int speed);
+        void SpawnMissile(const Vector<s16>& position, const class Direction& direction , int speed);
 
         
         class Stage& GetStage() 
@@ -56,7 +56,7 @@ namespace hfh3
         static const int partitionGridMask = partitionGridCount-1;
         static const int partitionCount = partitionGridCount*partitionGridCount;
         
-        const Vector<int> partitionSize;
+        const Vector<s16> partitionSize;
         Partition partitions[partitionCount];
         
         Partition& GetPartition(int x, int y)
@@ -64,7 +64,7 @@ namespace hfh3
             return partitions[(y & partitionGridMask)*partitionGridCount + (x & partitionGridMask)];
         }  
 
-        Partition& GetPartition(const Vector<int>& pos)
+        Partition& GetPartition(const Vector<s16>& pos)
         {
             return GetPartition(pos.x / partitionSize.x, pos.y / partitionSize.y);
         }
@@ -73,7 +73,7 @@ namespace hfh3
 
         // Returns a range of indexes to pass to GetPartition(x,y) that potentially contain
         // actors that overlap the rectangle passed in. 
-        void GetPartitionRange(const Rect<int>& rect, int& x1, int& x2, int& y1, int& y2);
+        void GetPartitionRange(const Rect<s16>& rect, int& x1, int& x2, int& y1, int& y2);
 
         // When actors are spawned or moved out of the bounding box of a partition,
         // they will be added to this list.

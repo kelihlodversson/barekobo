@@ -22,7 +22,7 @@ Enemy::Enemy(World& inWorld, ImageSheet& imageSheet, Random& inRandom) :
     random(inRandom),
     relaxed(inRandom.Get() % 100 + 10)
 {
-    SetPosition(random.GetVector<int>());
+    SetPosition(random.GetVector<s16>());
 }
 
 void Enemy::Update()

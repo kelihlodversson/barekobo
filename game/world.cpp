@@ -99,7 +99,9 @@ void World::Draw()
     Rect<int> playerBounds = player->GetBounds();
     View view = View(stage, screen);
     view.SetCenterOffset(playerBounds.origin+playerBounds.size/2);
+
     commands.SetViewOffset(view.GetOffset());
+    commands.DrawBackground();
 
     // Loop trhough all partitions and call render on actors in partitions that
     // extend into the visible area.
@@ -119,10 +121,6 @@ void World::Draw()
 
         }
     }
-    // The background object is special and is not stored in a partition
-    // it should always be rendered first.
-    background.Draw(view);
-    commands.Run(view);
 }
 
 void World::PerformCollisionCheck()
@@ -253,6 +251,7 @@ void World::GameLoop()
     CString pos;
     CString tmp;
 
+    View view = View(stage, screen);
     while(true)
     {
         u32 ip = network.GetIPAddress();
@@ -274,6 +273,9 @@ void World::GameLoop()
 
         Update();
         Draw();
+
+        // Actually execute the scheduled draw commands
+        commands.Run(view, background);
 
         screen.ClearClip();
         screen.Present();

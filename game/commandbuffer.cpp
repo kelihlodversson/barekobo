@@ -1,6 +1,7 @@
 #include "game/commandbuffer.h"
 
 #include "game/view.h"
+#include "game/starfield.h"
 
 #include "util/log.h"
 #include "render/image.h"
@@ -11,8 +12,8 @@ using namespace hfh3;
 enum class Opcode : u8
 {
     SetViewOffset,
-    DrawSprite,
     DrawBackground,
+    DrawSprite,
 };
 
 typedef Array<u8> CommandArray;
@@ -76,6 +77,11 @@ void CommandBuffer::SetViewOffset(const Vector<int>& position)
     commands << position;
 }
 
+void CommandBuffer::DrawBackground()
+{
+    commands << Opcode::DrawBackground;
+}
+
 void CommandBuffer::DrawSprite(const Vector<int>& position, u8 imageGroup, u8 subImage)
 {
     commands << Opcode::DrawSprite;
@@ -84,7 +90,7 @@ void CommandBuffer::DrawSprite(const Vector<int>& position, u8 imageGroup, u8 su
     commands << subImage;
 }
 
-void CommandBuffer::Run(class View& view)
+void CommandBuffer::Run(class View& view, Starfield& background)
 {
     Opcode op = Opcode::DrawBackground;
     for(auto iter = commands.begin(); iter != commands.end();)
@@ -108,6 +114,11 @@ void CommandBuffer::Run(class View& view)
                 iter >> imageGroup;
                 iter >> imageIndex;
                 view.DrawImage(position, imageSheet[imageGroup][imageIndex]);
+            }
+            break;
+            case Opcode::DrawBackground:
+            {
+                background.Draw(view);
             }
             break;
             default:

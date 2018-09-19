@@ -17,11 +17,12 @@ namespace hfh3
         {
 
         }
-        
+
         void SetViewOffset(const Vector<int>& position);
+        void DrawBackground();
         void DrawSprite(const Vector<int>& position, u8 imageGroup, u8 subImage);
 
-        void Run(class View& view);
+        void Run(class View& view, class Starfield& backround);
     private:
         class ImageSheet& imageSheet;
         Array<u8> commands;

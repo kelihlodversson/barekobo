@@ -2,7 +2,7 @@
 
 using namespace hfh3;
 
-Vector<s16> Direction::ToDelta(int speed)
+Vector<s16> Direction::ToDelta(s16 speed)
 {
     // Note when travelling diagonally, the speed will be approx. 41% too fast,
     // as the magnitude of the vector will actually be SQRT(2*(speed**2))
@@ -11,23 +11,23 @@ Vector<s16> Direction::ToDelta(int speed)
     switch(value)
     {
     case North:
-        return { 0,     -speed};
+        return Vector<s16>( 0,     -speed);
     case NorthEast:
-        return { speed, -speed};
+        return Vector<s16>( speed, -speed);
     case East:
-        return { speed,  0    };
+        return Vector<s16>( speed,  0    );
     case SouthEast:
-        return { speed,  speed};
+        return Vector<s16>( speed,  speed);
     case South:
-        return { 0,      speed};
+        return Vector<s16>( 0,      speed);
     case SouthWest:
-        return {-speed,  speed};
+        return Vector<s16>(-speed,  speed);
     case West:
-        return {-speed,  0    };
+        return Vector<s16>(-speed,  0    );
     case NorthWest:
-        return {-speed, -speed};
+        return Vector<s16>(-speed, -speed);
     default:
     case Stopped:
-        return { 0,      0    };
+        return Vector<s16>( 0,      0    );
     }
 }

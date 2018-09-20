@@ -70,7 +70,7 @@ namespace hfh3
         }
 
 
-        Vector<s16> ToDelta(int speed=1);
+        Vector<s16> ToDelta(s16 speed=1);
     private:
         Value value;
     };

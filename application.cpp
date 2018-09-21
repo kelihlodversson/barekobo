@@ -6,7 +6,8 @@
 
 #include "render/font.h"
 
-#include "game/world.h"
+#include "game/gameserver.h"
+#include "game/gameclient.h"
 
 #include "network/network.h"
 
@@ -48,25 +49,48 @@ bool Application::Initialize()
 }
 
 /**
-* This is the main run loop for the application.
-* Should update game state and present each frame.
-*/
+ * This is the main entry point for the application.
+ */
 int Application::Run()
 {
     INFO("Started MultiKobo. Compile time: " __DATE__ " " __TIME__);
-    //TimerTest(-1, this, nullptr);
-        DEBUG("Screenmanager: %p", &screenManager);
-
     const int enemyCount = 3000;
 
-    List<class Actor*>::Reserve(3100);
-    World world(screenManager, input, network);
-    for (int i = 0; i < enemyCount; i++)
-    {
-        world.SpawnEnemy();
-    }
+    u32 server_address = 0x5089A8C0; //192.168.137.80
 
-    world.SpawnPlayer();
-    world.GameLoop();
+    if ( network.GetIPAddress() == server_address )
+    {
+
+        screenManager.DrawString(screenManager.GetSize()/2-Vector<s16>(32*4,-16), "Waiting for client connection...", 20, Font::GetDefault());
+        screenManager.Present();
+
+
+        List<class Actor*>::Reserve(3100);
+        GameServer server(screenManager, input, network);
+
+        server.Bind();
+        screenManager.Clear();
+        screenManager.Present();
+
+        for (int i = 0; i < enemyCount; i++)
+        {
+            server.SpawnEnemy();
+        }
+
+        server.SpawnPlayer();
+        server.GameLoop();
+    }
+    else
+    {
+        screenManager.DrawString(screenManager.GetSize()/2-Vector<s16>(23*4,-16), "Connecting to server...", 20, Font::GetDefault());
+        screenManager.Present();
+
+        GameClient client(screenManager, input, network);
+
+        client.Connect();
+        screenManager.Clear();
+        screenManager.Present();
+        client.GameLoop();
+    }
     return EXIT_HALT;
 }

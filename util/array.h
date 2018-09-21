@@ -8,7 +8,7 @@
 
 namespace hfh3
 {
-    /** Templated container class that implements a simple double link list.
+    /** Templated container class that implements a dynamic array.
       */
     template<typename T>
     class Array
@@ -113,6 +113,24 @@ namespace hfh3
             // Initialize the element using placement new
             new (&data[count]) T(args...);
             return Iterator(&data[count++]);
+        }
+
+        Iterator AppendRaw(const T* src, int num)
+        {
+            int old_count = count;
+            count += num;
+            if(reserved < count)
+            {
+                Reserve(count>=MIN_RESERVE ? count : MIN_RESERVE);
+            }
+            T* dest = &data[old_count];
+            memcpy(dest, src, num*sizeof(T));
+            return Iterator(dest);
+        }
+
+        Iterator Append(const Array<T>& other)
+        {
+            return Append(other.data, other.count);
         }
 
         T& operator[](int index)

@@ -14,7 +14,7 @@ namespace hfh3
     class Actor
     {
     public:
-        Actor(class World& inWorld,
+        Actor(class GameServer& inWorld,
               CollisionMask inCollisionTargetMask = CollisionMask::Any, 
               CollisionMask inCollisionSourceMask = CollisionMask::None);
 
@@ -47,7 +47,7 @@ namespace hfh3
         }
 
     protected:
-        class World& world;
+        class GameServer& world;
         class Stage& stage;
 
         const Vector<s16>& GetPosition() const
@@ -78,6 +78,6 @@ namespace hfh3
         // Specifies which layers this object can generate a collision events with.
         const CollisionMask collisionSourceMask;
 
-        friend class World;
+        friend class GameServer;
     };
 }

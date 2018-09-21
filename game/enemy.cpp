@@ -1,7 +1,7 @@
 #include "game/enemy.h"
 #include "game/imagesets.h"
 #include "game/stage.h"
-#include "game/world.h"
+#include "game/gameserver.h"
 #include "render/image.h"
 #include "render/imagesheet.h"
 #include "util/random.h"
@@ -13,7 +13,7 @@ static const ImageSet enemyImages[7] = {
     ImageSet::Arch0, ImageSet::Arch1, ImageSet::Arch2
 };
 
-Enemy::Enemy(World& inWorld, ImageSheet& imageSheet, Random& inRandom) :
+Enemy::Enemy(GameServer& inWorld, ImageSheet& imageSheet, Random& inRandom) :
     Mover(inWorld,
           (u8)enemyImages[inRandom.Get() % 7],
           imageSheet.GetGroupSize(),

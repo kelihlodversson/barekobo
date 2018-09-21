@@ -1,6 +1,6 @@
 #include "game/shot.h"
 #include "game/imagesets.h"
-#include "game/world.h"
+#include "game/gameserver.h"
 #include "game/stage.h"
 #include "game/collisionmask.h"
 #include "render/image.h"
@@ -9,7 +9,7 @@
 
 using namespace hfh3;
 
-Shot::Shot(class World &inWorld, ImageSheet &imageSheet, ImageSet imageSet,
+Shot::Shot(class GameServer &inWorld, ImageSheet &imageSheet, ImageSet imageSet,
            const Vector<s16> &inPosition, Direction direction, int speed)
     : Mover(inWorld, (u8)imageSet, imageSheet.GetGroupSize(),
             direction, speed,

@@ -7,6 +7,10 @@
 #include "render/image.h"
 #include "render/imagesheet.h"
 
+#include <circle/net/socket.h>
+#include <circle/net/in.h>
+#include "circle/sched/scheduler.h"
+
 using namespace hfh3;
 
 enum class Opcode : u8
@@ -82,8 +86,7 @@ void CommandBuffer::DrawSprite(const Vector<s16>& position, u8 imageGroup, u8 su
 {
     commands << Opcode::DrawSprite;
     commands << position;
-    commands << imageGroup;
-    commands << subImage;
+    commands << u8((imageGroup<<4)|(subImage&0xF));
 }
 
 void CommandBuffer::Run(class View& view, Starfield& background)
@@ -104,12 +107,10 @@ void CommandBuffer::Run(class View& view, Starfield& background)
             case Opcode::DrawSprite:
             {
                 Vector<s16> position;
-                u8 imageGroup;
-                u8 imageIndex;
+                u8 image;
                 iter >> position;
-                iter >> imageGroup;
-                iter >> imageIndex;
-                view.DrawImage(position, imageSheet[imageGroup][imageIndex]);
+                iter >> image;
+                view.DrawImage(position, imageSheet[image >> 4][image & 0xF]);
             }
             break;
             case Opcode::DrawBackground:
@@ -126,4 +127,31 @@ void CommandBuffer::Run(class View& view, Starfield& background)
         }
     }
     commands.ClearFast();
+}
+
+// Utility operators for sending and receiving command buffers
+void CommandBuffer::Send (CSocket* stream)
+{
+    stream->Send(&commands[0], commands.Size(), MSG_DONTWAIT);
+}
+
+void CommandBuffer::Receive (CSocket* stream)
+{
+    assert(commands.Size() == 0);
+    static const int read_size = FRAME_BUFFER_SIZE;
+    u8 tmp[read_size];
+    int count;
+    do
+    {
+        count = stream->Receive(tmp, read_size, MSG_DONTWAIT);
+        DEBUG("Count %d", count);
+        if(count)
+        {
+            commands.AppendRaw(tmp, count);
+        }
+        else
+        {
+            CScheduler::Get()->Yield();
+        }
+    }  while (count == 0 || count == read_size);
 }

@@ -10,7 +10,7 @@ namespace hfh3
     class Sprite : public Actor 
     {
     public:
-      Sprite(class World &inWorld, 
+      Sprite(class GameServer &inWorld, 
              u8 inImageGroup, u8 inImageCount, 
              CollisionMask inCollisionTargetMask, 
              CollisionMask inCollisionSourceMask = CollisionMask::None,

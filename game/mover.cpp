@@ -3,7 +3,7 @@
 
 using namespace hfh3;
 
-Mover::Mover(class World &inWorld, u8 inImageGroup, u8 inImageCount,
+Mover::Mover(class GameServer &inWorld, u8 inImageGroup, u8 inImageCount,
              Direction inDirection, int inSpeed,
              CollisionMask inCollisionTargetMask, CollisionMask inCollisionSourceMask)
     : Sprite(inWorld, inImageGroup, inImageCount, inCollisionTargetMask, inCollisionSourceMask)

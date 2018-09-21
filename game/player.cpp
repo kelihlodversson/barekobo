@@ -3,7 +3,7 @@
 #include "game/stage.h"
 #include "game/shot.h"
 #include "game/partition.h"
-#include "game/world.h"
+#include "game/gameserver.h"
 #include "game/collisionmask.h"
 
 #include "render/image.h"
@@ -13,7 +13,7 @@
 
 using namespace hfh3;
 
-Player::Player(class World& inWorld, class ImageSheet& inImageSheet, class Input& inInput) :
+Player::Player(class GameServer& inWorld, class ImageSheet& inImageSheet, class Input& inInput) :
     Mover(inWorld,
           (u8)ImageSet::Player0,
           inImageSheet.GetGroupSize(),

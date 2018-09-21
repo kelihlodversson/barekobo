@@ -6,7 +6,7 @@
 
 using namespace hfh3;
 
-Sprite::Sprite(class World &inWorld, 
+Sprite::Sprite(class GameServer &inWorld, 
                 u8 inImageGroup, u8 inImageCount, 
                 CollisionMask inCollisionTargetMask, 
                 CollisionMask inCollisionSourceMask,

@@ -1,5 +1,6 @@
 #pragma once
 #include "circle/types.h"
+#include <circle/net/socket.h>
 
 #include "util/vector.h"
 #include "util/rect.h"
@@ -25,8 +26,15 @@ namespace hfh3
         void DrawSprite(const Vector<s16>& position, u8 imageGroup, u8 subImage);
 
         void Run(class View& view, class Starfield& backround);
+
+        // Utility methods for sending and receiving command buffers
+        void Send (CSocket* stream);
+        void Receive (CSocket* stream);
+        
+       
     private:
         class ImageSheet& imageSheet;
         Array<u8> commands;
     };
+
 }

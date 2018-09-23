@@ -5,11 +5,13 @@
 
 namespace hfh3
 {
-    /** Wrapper around input methods for controlling the game
+    /** Abstract base class around input methods for controlling the game.
       */
     class Input
     {
     public:
+        Input();
+        
         enum Button
         {
             ButtonA,
@@ -28,25 +30,16 @@ namespace hfh3
             ButtonPressed      = ButtonStateChanged | ButtonDown   // The button was pressed down this frame
         };
 
-        Input();
-        ~Input();
-
-        bool Initialize();
         Direction GetPlayerDirection() {return playerDirection;}
         enum ButtonState GetButtonState(enum Button button);
 
-    private:
-        static Input* instance;
-        static void KeyboardStatusHandler(unsigned char modifiers, const unsigned char keys[6]);
-        static void GamePadStatusHandler (unsigned device, const class TGamePadState *state);
-        static int NormalizeAxisValue(int value, int min, int max);
+        // Returns a snapshot of the button state to be sent to a remote server
+        u8 DumpInputState();
 
-        void UpdateButtonState(unsigned device, unsigned buttonMask, const unsigned* decode);
-
+    protected:
         Direction playerDirection;
-        unsigned lastDevice;
         enum ButtonState buttons[4];
-        unsigned buttonLastDevice[4];
+        
     };
 
 }

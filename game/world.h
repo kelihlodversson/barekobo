@@ -19,7 +19,6 @@ namespace hfh3
         void GameLoop();
 
         virtual void Update() = 0;
-        virtual void Draw() = 0;
         
         class Stage& GetStage() 
         {

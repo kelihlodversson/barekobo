@@ -16,12 +16,16 @@
 #include "game/view.h"
 #include "game/commandbuffer.h"
 
+#include "circle/net/socket.h"
+#include "circle/net/in.h"
+
 using namespace hfh3;
 
 GameServer::GameServer(ScreenManager& inScreen, class Input& inInput, Network& inNetwork)
     : World(inScreen, inInput, inNetwork)
     , partitionSize(stage.GetSize() / partitionGridCount)
     , client(nullptr)
+    , clientCommands(imageSheet)
 {
     // Initial partitioning: partition the GameServer into 8x8 partitions:
     Rect<s16> bounds ({0,0}, partitionSize);
@@ -50,6 +54,12 @@ GameServer::~GameServer()
 
             delete actor;
         }
+    }
+
+    if(readerTask)
+    {
+        delete readerTask;
+        readerTask = nullptr;
     }
 
     if(client)
@@ -88,9 +98,16 @@ void GameServer::Update()
     AssignPartitions();
     PerformPendingDeletes();
     PerformCollisionCheck();
+
+    BuildCommandBuffer(player, commands);
+    if(client)
+    {
+        BuildCommandBuffer(remotePlayer, clientCommands);
+        clientCommands.Send(client);
+    }
 }
 
-void GameServer::Draw()
+void GameServer::BuildCommandBuffer(Actor* player, CommandBuffer& commandBuffer)
 {
     if(!player)
     {
@@ -101,8 +118,9 @@ void GameServer::Draw()
     View view = View(stage, screen);
     view.SetCenterOffset(playerBounds.origin+playerBounds.size/2);
 
-    commands.SetViewOffset(view.GetOffset());
-    commands.DrawBackground();
+    commandBuffer.Clear();
+    commandBuffer.SetViewOffset(view.GetOffset());
+    commandBuffer.DrawBackground();
 
     // Loop trhough all partitions and call render on actors in partitions that
     // extend into the visible area.
@@ -116,16 +134,11 @@ void GameServer::Draw()
             {
                 if(view.IsVisible(actor->GetBounds()))
                 {
-                    actor->Draw(commands);
+                    actor->Draw(commandBuffer);
                 }
             }
 
         }
-    }
-
-    if(client)
-    {
-        commands.Send(client);
     }
 }
 
@@ -171,6 +184,13 @@ void GameServer::SpawnPlayer()
 {
     player = new Player(*this, imageSheet, input);
     AddActor(player);
+}
+
+void GameServer::SpawnRemotePlayer()
+{
+    remotePlayer = new Player(*this, imageSheet, clientInput);
+    remotePlayer->SetPosition({32,32});
+    AddActor(remotePlayer);
 }
 
 void GameServer::SpawnMissile(const Vector<s16>& startPosition, const Direction& direction, int speed)
@@ -259,7 +279,34 @@ void GameServer::Bind()
 
         DEBUG("Waiting for greeting");
         u8 buffer[FRAME_BUFFER_SIZE];
-        int count = client->Receive(buffer, FRAME_BUFFER_SIZE, 0);
+        client->Receive(buffer, FRAME_BUFFER_SIZE, 0);
         // TODO Verify greeting
+
+        SpawnRemotePlayer();
+        readerTask = new NetworkReader(client, clientInput); 
     }
+}
+
+void GameServer::NetworkReader::Run()
+{
+    CScheduler* scheduler = CScheduler::Get();
+    while(true)
+    {
+        u8 buffer[FRAME_BUFFER_SIZE];
+        int count = connection->Receive(buffer, FRAME_BUFFER_SIZE, MSG_DONTWAIT);
+    
+        if(count)
+        {
+            for(int i = 0; i < count; i++)
+            {
+                remoteInput.SetInputState(buffer[i]);
+            }
+        }
+        else
+        {
+            // When there is no data ready, sleep for 60th of a second
+            // before trying again. This will also yield control to other threads
+            scheduler->MsSleep(16); 
+        }
+    }  
 }

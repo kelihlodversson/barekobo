@@ -21,15 +21,22 @@ namespace hfh3
 
         }
 
+        // Methods for building the command buffer
         void SetViewOffset(const Vector<s16>& position);
         void DrawBackground();
         void DrawSprite(const Vector<s16>& position, u8 imageGroup, u8 subImage);
+        void Clear() 
+        {
+            commands.ClearFast();
+        }
 
+        // This method will execute the buffered commands
         void Run(class View& view, class Starfield& backround);
 
         // Utility methods for sending and receiving command buffers
         void Send (CSocket* stream);
-        void Receive (CSocket* stream);
+        bool Receive (CSocket* stream);
+        
         
        
     private:

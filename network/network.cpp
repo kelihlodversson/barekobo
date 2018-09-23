@@ -75,8 +75,6 @@ CSocket* Network::ConnectToServer()
     return connection;
 }
 
-
-
 Network::~Network()
 {
     if (beacon)

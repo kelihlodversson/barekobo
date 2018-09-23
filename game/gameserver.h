@@ -7,6 +7,8 @@
 #include "util/vector.h"
 #include "util/rect.h"
 
+#include "input/proxyinput.h"
+
 #include "game/world.h"
 #include "game/partition.h"
 
@@ -25,10 +27,11 @@ namespace hfh3
         void Bind();
 
         virtual void Update() override;
-        virtual void Draw() override;
         
+        void BuildCommandBuffer(class Actor* player, CommandBuffer& commandBuffer);
         void SpawnEnemy();
         void SpawnPlayer();
+        void SpawnRemotePlayer();
         void SpawnMissile(const Vector<s16>& position, const class Direction& direction , int speed);
 
     private:
@@ -37,6 +40,21 @@ namespace hfh3
         void AssignPartitions();
         void PerformPendingDeletes();
 
+        class NetworkReader : public CTask
+        {
+        public:
+            NetworkReader(CSocket* inConnection, ProxyInput& inRemoteInput)
+                : connection(inConnection)
+                , remoteInput(inRemoteInput)
+            {}
+
+            virtual void Run() override;
+
+        private:
+            CSocket* connection;
+            ProxyInput& remoteInput;
+        };        
+        
         Random random;
 
         static const int maxActorSize = 16;
@@ -69,7 +87,13 @@ namespace hfh3
         Array<class Actor*> pendingDelete;
         List<class Actor*> collisionSources;
         class Actor* player;
+        class Actor* remotePlayer;
         
         CSocket* client;
+        CommandBuffer clientCommands;
+        ProxyInput    clientInput;
+        NetworkReader* readerTask;
+
+
     };
 }

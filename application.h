@@ -15,6 +15,7 @@
 
 #include "render/screenmanager.h"
 #include "input/input.h"
+#include "input/localinput.h"
 #include "network/network.h"
 
 namespace hfh3
@@ -42,10 +43,10 @@ namespace hfh3
         CDWHCIDevice       usb;
         
         // ** Application objects:
-        // Sprite manager manages rendering sprites on the screen and
+        // ScreenManager manages rendering to the screen and
         // performing page flipping to avoid flickering.
         ScreenManager screenManager;
-        Input         input;
+        LocalInput    input;
         Network       network;
     };
 }

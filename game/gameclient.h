@@ -21,26 +21,26 @@ namespace hfh3
         void Connect();
 
         virtual void Update() override;
-        virtual void Draw() override;
+
     private:
-    
-        // Due to how the socket framework schedules transfers,
-        // the client sometimes needs an Idle task to yield to while waiting for data.
-        class Idle : public CTask
+
+        class NetworkReader : public CTask
         {
         public:
-            virtual void Run() override
-            {
-                CScheduler *scheduler = CScheduler::Get();
+            NetworkReader(CSocket* inServer, CommandBuffer& inCommandBuffer)
+                : server(inServer)
+                , commands(inCommandBuffer)
+            {}
 
-                while(true)
-                {
-                    scheduler->Yield();
-                }
-            }
+            virtual void Run() override;
+
+        private:
+            CSocket* server;
+            CommandBuffer& commands;
         };
-        CSocket* server;
-        Idle idleTask;
 
+        u8 lastInputState;
+        CSocket* server;
+        NetworkReader* readerTask;
     };
 }

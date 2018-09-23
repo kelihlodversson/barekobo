@@ -35,15 +35,17 @@ World::~World()
 
 void World::GameLoop()
 {
-    Rect<s16> clippedArea(10, 10, screen.GetWidth()-20, screen.GetHeight()-20);
+    Rect<s16> clippedArea(0, 10, screen.GetWidth(), screen.GetHeight()-10);
     CString message;
     CString pos;
     CString tmp;
 
     View view = View(stage, screen);
+    u32 ip = network.GetIPAddress();
     while(true)
     {
-        u32 ip = network.GetIPAddress();
+        Update();
+
         message.Format("IP: %u.%u.%u.%u. FPS: %u. Missed: %d. Render:%3u%% Copy:%3u%%",
             (ip & 0xff),
             (ip & 0xff00)>>8,
@@ -55,19 +57,18 @@ void World::GameLoop()
             screen.GetFlipTimePCT()
         );
 
-        screen.Clear(10);
-        screen.DrawString({1,1}, message, 0, Font::GetDefault());
-        screen.SetClip(clippedArea);
-        screen.Clear(0);
+        {
+            screen.Clear(10);
+            screen.DrawString({1,1}, message, 0, Font::GetDefault());
+            screen.SetClip(clippedArea);
+            screen.Clear(0);
 
-        Update();
-        Draw();
+            // Actually execute the scheduled draw commands
+            commands.Run(view, background);
 
-        // Actually execute the scheduled draw commands
-        commands.Run(view, background);
-
-        screen.ClearClip();
-        screen.Present();
+            screen.ClearClip();
+            screen.Present();
+        }
     }
 
 }

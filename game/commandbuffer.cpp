@@ -7,8 +7,8 @@
 #include "render/image.h"
 #include "render/imagesheet.h"
 
-#include <circle/net/socket.h>
-#include <circle/net/in.h>
+#include "circle/net/socket.h"
+#include "circle/net/in.h"
 #include "circle/sched/scheduler.h"
 
 using namespace hfh3;
@@ -126,32 +126,28 @@ void CommandBuffer::Run(class View& view, Starfield& background)
             break;
         }
     }
-    commands.ClearFast();
 }
 
-// Utility operators for sending and receiving command buffers
+// Utility methods for sending and receiving command buffers
 void CommandBuffer::Send (CSocket* stream)
 {
     stream->Send(&commands[0], commands.Size(), MSG_DONTWAIT);
 }
 
-void CommandBuffer::Receive (CSocket* stream)
+bool CommandBuffer::Receive (CSocket* stream)
 {
-    assert(commands.Size() == 0);
     static const int read_size = FRAME_BUFFER_SIZE;
     u8 tmp[read_size];
     int count;
-    do
+    count = stream->Receive(tmp, read_size, MSG_DONTWAIT);
+    if(count)
     {
-        count = stream->Receive(tmp, read_size, MSG_DONTWAIT);
-        DEBUG("Count %d", count);
-        if(count)
-        {
-            commands.AppendRaw(tmp, count);
-        }
-        else
-        {
-            CScheduler::Get()->Yield();
-        }
-    }  while (count == 0 || count == read_size);
+        // TODO: There is no indication in the data where one frame
+        // starts and the other ends in case we need to resynchronize
+        // the stream after transmission errors.
+        commands.ClearFast(); 
+        commands.AppendRaw(tmp, count);
+        return true;
+    }
+    return false;
 }

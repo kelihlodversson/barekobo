@@ -1,6 +1,7 @@
 
 #include "game/gameclient.h"
 #include "network/network.h"
+#include "input/input.h"
 #include "graphics/sprite_data.h"
 #include "util/vector.h"
 #include "util/log.h"
@@ -12,18 +13,27 @@
 #include "game/view.h"
 #include "game/commandbuffer.h"
 
+#include "circle/net/socket.h"
+#include "circle/net/in.h"
+
 
 using namespace hfh3;
 
 GameClient::GameClient(ScreenManager& inScreen, class Input& inInput, Network& inNetwork)
     : World(inScreen, inInput, inNetwork)
-    , server(nullptr)
-    , idleTask()
+    , lastInputState(0)
+    , readerTask(nullptr)
 {
 }
 
 GameClient::~GameClient()
 {
+    if(readerTask)
+    {
+        delete readerTask;
+        readerTask = nullptr;
+    }
+
     if(server)
     {
         delete server;
@@ -31,8 +41,10 @@ GameClient::~GameClient()
     }
 }
 
+
 void GameClient::Connect()
 {
+    assert(readerTask == nullptr);
     server = network.ConnectToServer();
 
     if(server)
@@ -44,17 +56,36 @@ void GameClient::Connect()
         int count = server->Receive(buffer, FRAME_BUFFER_SIZE, 0);
         // TODO Verify reply
         DEBUG("Connected %d", count);
+        readerTask = new NetworkReader(server, commands);
     }
 }
 
 
 void GameClient::Update()
 {
-    // send input events to server
+    if(server)
+    {
+        u8 inputState = input.DumpInputState();
+        if(inputState != lastInputState)
+        {
+            lastInputState = inputState;
+            DEBUG("Sending %x", lastInputState);
+            server->Send(&lastInputState, 1, MSG_DONTWAIT);
+        }
+    }
+
 }
 
-void GameClient::Draw()
+void GameClient::NetworkReader::Run()
 {
-    commands.Receive(server);
+    CScheduler* scheduler = CScheduler::Get();
+    while(true)
+    {
+        if(!commands.Receive(server))
+        {
+            // When there is no data ready, sleep for 60th of a second
+            // before trying again. This will also yield control to other threads
+            scheduler->MsSleep(16); 
+        }
+    }  
 }
-

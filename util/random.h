@@ -4,7 +4,9 @@
 
 namespace hfh3
 {
-    /** Simple pseudorandom generator using a linear congruential generator */
+    /** Simple pseudorandom generator using a linear congruential generator
+     *  Uses the same constants as drand48() [Roberts, 1982].
+     */
     class Random
     {
     public:

@@ -1,7 +1,7 @@
 #pragma once
-#include "circle/net/socket.h"
-#include "circle/sched/scheduler.h"
-#include "circle/sched/task.h"
+#include <circle/net/socket.h>
+#include <circle/sched/scheduler.h>
+#include <circle/sched/task.h>
 
 
 #include "game/world.h"

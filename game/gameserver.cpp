@@ -16,8 +16,8 @@
 #include "game/view.h"
 #include "game/commandbuffer.h"
 
-#include "circle/net/socket.h"
-#include "circle/net/in.h"
+#include <circle/net/socket.h>
+#include <circle/net/in.h>
 
 using namespace hfh3;
 

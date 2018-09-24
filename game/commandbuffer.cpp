@@ -7,9 +7,9 @@
 #include "render/image.h"
 #include "render/imagesheet.h"
 
-#include "circle/net/socket.h"
-#include "circle/net/in.h"
-#include "circle/sched/scheduler.h"
+#include <circle/net/socket.h>
+#include <circle/net/in.h>
+#include <circle/sched/scheduler.h>
 
 using namespace hfh3;
 

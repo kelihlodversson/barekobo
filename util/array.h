@@ -2,8 +2,8 @@
 #include "util/arrayiterator.h"
 #include "util/log.h"
 #include "util/new.h"
-#include "circle/alloc.h"
-#include "circle/util.h"
+#include <circle/alloc.h>
+#include <circle/util.h>
 #include <assert.h>
 
 namespace hfh3

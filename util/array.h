@@ -15,8 +15,8 @@ namespace hfh3
     {
     public:
         static const int MIN_RESERVE = 8;
-        typedef _ArrayIterator<T, false> Iterator;
-        typedef _ArrayIterator<T, true> ReverseIterator;
+        using Iterator = _ArrayIterator<T, false>;
+        using ReverseIterator = _ArrayIterator<T, true>;
 
         /** The number of items in the list.
           * This is a constant time operation.

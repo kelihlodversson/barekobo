@@ -20,8 +20,8 @@ enum class Opcode : u8
     DrawSprite,
 };
 
-typedef Array<u8> CommandArray;
-typedef CommandArray::Iterator CommandIterator;
+using CommandArray = Array<u8>;
+using CommandIterator = CommandArray::Iterator;
 
 static void operator >> (CommandIterator& iter, u8& value)
 {

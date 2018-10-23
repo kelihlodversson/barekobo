@@ -157,7 +157,7 @@ namespace hfh3
           */
         void WaitForVerticalSync();
 
-        /** Bookkeeping method used to calculate the current FPS,
+        /** Bookkeeping methods used to calculate the current FPS,
           * which should be equal to the physical screen update rate
           */
         void UpdateStatsPreSync();

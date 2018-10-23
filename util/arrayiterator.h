@@ -3,7 +3,7 @@
 namespace hfh3
 {
     /** Utility class to iterate through arrays.
-      * Should be referenced through the typedefs in Array<T>, such
+      * Should be referenced through the type aliases in Array<T>, such
       * as Array<T>::Iterator or Array<T>::ReverseIterator
       */
     template<typename T, bool reverse>

@@ -13,21 +13,25 @@ namespace hfh3
     /** Internal utility class used by List<T>. Contains the payload
       * and the internal links between items.
       */
-    template <typename T, typename P>
+    template <typename LT>
     struct _ListItem
     {
+        using List = LT;
+        using Payload = typename LT::Payload;
+        using Item = _ListItem<LT>;
+
         template <typename... Args>
-        _ListItem(P* inParent, Args&&... args)
+        _ListItem(List* inParent, Args&&... args)
             : parent(inParent)
             , previous(nullptr)
             , next(nullptr)
             , payload(args...)
         {}
 
-        P*              parent;
-        _ListItem<T,P>* previous;
-        _ListItem<T,P>* next;
-        T               payload;
+        List*   parent;
+        Item*   previous;
+        Item*   next;
+        Payload payload;
 
 #if CONFIG_USE_ITEM_POOL
         static void* operator new (size_t size);
@@ -35,26 +39,26 @@ namespace hfh3
 
         // An optimization for deallocating a whole range of items.
         // Note: it will not iterate through the items and call any destructors
-        static void DeallocateRange_NoDestruct(_ListItem<T,P>* first, _ListItem<T,P>* last);
+        static void DeallocateRange_NoDestruct(Item* first, Item* last);
 
         // Allocates memory for count items and adds them to the item pool
         static void PreallocItemPool(unsigned count);
     private:
         /* reuse previously allocated items to save on allocations */
-        static _ListItem<T,P>* itemPool;
+        static Item* itemPool;
 #endif
     };
 
 #if CONFIG_USE_ITEM_POOL
-    template <typename T, typename P>
-    _ListItem<T,P>* _ListItem<T,P>::itemPool = nullptr;
+    template <typename LT>
+    _ListItem<LT>* _ListItem<LT>::itemPool = nullptr;
 
-    template <typename T, typename P>
-    void* _ListItem<T,P>::operator new (size_t size)
+    template <typename LT>
+    void* _ListItem<LT>::operator new (size_t size)
     {
-        if(itemPool && size == sizeof(_ListItem<T,P>))
+        if(itemPool && size == sizeof(_ListItem<LT>))
         {
-            _ListItem<T,P>* result = itemPool;
+            _ListItem<LT>* result = itemPool;
             // Reuse the next pointer to link together unallocated items in the pool
             itemPool = result->next;
             return result;
@@ -66,18 +70,18 @@ namespace hfh3
         }
     }
 
-    template <typename T, typename P>
-    void _ListItem<T,P>::operator delete (void* memory, size_t size)
+    template <typename LT>
+    void _ListItem<LT>::operator delete (void* memory, size_t size)
     {
         if(memory == nullptr)
         {
             return;
         }
 
-        if(size == sizeof(_ListItem<T,P>))
+        if(size == sizeof(_ListItem<LT>))
         {
             // instead of deallocating the item, push it back to the item pool
-            _ListItem<T,P>* item = reinterpret_cast<_ListItem<T,P>*>(memory);
+            _ListItem<LT>* item = reinterpret_cast<_ListItem<LT>*>(memory);
             item->next = itemPool;
             itemPool = item;
         }
@@ -89,8 +93,8 @@ namespace hfh3
         }
     }
 
-    template <typename T, typename P>
-    void _ListItem<T,P>::DeallocateRange_NoDestruct(_ListItem<T,P>* first, _ListItem<T,P>* last)
+    template <typename LT>
+    void _ListItem<LT>::DeallocateRange_NoDestruct(_ListItem<LT>* first, _ListItem<LT>* last)
     {
         if (first != nullptr)
         {
@@ -104,8 +108,8 @@ namespace hfh3
         }
     }
 
-    template <typename T, typename P>
-    void _ListItem<T,P>::PreallocItemPool(unsigned count)
+    template <typename LT>
+    void _ListItem<LT>::PreallocItemPool(unsigned count)
     {
         if(count < 1)
         {
@@ -113,7 +117,7 @@ namespace hfh3
         }
 
         // Allocate memory for count items in one block
-        _ListItem<T,P>* newItems = static_cast<_ListItem<T,P>*>(::operator new(count * sizeof(_ListItem<T,P>)));
+        _ListItem<LT>* newItems = static_cast<_ListItem<LT>*>(::operator new(count * sizeof(_ListItem<LT>)));
 
         // Make sure the last item points to the current head of the item pool
         newItems[count-1].next = itemPool;

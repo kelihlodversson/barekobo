@@ -12,9 +12,10 @@ namespace hfh3
     class List
     {
     public:
-        typedef _ListItem<T, List<T>> Item;
-        typedef _ListIterator<T, Item, false> Iterator;
-        typedef _ListIterator<T, Item, true> ReverseIterator;
+        using Payload = T;
+        using Item = _ListItem<List<T>>;
+        using Iterator = _ListIterator<List<T>, false>;
+        using ReverseIterator = _ListIterator<List<T>, true>;
 
         /** The number of items in the list.
           * Since the count is stored and updated on insertion and removal,

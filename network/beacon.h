@@ -14,7 +14,7 @@ namespace hfh3
       */
     class Beacon
     {
-        typedef u32 beacon_data_t;
+        using beacon_data_t = u32;
     public:
         Beacon(CNetSubSystem *inNetSubsystem);
         ~Beacon();

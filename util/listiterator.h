@@ -3,13 +3,17 @@
 namespace hfh3
 {
     /** Utility class to iterate through doubly linked lists.
-      * Should be referenced through the typedefs in List<T>, such
+      * Should be referenced through the type aliases in List<T>, such
       * as List<T>::Iterator or List<T>::ReverseIterator
       */
-    template<typename T, typename Item, bool reverse>
+    template<typename LT, bool reverse>
     class _ListIterator
     {
     public:
+        using List = LT;
+        using Item = typename LT::Item;
+        using Payload = typename LT::Payload;
+
         _ListIterator(Item* inCurrent=nullptr)
             : current(inCurrent)
         {}
@@ -18,9 +22,9 @@ namespace hfh3
             : current(other.current)
         {}
 
-        explicit operator _ListIterator<T,Item,!reverse> ()
+        explicit operator _ListIterator<List,!reverse> ()
         {
-            return _ListIterator<T,Item,!reverse>(current);
+            return _ListIterator<List,!reverse>(current);
         }
 
         void Remove()
@@ -31,43 +35,43 @@ namespace hfh3
         }
 
         template<typename... Args>
-        _ListIterator<T,Item,reverse> InsertAfter(Args&&... args)
+        _ListIterator<List,reverse> InsertAfter(Args&&... args)
         {
             assert(current != nullptr);
-            return static_cast<_ListIterator<T,Item,reverse>> (
+            return static_cast<_ListIterator<List,reverse>> (
                    reverse?current->parent->InsertBefore(current, args...)
                           :current->parent->InsertAfter(current, args...));
         }
 
         template<typename... Args>
-        _ListIterator<T,Item,reverse> InsertBefore(Args&&... args)
+        _ListIterator<List,reverse> InsertBefore(Args&&... args)
         {
             assert(current != nullptr);
-            return static_cast<_ListIterator<T,Item,reverse>> (
+            return static_cast<_ListIterator<List,reverse>> (
                    reverse?current->parent->InsertAfter(current, args...)
                           :current->parent->InsertBefore(current, args...));
         }
 
-        _ListIterator<T,Item,reverse>& operator++()
+        _ListIterator<List,reverse>& operator++()
         {
             Forward();
             return *this;
         }
 
-        _ListIterator<T,Item,reverse> operator++(int)
+        _ListIterator<List,reverse> operator++(int)
         {
             auto tmp = *this;
             Forward();
             return tmp;
         }
 
-        _ListIterator<T,Item,reverse>& operator--()
+        _ListIterator<List,reverse>& operator--()
         {
             Backward();
             return *this;
         }
 
-        _ListIterator<T,Item,reverse> operator--(int)
+        _ListIterator<List,reverse> operator--(int)
         {
             auto tmp = *this;
             Backward();
@@ -79,54 +83,54 @@ namespace hfh3
             return current != nullptr;
         }
 
-        bool operator==(const _ListIterator<T,Item,reverse>& other) const
+        bool operator==(const _ListIterator<List,reverse>& other) const
         {
             return current == other.current;
         }
 
-        bool operator!=(const _ListIterator<T,Item,reverse>& other) const
+        bool operator!=(const _ListIterator<List,reverse>& other) const
         {
             return current != other.current;
         }
 
-        bool operator==(const T* other) const
+        bool operator==(const Payload* other) const
         {
             return current ? &current->payload == other : other == nullptr;
         }
 
-        bool operator!=(const T* other) const
+        bool operator!=(const Payload* other) const
         {
             return !(current == other);
         }
 
-        T& operator*()
+        Payload& operator*()
         {
             assert(current != nullptr);
             return current->payload;
         }
 
-        const T& operator*() const
+        const Payload& operator*() const
         {
             assert(current != nullptr);
             return current->payload;
         }
 
-        T* operator->()
+        Payload* operator->()
         {
             return current != nullptr?&current->payload:nullptr;
         }
 
-        const T* operator->() const
+        const Payload* operator->() const
         {
             return current != nullptr?&current->payload:nullptr;
         }
 
-        operator T*()
+        operator Payload*()
         {
             return current != nullptr?&current->payload:nullptr;
         }
 
-        operator const T*() const
+        operator const Payload*() const
         {
             return current != nullptr?&current->payload:nullptr;
         }

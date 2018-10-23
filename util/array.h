@@ -130,7 +130,7 @@ namespace hfh3
 
         Iterator Append(const Array<T>& other)
         {
-            return Append(other.data, other.count);
+            return AppendRaw(other.data, other.count);
         }
 
         T& operator[](int index)

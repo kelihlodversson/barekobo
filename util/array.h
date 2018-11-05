@@ -133,6 +133,38 @@ namespace hfh3
             return AppendRaw(other.data, other.count);
         }
 
+        /** Same as Append, except it doesn't return an iterator. */
+        template<typename... Args>
+        void Push(Args&&... args)
+        {
+            Append(args...);
+        }
+
+        /** Returns the last element from the list and reduces the size by one. */
+        T Pop()
+        {
+            assert(count > 0);
+            count--;
+            T retval = data[count];
+            data[count].~T();
+            return retval;
+        }
+
+        /** Swaps element i with the last element and then pops it of the list. */
+        T Pop(int index)
+        {
+            assert(index >=0 && index < count);
+            T retval = data[index];
+            count--;
+            if (count != index)
+            {
+                data[index] = data[count];
+            }
+            data[count].~T();
+
+            return retval;
+        }
+
         T& operator[](int index)
         {
             assert(index >=0 && index < count);
@@ -274,6 +306,10 @@ namespace hfh3
             Clear();
         }
 
+        operator T* ()
+        {
+            return data;
+        }
     private:
 
         T* data;

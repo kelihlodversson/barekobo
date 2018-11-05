@@ -56,7 +56,7 @@ int Application::Run()
     INFO("Started MultiKobo. Compile time: " __DATE__ " " __TIME__);
     const int enemyCount = 3000;
 
-    u32 server_address = 0x5089A8C0; //192.168.137.80
+    u32 server_address = 0x4789A8C0; //192.168.137.71
 
     if ( network.GetIPAddress() == server_address )
     {
@@ -67,15 +67,17 @@ int Application::Run()
 
         List<class Actor*>::Reserve(3100);
         GameServer server(screenManager, input, network);
-
-        server.Bind();
-        screenManager.Clear();
-        screenManager.Present();
-
+        server.SpawnFortress();
         for (int i = 0; i < enemyCount; i++)
         {
             server.SpawnEnemy();
         }
+
+        server.Bind();
+        screenManager.Clear();
+        screenManager.Present();
+        
+
 
         server.SpawnPlayer();
         server.GameLoop();

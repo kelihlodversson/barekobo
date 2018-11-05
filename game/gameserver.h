@@ -29,6 +29,7 @@ namespace hfh3
         virtual void Update() override;
         
         void BuildCommandBuffer(class Actor* player, CommandBuffer& commandBuffer);
+        void SpawnFortress();
         void SpawnEnemy();
         void SpawnPlayer();
         void SpawnRemotePlayer();
@@ -94,6 +95,6 @@ namespace hfh3
         ProxyInput    clientInput;
         NetworkReader* readerTask;
 
-
+        friend class Base;
     };
 }

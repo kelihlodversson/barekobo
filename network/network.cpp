@@ -66,7 +66,7 @@ CSocket* Network::WaitForClient()
 CSocket* Network::ConnectToServer()
 {
     CSocket* connection = new CSocket(&netSubsystem, IPPROTO_TCP);
-    CIPAddress address (0x5089A8C0); //192.168.137.80
+    CIPAddress address (0x4789A8C0); //192.168.137.71
     if (connection->Connect(address, GAME_PORT) < 0)
     {
         delete connection;

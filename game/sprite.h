@@ -28,6 +28,11 @@ namespace hfh3
             current = newCurrent;
         }
 
+        void SetImageGroup(unsigned newGroup)
+        {
+            imageGroup = newGroup;
+        }
+
         unsigned GetImageIndex() const
         {
             return current;

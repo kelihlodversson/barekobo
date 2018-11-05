@@ -10,6 +10,7 @@
 #include "render/font.h"
 
 #include "game/actor.h"
+#include "game/base.h"
 #include "game/enemy.h"
 #include "game/player.h"
 #include "game/shot.h"
@@ -173,6 +174,12 @@ void GameServer::PerformCollisionCheck()
             }
         }
     }
+}
+
+void GameServer::SpawnFortress()
+{
+    Rect<s16> area (20,0,20*16,20*16);
+    Base::CreateFort(*this, imageSheet, random, area);
 }
 
 void GameServer::SpawnEnemy()

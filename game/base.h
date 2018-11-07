@@ -2,6 +2,7 @@
 #include "game/sprite.h"
 #include "util/vector.h"
 #include "util/rect.h"
+#include "util/direction.h"
 
 namespace hfh3
 {
@@ -25,6 +26,7 @@ namespace hfh3
         void Destroy(DestructionType type);
         void UpdateShape();
         int EdgeCount();
+        Direction MaskToDirection(u8 mask);
 
         // The parent core node
         class Base* core;

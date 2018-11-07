@@ -34,6 +34,7 @@ namespace hfh3
         void SpawnPlayer();
         void SpawnRemotePlayer();
         void SpawnMissile(const Vector<s16>& position, const class Direction& direction , int speed);
+        void SpawnExplosion(const Vector<s16>& position, const class Direction& direction , int speed);
 
     private:
 

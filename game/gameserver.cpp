@@ -12,6 +12,7 @@
 #include "game/actor.h"
 #include "game/base.h"
 #include "game/enemy.h"
+#include "game/explosion.h"
 #include "game/player.h"
 #include "game/shot.h"
 #include "game/view.h"
@@ -203,6 +204,11 @@ void GameServer::SpawnRemotePlayer()
 void GameServer::SpawnMissile(const Vector<s16>& startPosition, const Direction& direction, int speed)
 {
     AddActor(new Shot(*this, imageSheet, ImageSet::Missile, startPosition, direction, speed));
+}
+
+void GameServer::SpawnExplosion(const Vector<s16>& startPosition, const Direction& direction, int speed)
+{
+    AddActor(new Explosion(*this, imageSheet, startPosition, direction, speed));
 }
 
 void GameServer::AddActor(Actor* newActor)

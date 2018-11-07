@@ -31,6 +31,11 @@ namespace hfh3
             speed = s;
         }
 
+        int GetSpeed() const
+        {
+            return speed;
+        }
+
         void SetDirection(const Direction& dir);
 
         const Direction& GetDirection() const

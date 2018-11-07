@@ -43,4 +43,5 @@ void Enemy::Update()
 void Enemy::OnCollision(class Actor* other)
 {
     Destroy();
+    world.SpawnExplosion(GetPosition(), GetDirection(), GetSpeed());
 }

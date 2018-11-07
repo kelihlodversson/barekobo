@@ -60,31 +60,71 @@ int Base::EdgeCount()
     return result; 
 }
 
+Direction Base::MaskToDirection(u8 mask)
+{
+    switch(mask)
+    {
+        case 1:
+            return Direction::North;
+        case 2:
+            return Direction::East;
+        case 4:
+            return Direction::South;
+        case 8: 
+            return Direction::West;
+        case 3: // 1 + 2
+            return Direction::NorthEast;
+        case 6: // 2 + 4
+            return Direction::SouthEast;
+        case 9: // 1 + 8
+            return Direction::NorthWest;
+        case 12: // 4 + 8
+            return Direction::SouthWest;
+        case 7: // 1 + 2 + 4
+            return Direction::East;
+        case 11: // 1 + 2 + 8
+            return Direction::North;
+        case 13: // 1 + 4 + 8
+            return Direction::West;
+        case 14: // 2 + 4 + 8
+            return Direction::South;
+        default:
+            return Direction::Stopped;
+    }
+}
+
+
 void Base::Destroy(DestructionType type)
 {
     Array<Base*> needsUpdate;
     Sprite::Destroy();
+    u8 neigbourMask = 0;
 
     if(north)
     {
         north->south = nullptr;
         needsUpdate.Push(north);
+        neigbourMask |= 1;
     }
     if(east)
     {
         east->west = nullptr;
         needsUpdate.Push(east);
+        neigbourMask |= 2;
     }
     if(south)
     {
         south->north = nullptr;
         needsUpdate.Push(south);
+        neigbourMask |= 4;
     }
     if(west)
     {
         west->east = nullptr;
         needsUpdate.Push(west);
+        neigbourMask |= 8;
     }
+    world.SpawnExplosion(GetPosition(), MaskToDirection(neigbourMask), 2);
 
     for(Base* base : needsUpdate)
     {

@@ -1,5 +1,6 @@
 #pragma once
 #include <circle/types.h>
+#include <circle/util.h>
 #include "util/vector.h"
 #include "util/log.h"
 
@@ -36,6 +37,11 @@ namespace hfh3
         int GetHeight() const
         {
             return cellSize.y;
+        }
+
+        int GetWidth(const char* string) const 
+        {
+            return strlen(string) * cellSize.x;
         }
 
     private:

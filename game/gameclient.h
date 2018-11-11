@@ -18,7 +18,7 @@ namespace hfh3
         GameClient(ScreenManager& inScreen, class Input& inInput, class Network& inNetwork);
         virtual ~GameClient();
 
-        void Connect();
+        void Connect(class CIPAddress& address);
 
         virtual void Update() override;
 

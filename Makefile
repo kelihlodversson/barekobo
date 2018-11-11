@@ -3,7 +3,7 @@ CIRCLEHOME=3rd_party/circle
 # Default RaspberryPI model to build for
 RASPPI ?= 3
 # Directories containing source files for this project
-DIRS = . game render input util graphics network
+DIRS = . game render input util graphics network ui
 
 # Additional CIRCLE features to include (the sched subsytem is required by the net subsystem)
 CIRCLE_FEATURES = usb fs input net sched

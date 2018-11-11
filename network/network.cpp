@@ -15,8 +15,6 @@ bool Network::Initialize()
         return false;
     }
 
-    //beacon = new Beacon(&netSubsystem);
-
     return true;
 }
 
@@ -26,7 +24,6 @@ u32 Network::GetIPAddress()
 }
 
 Network::Network()
-    : beacon(nullptr)
 {
 }
 
@@ -63,10 +60,10 @@ CSocket* Network::WaitForClient()
 }
 
 // Connects to the server and returns the connection object.
-CSocket* Network::ConnectToServer()
+CSocket* Network::ConnectToServer(CIPAddress& address)
 {
     CSocket* connection = new CSocket(&netSubsystem, IPPROTO_TCP);
-    CIPAddress address (0x4789A8C0); //192.168.137.71
+    
     if (connection->Connect(address, GAME_PORT) < 0)
     {
         delete connection;
@@ -77,9 +74,4 @@ CSocket* Network::ConnectToServer()
 
 Network::~Network()
 {
-    if (beacon)
-    {
-        delete beacon;
-        beacon = nullptr;
-    }
 }

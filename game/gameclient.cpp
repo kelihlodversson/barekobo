@@ -15,6 +15,7 @@
 
 #include <circle/net/socket.h>
 #include <circle/net/in.h>
+#include <circle/net/ipaddress.h>
 
 
 using namespace hfh3;
@@ -42,10 +43,10 @@ GameClient::~GameClient()
 }
 
 
-void GameClient::Connect()
+void GameClient::Connect(CIPAddress& address)
 {
     assert(readerTask == nullptr);
-    server = network.ConnectToServer();
+    server = network.ConnectToServer(address);
 
     if(server)
     {

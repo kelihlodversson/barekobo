@@ -22,12 +22,13 @@ namespace hfh3
         CSocket* WaitForClient();
 
         // Connects to the server and returns the connection object.
-        CSocket* ConnectToServer();
+        CSocket* ConnectToServer(class CIPAddress& address);
 
     private:
         CScheduler      scheduler;      // The scheduler is required by the net subsystem
         CNetSubSystem   netSubsystem;
 
-        class Beacon    *beacon;
+        friend class Beacon;
+        friend class Spotter;
     };
 }

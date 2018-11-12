@@ -46,10 +46,14 @@ void Spotter::Task::Run()
     CIPAddress remoteAddress;
     u16 dummy;
 
-    while(active)
+    while(true)
     {
-        int res = socket.ReceiveFrom(&payload, sizeof(beacon_data_t), 0,
-            &remoteAddress, &dummy);
+        int res = socket.ReceiveFrom(&payload, sizeof(beacon_data_t), 0, &remoteAddress, &dummy);
+        if(! active)
+        {
+            break;
+        }
+        
         if (res > 0)
         {
             UpdateHosts(remoteAddress, payload);
@@ -62,7 +66,7 @@ void Spotter::Task::Run()
     }
 }
 
-void Spotter::Task::UpdateHosts(const CIPAddress& address, bool available)
+void Spotter::Task::UpdateHosts(ipv4_address_t address, bool available)
 {
     auto existing = knownHosts.FindFirst([&](Host& host){ return host.address == address; });
     if (existing)
@@ -85,3 +89,15 @@ void Spotter::Task::UpdateHosts(const CIPAddress& address, bool available)
     callback();
 }
 
+String Spotter::Host::GetIpString()
+{
+    String result;
+    result += address & 0xff;
+    result += '.';
+    result += (address >> 8) & 0xff;
+    result += '.';
+    result += (address >> 16) & 0xff;
+    result += '.';
+    result += (address >> 24) & 0xff;
+    return result;
+}

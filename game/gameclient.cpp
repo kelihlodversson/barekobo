@@ -20,9 +20,10 @@
 
 using namespace hfh3;
 
-GameClient::GameClient(ScreenManager& inScreen, class Input& inInput, Network& inNetwork)
-    : World(inScreen, inInput, inNetwork)
+GameClient::GameClient(MainLoop& inMainLoop, class Input& inInput, Network& inNetwork)
+    : World(inMainLoop, inInput, inNetwork)
     , lastInputState(0)
+    , server(nullptr)
     , readerTask(nullptr)
 {
 }
@@ -43,14 +44,17 @@ GameClient::~GameClient()
 }
 
 
-void GameClient::Connect(CIPAddress& address)
+void GameClient::Connect(ipv4_address_t address, ipv4_port_t port)
 {
+    Pause();
     assert(readerTask == nullptr);
-    server = network.ConnectToServer(address);
+    DEBUG("Connecting to %d", address);
+    auto connection = network.ConnectToServer(address, port);
 
-    if(server)
+    if(connection)
     {
         DEBUG("Sending greeting");
+        server = connection;
         server->Send("HI!", 3, 0);
         DEBUG("Waiting for greeting");
         u8 buffer[FRAME_BUFFER_SIZE];
@@ -59,6 +63,7 @@ void GameClient::Connect(CIPAddress& address)
         DEBUG("Connected %d", count);
         readerTask = new NetworkReader(server, commands);
     }
+    Resume();
 }
 
 
@@ -74,7 +79,6 @@ void GameClient::Update()
             server->Send(&lastInputState, 1, MSG_DONTWAIT);
         }
     }
-
 }
 
 void GameClient::NetworkReader::Run()

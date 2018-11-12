@@ -1,10 +1,7 @@
 #pragma once
+#include "network/types.h"
 
-#include <circle/types.h>
 #include <circle/sched/task.h>
-
-
-#define BEACON_PORT 12345
 
 namespace hfh3
 {
@@ -15,7 +12,6 @@ namespace hfh3
     class Beacon 
     {
     public:
-        using beacon_data_t = u32;
         Beacon();
         ~Beacon();
 

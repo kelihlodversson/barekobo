@@ -115,6 +115,21 @@ namespace hfh3
             return Iterator(&data[count++]);
         }
 
+        /** Adds a default element past the end of the array without incrementing the size.
+          * Useful for the String subclass to ensure a zero terminator when converting to a
+          * char* 
+          */
+        void Terminate()
+        {
+            if(reserved <= count)
+            {
+                Reserve(reserved>=MIN_RESERVE ? reserved*2 : MIN_RESERVE);
+            }
+
+            // Call the default constructor without incrementing the count
+            new (&data[count]) T();
+        }
+
         Iterator AppendRaw(const T* src, int num)
         {
             int old_count = count;

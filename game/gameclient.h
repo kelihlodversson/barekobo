@@ -3,7 +3,7 @@
 #include <circle/sched/scheduler.h>
 #include <circle/sched/task.h>
 
-
+#include "network/types.h"
 #include "game/world.h"
 
 namespace hfh3
@@ -15,10 +15,10 @@ namespace hfh3
     class GameClient : public World
     {
     public:
-        GameClient(ScreenManager& inScreen, class Input& inInput, class Network& inNetwork);
+        GameClient(MainLoop& inMainLoop, class Input& inInput, class Network& inNetwork);
         virtual ~GameClient();
 
-        void Connect(class CIPAddress& address);
+        void Connect(ipv4_address_t address, ipv4_port_t port = GAME_PORT);
 
         virtual void Update() override;
 

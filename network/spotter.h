@@ -1,13 +1,11 @@
 #pragma once
-#include "network/beacon.h"
+#include "network/types.h"
 #include "util/callback.h"
 #include "util/list.h"
-#include <circle/types.h>
+#include "util/string.h"
+
 #include <circle/sched/task.h>
-
 #include <limits.h>
-
-#define BEACON_PORT 12345
 
 namespace hfh3
 {
@@ -18,8 +16,6 @@ namespace hfh3
     class Spotter
     {
     public:
-        using beacon_data_t = Beacon::beacon_data_t;
-
         template<typename ...Args>
         Spotter(Args&&... args)
             : task(new Task(args...))
@@ -32,20 +28,13 @@ namespace hfh3
         {
         public:
             static const int MAX_AGE = 4;
-            static const int INVALID_IP = 0;
+            static const ipv4_address_t INVALID_IP = -1;
 
-            const char* GetIpString() 
-            {
-                if(ipString.GetLength() == 0)
-                {
-                    address.Format(&ipString);
-                }
-                return (const char*)ipString;
-            }
+            String GetIpString();
 
-            void GetIpAddress(CIPAddress& outAddress) const
+            ipv4_address_t GetIpAddress() const
             {
-                outAddress.Set(address);
+                return address;
             }
 
             void SetValid(bool isValid)
@@ -60,7 +49,7 @@ namespace hfh3
 
 
             Host() 
-                : address(reinterpret_cast<const u8*>(&INVALID_IP))
+                : address(INVALID_IP)
                 , lastSeen(INT_MIN)
             {}
 
@@ -69,7 +58,7 @@ namespace hfh3
                 , lastSeen(other.lastSeen)
             {}
 
-            Host(const CIPAddress& inAddress, bool isValid)
+            Host(ipv4_address_t inAddress, bool isValid)
                 : address(inAddress)
                 , lastSeen(isValid?GetTime():INT_MIN)
             {}
@@ -80,8 +69,7 @@ namespace hfh3
                 return CTimer::Get()->GetTime();
             }
 
-            CIPAddress address;
-            CString ipString;
+            ipv4_address_t address;
             int lastSeen;
 
             friend Spotter;
@@ -119,7 +107,7 @@ namespace hfh3
             // Main entry point for the Broadcaster task
             virtual void Run() override;
 
-            void UpdateHosts(const CIPAddress& host, bool available);
+            void UpdateHosts(ipv4_address_t address, bool available);
           
             Callback<void()> callback;
             volatile bool active;

@@ -53,7 +53,7 @@ void Beacon::Task::Run()
 
     socket.SetOptionBroadcast(true);
 
-    beacon_data_t payload = *netConfig->GetIPAddress();
+    beacon_data_t payload = 1;
     while (active)
     {
         int res = socket.Send(&payload, sizeof(beacon_data_t), MSG_DONTWAIT);

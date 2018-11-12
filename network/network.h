@@ -1,4 +1,6 @@
 #pragma once
+#include "network/types.h"
+
 #include <circle/types.h>
 #include <circle/sched/scheduler.h>
 #include <circle/net/netsubsystem.h>
@@ -10,7 +12,6 @@ namespace hfh3
     {
     public:
 
-        static const u16 GAME_PORT = 12345;
 
         Network();
         ~Network();
@@ -22,7 +23,7 @@ namespace hfh3
         CSocket* WaitForClient();
 
         // Connects to the server and returns the connection object.
-        CSocket* ConnectToServer(class CIPAddress& address);
+        CSocket* ConnectToServer(ipv4_address_t address, ipv4_port_t port = GAME_PORT);
 
     private:
         CScheduler      scheduler;      // The scheduler is required by the net subsystem

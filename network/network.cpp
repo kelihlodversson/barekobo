@@ -60,11 +60,11 @@ CSocket* Network::WaitForClient()
 }
 
 // Connects to the server and returns the connection object.
-CSocket* Network::ConnectToServer(CIPAddress& address)
+CSocket* Network::ConnectToServer(ipv4_address_t address, ipv4_port_t port)
 {
     CSocket* connection = new CSocket(&netSubsystem, IPPROTO_TCP);
-    
-    if (connection->Connect(address, GAME_PORT) < 0)
+    CIPAddress circleAddress(address);
+    if (connection->Connect(circleAddress, port) < 0)
     {
         delete connection;
         return nullptr;

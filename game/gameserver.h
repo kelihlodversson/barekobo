@@ -20,7 +20,7 @@ namespace hfh3
     class GameServer : public World
     {
     public:
-        GameServer(ScreenManager& inScreen, class Input& inInput, class Network& inNetwork);
+        GameServer(MainLoop& inMainLoop, class Input& inInput, class Network& inNetwork);
         virtual ~GameServer();
 
         // Binds to a TCP port number ans waits until a client has connected

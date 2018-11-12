@@ -21,7 +21,7 @@
 namespace hfh3
 {
 
-    class Application
+    class Application 
     {
     public:
         Application();

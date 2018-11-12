@@ -23,8 +23,8 @@
 
 using namespace hfh3;
 
-GameServer::GameServer(ScreenManager& inScreen, class Input& inInput, Network& inNetwork)
-    : World(inScreen, inInput, inNetwork)
+GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNetwork)
+    : World(inMainLoop, inInput, inNetwork)
     , partitionSize(stage.GetSize() / partitionGridCount)
     , client(nullptr)
     , clientCommands(imageSheet)
@@ -285,6 +285,7 @@ void GameServer::GetPartitionRange(const Rect<s16>& rect, int& x1, int& x2, int&
 
 void GameServer::Bind()
 {
+    Pause(); // If called from a different task, we have to disable updates while waiting
     client = network.WaitForClient();
     if(client)
     {
@@ -298,6 +299,7 @@ void GameServer::Bind()
         SpawnRemotePlayer();
         readerTask = new NetworkReader(client, clientInput); 
     }
+    Resume();
 }
 
 void GameServer::NetworkReader::Run()

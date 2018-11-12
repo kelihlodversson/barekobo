@@ -1,4 +1,5 @@
 #pragma once
+#include "ui/mainloop.h"
 #include "render/screenmanager.h"
 #include "render/imagesheet.h"
 
@@ -10,24 +11,21 @@ namespace hfh3
 
     /** Base class for GameClient and Server
       */
-    class World
+    class World : public MainLoop::IUpdatable
     {
     public:
-        World(ScreenManager& inScreen, class Input& inInput, class Network& inNetwork);
+        World(MainLoop& inMainLoop, class Input& inInput, class Network& inNetwork);
         virtual ~World();
 
-        void GameLoop();
-
-        virtual void Update() = 0;
-        
         class Stage& GetStage() 
         {
             return stage;
         }
 
     protected:
+        virtual void Render() override;
+
         Stage stage;
-        ScreenManager& screen;
         class Input& input;
         class Network& network;
         ImageSheet imageSheet;

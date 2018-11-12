@@ -7,6 +7,7 @@
 #include "render/font.h"
 
 #include "network/network.h"
+#include "ui/mainLoop.h"
 #include "ui/gamemenu.h"
 
 using namespace hfh3;
@@ -51,7 +52,8 @@ bool Application::Initialize()
  */
 int Application::Run()
 {
-    GameMenu menu(screenManager, input, network);
-    menu.MainLoop();
+    MainLoop mainLoop(screenManager);
+    mainLoop.CreateClient<GameMenu>(input, network);
+    mainLoop.Run();
     return EXIT_HALT;
 }

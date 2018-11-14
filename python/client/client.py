@@ -49,7 +49,9 @@ class Client:
                 pass
             time.sleep(1.0/60.0)
 
-    def key_event(self, key, pressed):
+    def key_event(self, event):
+        key = event.key
+        pressed = event.type == pygame.KEYDOWN
         if key in KEYS_UP:
             self.up = pressed
             if pressed and self.down:
@@ -71,6 +73,26 @@ class Client:
 
 
         self.send_input_state()
+    
+    def controller_event(self, event):
+        # TODO: This code is written with assumptions that may not match all controllers:
+        #   It assumes that axis 0 is the x axis and axis 1 is the y axis and that they
+        #   go from a negative to a positive value.
+        #   It also assumes that the fire button is button 1 and ignores all other buttons
+        if event.type == pygame.JOYAXISMOTION:
+            negative = True if event.value < -0.1 else False
+            positive = True if event.value >  0.1 else False
+            if event.axis == 0:
+                self.left, self.right = negative, positive
+            else:
+                self.up,   self.down  = negative, positive
+        elif event.type in (pygame.JOYBUTTONUP, pygame.JOYBUTTONDOWN) and event.button == 1:
+            self.fire = event.type == pygame.JOYBUTTONDOWN
+
+        self.send_input_state()
+
+    def render(self):
+        self.command_buffer.run()
 
     def get_direction(self):
         if self.up:

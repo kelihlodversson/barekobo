@@ -10,7 +10,8 @@ from os import path
 class MultiKobo:
     def __init__(self):
         self.size = 640, 400
-        self.screen = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+        self.display_flags = pygame.HWSURFACE | pygame.DOUBLEBUF
+        self.screen = pygame.display.set_mode(self.size, self.display_flags)
         self.running = self.screen != None
         self.clock = pygame.time.Clock()
         self.target_fps = 60
@@ -19,23 +20,37 @@ class MultiKobo:
         self.sprites = render.imagesheet.ImageSheet(sprite_path, 16, 16, 255, 8)
         self.client = None
         self.subimage = 0
-        self.buffer = None
+
+        pygame.joystick.init()
+        for i in range(pygame.joystick.get_count()):
+            controller = pygame.joystick.Joystick(i)
+            controller.init()
+            print("Controller %d: %s" % (i, controller.get_name()))
+
  
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            elif event.type == Spotter.SPOTTER_HOST_ADDED:
-                print("HOST ADDED   " + event.host)
-                if self.client is None:
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_F12:
+                if self.display_flags & pygame.FULLSCREEN:
+                    self.display_flags &= ~pygame.FULLSCREEN
+                    pygame.mouse.set_visible(True)
+                else:
+                    self.display_flags |= pygame.FULLSCREEN
+                    pygame.mouse.set_visible(False)
+                pygame.display.set_mode(self.size, self.display_flags)
+            if self.client:
+                if event.type in (pygame.KEYDOWN, pygame.KEYUP) :
+                    self.client.key_event(event)
+                elif event.type in (pygame.JOYAXISMOTION, pygame.JOYHATMOTION, pygame.JOYBUTTONDOWN, pygame.JOYBUTTONUP):
+                    self.client.controller_event(event)
+            else:
+                if event.type == Spotter.SPOTTER_HOST_ADDED:
+                    print("HOST ADDED   " + event.host)
                     self.client = Client(self.screen, self.sprites, event.host)
-            elif event.type == Spotter.SPOTTER_HOST_REMOVED:
-                print("HOST REMOVED " + event.host)
-            elif event.type == CommandBuffer.COMMAND_BUFFER_PACKET_RECEIVED:
-                self.buffer = event.buffer
-            elif event.type in (pygame.KEYDOWN, pygame.KEYUP) and self.client:
-                self.client.key_event(event.key, event.type == pygame.KEYDOWN)
-
+                elif event.type == Spotter.SPOTTER_HOST_REMOVED:
+                    print("HOST REMOVED " + event.host)
 
     def update(self):
         time_step = self.clock.tick(self.target_fps)
@@ -47,8 +62,8 @@ class MultiKobo:
         if self.client is None:
             self.screen.blit(self.sprites[6][self.subimage],(10,10))
             self.subimage = (self.subimage + 1) % len(self.sprites[6])
-        elif not self.buffer is None:
-            self.buffer.run()
+        else:
+            self.client.render()
 
         pygame.display.flip() 
  

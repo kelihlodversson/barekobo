@@ -7,11 +7,7 @@ class Opcode(enum.Enum) :
     DrawBackground = 1
     DrawSprite     = 2
 
-from pygame import event, USEREVENT
-
 class CommandBuffer:
-
-    COMMAND_BUFFER_PACKET_RECEIVED = USEREVENT + 3
 
     def __init__(self, screen, sprites):
         self.screen = screen
@@ -61,4 +57,3 @@ class CommandBuffer:
     def read(self, socket):
         new_buffer = socket.recv(4096)
         self.buffer = new_buffer
-        event.post(event.Event(self.COMMAND_BUFFER_PACKET_RECEIVED, buffer=self))

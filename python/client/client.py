@@ -15,15 +15,23 @@ KEYS_FIRE  = set([pygame.K_LCTRL, pygame.K_RCTRL, pygame.K_SPACE, pygame.K_LSHIF
 class Client:
     def __init__(self, screen, sprites, host, port=12345):
         self.command_buffer = CommandBuffer(screen, sprites)
-        self.socket = socket.create_connection((host, port))
-        self.socket.setblocking(False)
+        self.endpoint = (host,port)
+        self.socket = None
         self.direction = 0
         self.fire  = False
         self.up    = False
         self.down  = False
         self.left  = False
         self.right = False
-        
+
+        self.running = True
+        self.task = Thread(target=self.reader_main)
+        self.task.start()
+
+    def connect(self):
+        self.socket = socket.create_connection(self.endpoint)
+        self.socket.setblocking(False)
+
         # Send greeting to server
         self.socket.send(b'Hi!')
 
@@ -32,16 +40,13 @@ class Client:
         greeting = self.socket.recv(3)
         self.socket.setblocking(False)
         
-        print("Connected to", host, ":", greeting)
-
-        self.running = True
-        self.task = Thread(target=self.reader_main)
-        self.task.start()
+        print("Connected to", self.endpoint, ":", greeting)
 
     def stop(self) :
         self.running = False
 
     def reader_main(self):
+        self.connect()
         while self.running:
             try:
                 self.command_buffer.read(self.socket)
@@ -117,7 +122,8 @@ class Client:
             return 8
 
     def send_input_state(self):
-        state = self.get_direction() << 4
-        state |= 1 if self.fire else 0
-        buffer = struct.pack('B', state)
-        self.socket.send(buffer)
+        if self.socket:
+            state = self.get_direction() << 4
+            state |= 1 if self.fire else 0
+            buffer = struct.pack('B', state)
+            self.socket.send(buffer)

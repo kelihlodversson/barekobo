@@ -6,6 +6,8 @@ class ImageSheet:
         self.groups = [[]]
         
         base_image = pygame.image.load(path)
+        self.palette = base_image.get_palette()
+
         base_image.set_colorkey(transparent)
         base_image = base_image.convert()
 
@@ -16,6 +18,9 @@ class ImageSheet:
                 self.groups[-1].append(base_image.subsurface((x,y,imageWidth,imageHeight)))
                 if(len(self.groups[-1]) == groupSize) :
                     self.groups.append([])
+    
+    def get_palette(self) :
+        return self.palette
 
     def __getitem__(self, group):
         return self.groups[group]

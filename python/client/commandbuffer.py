@@ -13,7 +13,7 @@ class CommandBuffer:
         self.screen = screen
         self.sprites = sprites
         self.offset = (0,0)
-        self.starfield = Starfield(screen, 4096, 4096)
+        self.starfield = Starfield(screen, sprites.get_palette(), 4096, 4096)
 
         self.buffer = b''
         self.commands = {

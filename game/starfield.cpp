@@ -40,7 +40,7 @@ void Starfield::Draw(class View& view)
         // Use some of the bits we're going to throw away for random brightness variation
         int brightness = (star.y >> 20) & 5;
 
-        subviews[0].DrawPixel(star, 22+brightness);
         subviews[1].DrawPixel(star, 5+brightness);
+        subviews[0].DrawPixel(star, 22+brightness);
     }
 }

@@ -37,8 +37,6 @@ void MainLoop::Run()
         Update();
         Rect<s16> clippedArea(0, 10, screen.GetWidth(), screen.GetHeight()-10);
         CString message;
-        CString pos;
-        CString tmp;
 
         message.Format("FPS: %u. Missed: %d. Render:%3u%% Copy:%3u%%",
             screen.GetFPS(),

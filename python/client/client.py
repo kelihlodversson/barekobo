@@ -10,6 +10,7 @@ KEYS_UP    = set([pygame.K_w, pygame.K_UP,    pygame.K_KP7, pygame.K_KP8, pygame
 KEYS_DOWN  = set([pygame.K_s, pygame.K_DOWN,  pygame.K_KP1, pygame.K_KP2, pygame.K_KP3])
 KEYS_LEFT  = set([pygame.K_a, pygame.K_LEFT,  pygame.K_KP1, pygame.K_KP4, pygame.K_KP7])
 KEYS_RIGHT = set([pygame.K_d, pygame.K_RIGHT, pygame.K_KP3, pygame.K_KP6, pygame.K_KP9])
+KEYS_FIRE  = set([pygame.K_LCTRL, pygame.K_RCTRL, pygame.K_SPACE, pygame.K_LSHIFT, pygame.K_RSHIFT, pygame.K_LALT, pygame.K_RALT])
 
 class Client:
     def __init__(self, screen, sprites, host, port=12345):
@@ -51,19 +52,24 @@ class Client:
     def key_event(self, key, pressed):
         if key in KEYS_UP:
             self.up = pressed
+            if pressed and self.down:
+                self.down = False
         if key in KEYS_DOWN:
             self.down = pressed
+            if pressed and self.up:
+                self.up = False
         if key in KEYS_LEFT:
             self.left = pressed
+            if pressed and self.right:
+                self.right = False
         if key in KEYS_RIGHT:
             self.right = pressed
+            if pressed and self.left:
+                self.left = False
+        if key in KEYS_FIRE:
+            self.fire = pressed
 
-        if self.right and self.left:
-            self.right = False
-            self.left  = False
-        if self.up and self.down:
-            self.up    = False
-            self.down  = False
+
         self.send_input_state()
 
     def get_direction(self):
@@ -90,5 +96,6 @@ class Client:
 
     def send_input_state(self):
         state = self.get_direction() << 4
+        state |= 1 if self.fire else 0
         buffer = struct.pack('B', state)
         self.socket.send(buffer)

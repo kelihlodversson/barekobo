@@ -63,7 +63,7 @@ ifneq ($(strip $(LIBGCC_EH)),libgcc_eh.a)
 EXTRALIBS += $(LIBGCC_EH)
 endif
 else
-CPPFLAGS  += -fno-exceptions -fno-rtti -nostdinc++
+CPPFLAGS  += -fno-exceptions -fno-rtti #-nostdinc++
 endif
 
 ifeq ($(strip $(STDLIB_SUPPORT)),0)

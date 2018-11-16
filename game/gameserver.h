@@ -11,6 +11,7 @@
 
 #include "game/world.h"
 #include "game/partition.h"
+#include "game/levels.h"
 
 namespace hfh3
 {
@@ -29,12 +30,18 @@ namespace hfh3
         virtual void Update() override;
         
         void BuildCommandBuffer(class Actor* player, CommandBuffer& commandBuffer);
-        void SpawnFortress();
-        void SpawnEnemy();
-        void SpawnPlayer();
-        void SpawnRemotePlayer();
+
+        void LoadLevel(int level=-1);
+
+
+        void SpawnFortress(const Level::FortressSpec& area);
+        void SpawnEnemy(const Level::EnemySpec& enemy);
+        void SpawnPlayer(const Level::SpawnPoint& point);
+        void SpawnRemotePlayer(const Level::SpawnPoint& point);
         void SpawnMissile(const Vector<s16>& position, const class Direction& direction , int speed);
         void SpawnExplosion(const Vector<s16>& position, const class Direction& direction , int speed);
+
+        void OnFortressDestroyed();
 
     private:
 
@@ -90,11 +97,14 @@ namespace hfh3
         List<class Actor*> collisionSources;
         class Actor* player;
         class Actor* remotePlayer;
-        
+        int fortressCount;
+
         CSocket* client;
         CommandBuffer clientCommands;
         ProxyInput    clientInput;
         NetworkReader* readerTask;
+        int currentLevel;
+        Levels levels;
 
         friend class Base;
     };

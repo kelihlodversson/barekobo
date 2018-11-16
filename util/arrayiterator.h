@@ -145,4 +145,133 @@ namespace hfh3
 
         T* ptr;
     };
+
+    /** Utility class to iterate through arrays.
+      * Should be referenced through the type aliases in Array<T>, such
+      * as Array<T>::Iterator or Array<T>::ReverseIterator
+      */
+    template<typename T, bool reverse>
+    class _ArrayConstIterator
+    {
+    public:
+        _ArrayConstIterator(T* inPtr)
+            : ptr(inPtr)
+        {}
+
+        _ArrayConstIterator(const _ArrayConstIterator& other)
+            : ptr(other.ptr)
+        {}
+
+        explicit operator _ArrayConstIterator<T,!reverse> ()
+        {
+            return _ArrayConstIterator<T,!reverse>(ptr);
+        }
+
+        _ArrayConstIterator<T,reverse>& operator++()
+        {
+            operator+=(1);
+            return *this;
+        }
+
+        _ArrayConstIterator<T,reverse> operator++(int)
+        {
+            auto tmp = *this;
+            operator+=(1);
+            return tmp;
+        }
+
+        _ArrayConstIterator<T,reverse>& operator--()
+        {
+            operator-=(1);
+            return *this;
+        }
+
+        _ArrayConstIterator<T,reverse> operator--(int)
+        {
+            auto tmp = *this;
+            operator-=(1);
+            return tmp;
+        }
+
+        _ArrayConstIterator<T,reverse>& operator+=(int steps)
+        {
+            if(reverse)
+            {
+                ptr -= steps;
+            }
+            else
+            {
+                ptr += steps;
+            }
+            return *this;
+        }
+
+        _ArrayConstIterator<T,reverse>& operator-=(int steps)
+        {
+            if(reverse)
+            {
+                ptr += steps;
+            }
+            else
+            {
+                ptr -= steps;
+            }
+            return *this;
+        }
+
+        operator bool() const
+        {
+            return ptr;
+        }
+
+        bool operator==(const _ArrayConstIterator<T,reverse>& other) const
+        {
+            return ptr == other.ptr;
+        }
+
+        bool operator!=(const _ArrayConstIterator<T,reverse>& other) const
+        {
+            return ptr != other.ptr;
+        }
+
+        bool operator==(const T* other) const
+        {
+            return ptr == other;
+
+        }
+
+        bool operator!=(const T* other) const
+        {
+            return ptr != other;
+        }
+
+        const T& operator*() const
+        {
+            return *ptr;
+        }
+
+        const T* operator->() const
+        {
+            return ptr;
+        }
+
+        operator const T*() const
+        {
+            return ptr;
+        }
+
+    private:
+
+        void Forward()
+        {
+            ptr += reverse?-1:1;
+        }
+
+        void Backward()
+        {
+            ptr -= reverse?-1:1;
+        }
+
+        T* ptr;
+    };
 }

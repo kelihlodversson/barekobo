@@ -138,6 +138,11 @@ void Base::Destroy(DestructionType type)
             base->UpdateShape();
         }
     }
+
+    if(this == core)
+    {
+        world.OnFortressDestroyed();
+    }
 }
 
 // Select the correct image based on which siblings are connected
@@ -217,7 +222,7 @@ struct Grid
     Vector<s16> size;
 };
 
-void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random, Rect<s16>& area)
+void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random, const Rect<s16>& area)
 {
     
     // The grid size is the size of the area divided by 16 rounded to the nearest integer and then
@@ -226,8 +231,6 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
 
     DEBUG("Grid size: %d,%d", gridSize.x, gridSize.y);
 
-    // Update the size of the rectangle to fit to the rounded grid size:
-    area.size = gridSize * 16;
 
     // Get the center of the grid and the area
     Vector<s16> start = gridSize / 2; 

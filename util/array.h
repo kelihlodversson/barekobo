@@ -6,6 +6,10 @@
 #include <circle/util.h>
 #include <assert.h>
 
+/* std::initializer_list is available in freestanding mode.
+  */
+#include <initializer_list>
+
 namespace hfh3
 {
     /** Templated container class that implements a dynamic array.
@@ -16,6 +20,7 @@ namespace hfh3
     public:
         static const int MIN_RESERVE = 8;
         using Iterator = _ArrayIterator<T, false>;
+        using ConstIterator = _ArrayConstIterator<T, false>;
         using ReverseIterator = _ArrayIterator<T, true>;
 
         /** The number of items in the list.
@@ -235,12 +240,22 @@ namespace hfh3
             return Iterator(data);
         }
 
+        ConstIterator begin() const
+        {
+            return ConstIterator(data);
+        }
+
         /** Returns an empty iterator indicating a position one past
           * the end of the list.
           */
         Iterator end()
         {
             return Iterator(&data[count]);
+        }
+
+        ConstIterator end() const
+        {
+            return ConstIterator(&data[count]);
         }
 
         /** Creates an iterator for iterating through the list from
@@ -311,11 +326,19 @@ namespace hfh3
         {}
 
         Array(int reserve)
-            : data(malloc(reserve * sizeof(T)))
+            : data((T*)malloc(reserve * sizeof(T)))
             , reserved(reserve)
             , count(0)
         {}
 
+        Array(std::initializer_list<T> init)
+            : data((T*)malloc(init.size() * sizeof(T)))
+            , reserved(init.size())
+            , count(0)
+        {
+            AppendRaw(init.begin(), init.size());
+        }
+        
         ~Array()
         {
             Clear();

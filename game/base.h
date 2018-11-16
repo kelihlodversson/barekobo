@@ -15,7 +15,7 @@ namespace hfh3
         virtual void Update() override;
         virtual void OnCollision(class Actor* other) override;
 
-        static void CreateFort(class GameServer& server, ImageSheet& imageSheet, class Random& random, Rect<s16>& area);
+        static void CreateFort(class GameServer& server, ImageSheet& imageSheet, class Random& random, const Rect<s16>& area);
     private:
         enum DestructionType {
             None,

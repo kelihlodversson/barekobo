@@ -13,7 +13,8 @@
 
 using namespace hfh3;
 
-Player::Player(class GameServer& inWorld, class ImageSheet& inImageSheet, class Input& inInput) :
+Player::Player(class GameServer& inWorld, class ImageSheet& inImageSheet, class Input& inInput,
+               const Vector<s16>& position, const Direction& heading) :
     Mover(inWorld,
           (u8)ImageSet::Player0,
           inImageSheet.GetGroupSize(),
@@ -22,8 +23,8 @@ Player::Player(class GameServer& inWorld, class ImageSheet& inImageSheet, class 
     input(inInput),
     imageSheet(inImageSheet)
 {
-    SetImageIndex(0);
-    SetPosition({0,0});//(stage.GetSize() - GetImage().GetSize())/2;
+    SetImageIndex(heading == Direction::Stopped ? 0 : (int) heading);
+    SetPosition(position);
 }
 
 void Player::Update()

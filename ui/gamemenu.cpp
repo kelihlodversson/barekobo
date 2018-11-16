@@ -113,7 +113,6 @@ void GameMenu::StartClient()
 
 void GameMenu::StartHost(bool multiplayer)
 {
-    static const int enemyCount = 3000;
     entries.Clear();
     if(multiplayer)
     {
@@ -128,19 +127,12 @@ void GameMenu::StartHost(bool multiplayer)
     new Async([=]()
     {
         auto server = mainLoop.CreateClient<GameServer>(input, network);
-        server->SpawnFortress();
-        for (int i = 0; i < enemyCount; i++)
-        {
-            server->SpawnEnemy();
-        }
-
         if(multiplayer)
         {
             Beacon beacon; // Announce our presence to the local network
             server->Bind(); // Wait for connection
         }
-
-        server->SpawnPlayer();
+        server->LoadLevel(0);
         Pause();
     });
 }

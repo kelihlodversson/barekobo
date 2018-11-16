@@ -4,6 +4,10 @@
 #include "util/log.h"
 #include <assert.h>
 
+/* std::initializer_list is available in freestanding mode.
+  */
+#include <initializer_list>
+
 namespace hfh3
 {
     /** Templated container class that implements a simple double link list.
@@ -237,6 +241,20 @@ namespace hfh3
             , last(nullptr)
             , count(0)
         {}
+
+        List(std::initializer_list<T> init)
+            : first(nullptr)
+            , last(nullptr)
+            , count(0)
+        {
+#           if CONFIG_USE_ITEM_POOL
+            Item::PreallocItemPool(init.size());
+#           endif
+            for(auto& value : init)
+            {
+                Append(value);
+            }
+        }
 
         ~List()
         {

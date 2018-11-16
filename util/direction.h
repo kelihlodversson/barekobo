@@ -69,6 +69,15 @@ namespace hfh3
             return *this + (-other);
         }
 
+        bool operator==(Value other) const
+        {
+            return value == other;
+        }
+
+        bool operator==(const Direction& other) const
+        {
+            return value == other.value;
+        }
 
         Vector<s16> ToDelta(s16 speed=1);
     private:

@@ -28,6 +28,7 @@ GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNe
     , partitionSize(stage.GetSize() / partitionGridCount)
     , client(nullptr)
     , clientCommands(imageSheet)
+    , currentLevel(-1)
 {
     // Initial partitioning: partition the GameServer into 8x8 partitions:
     Rect<s16> bounds ({0,0}, partitionSize);
@@ -177,27 +178,35 @@ void GameServer::PerformCollisionCheck()
     }
 }
 
-void GameServer::SpawnFortress()
+void GameServer::SpawnFortress(const Level::FortressSpec& area)
 {
-    Rect<s16> area (20,0,20*16,20*16);
     Base::CreateFort(*this, imageSheet, random, area);
 }
 
-void GameServer::SpawnEnemy()
+void GameServer::SpawnEnemy(const Level::EnemySpec& enemy)
 {
     AddActor(new Enemy(*this, imageSheet, random));
 }
 
-void GameServer::SpawnPlayer()
+void GameServer::SpawnPlayer(const Level::SpawnPoint& point)
 {
-    player = new Player(*this, imageSheet, input);
+    if (player)
+    {
+        player->Destroy();
+    }
+    player = new Player(*this, imageSheet, input, point.location, point.heading);
     AddActor(player);
 }
 
-void GameServer::SpawnRemotePlayer()
+void GameServer::SpawnRemotePlayer(const Level::SpawnPoint& point)
 {
-    remotePlayer = new Player(*this, imageSheet, clientInput);
-    remotePlayer->SetPosition({32,32});
+    assert(client);
+
+    if (remotePlayer)
+    {
+        remotePlayer->Destroy();
+    }
+    remotePlayer = new Player(*this, imageSheet, clientInput, point.location, point.heading);
     AddActor(remotePlayer);
 }
 
@@ -283,6 +292,58 @@ void GameServer::GetPartitionRange(const Rect<s16>& rect, int& x1, int& x2, int&
     }
 }
 
+void GameServer::OnFortressDestroyed()
+{
+    fortressCount --;
+    if (fortressCount == 0)
+    {
+        // TODO: Delay loading of the next level for a bit
+        LoadLevel();
+    }
+}
+
+void GameServer::LoadLevel(int levelIndex)
+{
+    if (levelIndex < 0)
+    {
+        currentLevel ++;
+    }
+    else
+    {
+        currentLevel = levelIndex;
+    }
+
+    if(currentLevel >= levels.Size())
+    {
+        currentLevel = 0;
+    }
+    const Level& level = levels[currentLevel];
+
+    for(auto& fortress : level.fortresses)
+    {
+        SpawnFortress(fortress);
+    }
+    fortressCount = level.fortresses.Size();
+
+    for(auto& enemySpec : level.enemies)
+    {
+        SpawnEnemy(enemySpec);
+    }
+
+    int localSpawnPoint = random.Get() % level.playerStarts.Size();
+    SpawnPlayer(level.playerStarts[localSpawnPoint]);
+    if(client)
+    {
+        int remoteSpawnPoint;
+        do
+        {
+            remoteSpawnPoint = random.Get() % level.playerStarts.Size();
+        } while (remoteSpawnPoint == localSpawnPoint);
+        SpawnRemotePlayer(level.playerStarts[remoteSpawnPoint]);
+    }
+}
+
+
 void GameServer::Bind()
 {
     Pause(); // If called from a different task, we have to disable updates while waiting
@@ -295,8 +356,6 @@ void GameServer::Bind()
         u8 buffer[FRAME_BUFFER_SIZE];
         client->Receive(buffer, FRAME_BUFFER_SIZE, 0);
         // TODO Verify greeting
-
-        SpawnRemotePlayer();
         readerTask = new NetworkReader(client, clientInput); 
     }
     Resume();

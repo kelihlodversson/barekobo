@@ -1,5 +1,6 @@
 #pragma once
 #include "ui/mainloop.h"
+#include "ui/minimap.h"
 #include "render/screenmanager.h"
 #include "render/imagesheet.h"
 
@@ -22,14 +23,19 @@ namespace hfh3
             return stage;
         }
 
+        virtual void Pause() override;
+        virtual void Resume() override;
+
     protected:
         virtual void Render() override;
+        virtual Rect<s16> GetBounds() const override;
 
         Stage stage;
         class Input& input;
         class Network& network;
         ImageSheet imageSheet;
         Starfield background;
+        MiniMap* minimap;
         CommandBuffer commands;
     };
 }

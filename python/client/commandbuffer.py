@@ -1,11 +1,12 @@
 import enum
 import struct
 from  render.starfield import Starfield
-
+from pygame import Rect
 class Opcode(enum.Enum) :
-    SetViewOffset  = 0
-    DrawBackground = 1
-    DrawSprite     = 2
+    SetViewOffset      = 0
+    DrawBackground     = 1
+    DrawSprite         = 2
+    SetPlayerPositions = 3
 
 class CommandBuffer:
 
@@ -13,13 +14,14 @@ class CommandBuffer:
         self.screen = screen
         self.sprites = sprites
         self.offset = (0,0)
-        self.starfield = Starfield(screen, sprites.get_palette(), 4096, 4096)
+        self.starfield = Starfield(screen, sprites.get_palette(), 2048, 4096)
 
         self.buffer = b''
         self.commands = {
-            Opcode.SetViewOffset  : (self.set_view_offset, '<hh'),
-            Opcode.DrawBackground : (self.draw_background, ''),
-            Opcode.DrawSprite     : (self.draw_sprite,     '<hhB')
+            Opcode.SetViewOffset      : (self.set_view_offset, '<hh'),
+            Opcode.DrawBackground     : (self.draw_background, ''),
+            Opcode.DrawSprite         : (self.draw_sprite,     '<hhB'),
+            Opcode.SetPlayerPositions : (self.set_positions,   '<hhhh')
         }
 
     def set_view_offset(self, x, y) :
@@ -30,13 +32,18 @@ class CommandBuffer:
 
     def draw_sprite(self, x, y, image) :
         sprite = self.sprites[image >> 4][image & 0xF]
-        self.screen.blit(sprite, ((x - self.offset[0]) & 4095, (y - self.offset[1]) & 4095))
+        self.screen.blit(sprite, ((x - self.offset[0]) & 2047, (y - self.offset[1]) & 4095))
+
+    def set_positions(self, p0x, p0y, p1x, p1y) :
+        pass
 
     def invalid_opcode(self, op) :
         print("Error: invalid opcode", op)
     
     def run(self):
         offset = 0
+        self.screen.set_clip(Rect(0,10,512,512))
+        self.screen.fill(0)
         while offset < len(self.buffer):
             try:
                 args = ()
@@ -50,6 +57,7 @@ class CommandBuffer:
                 offset += 1
             except struct.error:
                 pass
+        self.screen.set_clip(None)
     
     def clear(self):
         self.buffer = b''

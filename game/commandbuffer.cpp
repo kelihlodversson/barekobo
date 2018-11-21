@@ -6,6 +6,7 @@
 #include "util/log.h"
 #include "render/image.h"
 #include "render/imagesheet.h"
+#include "ui/minimap.h"
 
 #include <circle/net/socket.h>
 #include <circle/net/in.h>
@@ -18,6 +19,7 @@ enum class Opcode : u8
     SetViewOffset,
     DrawBackground,
     DrawSprite,
+    SetPlayerPositions,
 };
 
 using CommandArray = Array<u8>;
@@ -89,6 +91,13 @@ void CommandBuffer::DrawSprite(const Vector<s16>& position, u8 imageGroup, u8 su
     commands << u8((imageGroup<<4)|(subImage&0xF));
 }
 
+void CommandBuffer::SetPlayerPositions(const Vector<s16>& p0, const Vector<s16>& p1)
+{
+    commands << Opcode::SetPlayerPositions;
+    commands << p0;
+    commands << p1;
+}
+
 void CommandBuffer::Run(class View& view, Starfield& background)
 {
     Opcode op = Opcode::DrawBackground;
@@ -116,6 +125,19 @@ void CommandBuffer::Run(class View& view, Starfield& background)
             case Opcode::DrawBackground:
             {
                 background.Draw(view);
+            }
+            break;
+            case Opcode::SetPlayerPositions:
+            {
+                Vector<s16> p0;
+                Vector<s16> p1;
+                iter >> p0;
+                iter >> p1;
+                if (map)
+                {
+                    map->SetPlayerPosition(0, p0);
+                    map->SetPlayerPosition(1, p1);
+                }
             }
             break;
             default:

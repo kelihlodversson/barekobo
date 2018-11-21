@@ -13,7 +13,7 @@ namespace hfh3
     class Starfield
     {
     public:
-        Starfield(class World& inWorld, int inDensity=2500, u64 inSeed=999);
+        Starfield(class World& inWorld, int inDensity=1250, u64 inSeed=999);
 
         void Draw(class View& view);
     private:

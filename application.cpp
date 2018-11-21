@@ -9,6 +9,7 @@
 #include "network/network.h"
 #include "ui/mainLoop.h"
 #include "ui/gamemenu.h"
+#include "ui/stats.h"
 
 using namespace hfh3;
 
@@ -53,6 +54,7 @@ bool Application::Initialize()
 int Application::Run()
 {
     MainLoop mainLoop(screenManager);
+    mainLoop.CreateClient<Stats>();
     mainLoop.CreateClient<GameMenu>(input, network);
     mainLoop.Run();
     return EXIT_HALT;

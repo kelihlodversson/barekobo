@@ -98,6 +98,13 @@ namespace hfh3
             return origin + size;
         }
 
+        /** helper to calculate the center point of the rectangle.
+          */
+        Vector<T> Center() const
+        {
+            return origin + size / 2;
+        }
+
         /** returns true if a vector is contained within the rectangle.
           */
         bool Contains(const Vector<T>& vector) const

@@ -15,8 +15,9 @@ namespace hfh3
     class CommandBuffer
     {
     public:
-        CommandBuffer(class ImageSheet& inImageSheet) 
+        CommandBuffer(class ImageSheet& inImageSheet, class MiniMap* inMap) 
             : imageSheet(inImageSheet)
+            , map(inMap)
         {
 
         }
@@ -25,6 +26,7 @@ namespace hfh3
         void SetViewOffset(const Vector<s16>& position);
         void DrawBackground();
         void DrawSprite(const Vector<s16>& position, u8 imageGroup, u8 subImage);
+        void SetPlayerPositions(const Vector<s16>& p0, const Vector<s16>& p1);
         void Clear() 
         {
             commands.ClearFast();
@@ -41,6 +43,7 @@ namespace hfh3
        
     private:
         class ImageSheet& imageSheet;
+        class MiniMap* map;
         Array<u8> commands;
     };
 

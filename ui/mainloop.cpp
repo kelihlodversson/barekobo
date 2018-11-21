@@ -35,22 +35,8 @@ void MainLoop::Run()
     while(true)
     {
         Update();
-        Rect<s16> clippedArea(0, 10, screen.GetWidth(), screen.GetHeight()-10);
-        CString message;
-
-        message.Format("FPS: %u. Missed: %d. Render:%3u%% Copy:%3u%%",
-            screen.GetFPS(),
-            screen.GetMissedFrames(),
-            screen.GetGameTimePCT(),
-            screen.GetFlipTimePCT()
-        );
-
-        screen.Clear(10);
-        screen.DrawString({1,1}, message, 0, Font::GetDefault());
-        screen.SetClip(clippedArea);
         screen.Clear(0);
         Render();
-        screen.ClearClip();
         screen.Present();
         PostRender();
     }
@@ -63,7 +49,9 @@ void MainLoop::Update()
     {
         if(client->active)
         {
+            screen.SetClip(client->GetBounds());
             client->Update();
+            screen.ClearClip();
         }
     }
 }
@@ -74,7 +62,9 @@ void MainLoop::Render()
     {
         if(client->active)
         {
+            screen.SetClip(client->GetBounds());
             client->Render();
+            screen.ClearClip();
         }
     }
 }

@@ -11,19 +11,6 @@ namespace hfh3
     public:
         View(Stage& inStage, ScreenManager& inScreen);
 
-        /** Translates a stage coordinate to a screen coordinate.
-          * (no pun intended.)
-          */
-        Vector<s16> StageToScreen(const Vector<s16>& stageVector) const
-        {
-            return stage.WrapCoordinate(stageVector - screenOffset);
-        }
-
-        Rect<s16> StageToScreen(const Rect<s16>& stageRect) const
-        {
-            return {StageToScreen(stageRect.origin), stageRect.size};
-        }
-
         class ScreenManager& GetScreen()
         {
             return screen;
@@ -42,7 +29,7 @@ namespace hfh3
           */
         void SetCenterOffset(const Vector<s16>& offset)
         {
-            Vector<s16> center = screen.GetSize()/2;
+            Vector<s16> center = screen.GetClip().Center();
             screenOffset = stage.WrapCoordinate(offset - center);
         }
 
@@ -53,7 +40,9 @@ namespace hfh3
 
         Rect<s16> GetVisibleRect()
         {
-            return {screenOffset, screen.GetSize()};
+            Rect<s16> clip = screen.GetClip();
+            clip.origin += screenOffset;
+            return clip;
         }
 
         /** Returns true if the rect passed in is within the visible screen area

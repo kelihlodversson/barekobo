@@ -16,6 +16,16 @@ namespace hfh3
             y(in_y)
         {}
 
+        bool operator==(const Vector<T>& other) const
+        {
+            return x == other.x && y == other.y;
+        }
+
+        bool operator!=(const Vector<T>& other) const
+        {
+            return x != other.x || y != other.y;
+        }
+
         Vector<T>& operator+=(const Vector<T>& other)
         {
             x += other.x;
@@ -44,6 +54,13 @@ namespace hfh3
             return *this;
         }
 
+        Vector<T>& operator%=(const Vector<T>& other)
+        {
+            x %= other.x;
+            y %= other.y;
+            return *this;
+        }
+
         Vector<T> operator+(const Vector<T>& other) const
         {
             return Vector<T>(x+other.x, y+other.y);
@@ -62,6 +79,11 @@ namespace hfh3
         Vector<T> operator/(T dividend) const
         {
             return Vector<T>(x/dividend, y/dividend);
+        }
+
+        Vector<T> operator%(const Vector<T>& other) const
+        {
+            return Vector<T>(x%other.x, y%other.y);
         }
 
         bool IsZero() const

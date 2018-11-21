@@ -58,8 +58,8 @@ class MultiKobo:
         pygame.display.set_caption("FPS: {0:.0f}".format(self.clock.get_fps()))
 
     def render(self):
-        self.screen.fill(0)
         if self.client is None:
+            self.screen.fill(0)
             self.screen.blit(self.sprites[6][self.subimage],(10,10))
             self.subimage = (self.subimage + 1) % len(self.sprites[6])
         else:

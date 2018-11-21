@@ -26,8 +26,11 @@ using namespace hfh3;
 GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNetwork)
     : World(inMainLoop, inInput, inNetwork)
     , partitionSize(stage.GetSize() / partitionGridCount)
+    , player(nullptr)
+    , remotePlayer(nullptr)
+    , baseCount(0)
     , client(nullptr)
-    , clientCommands(imageSheet)
+    , clientCommands(imageSheet, nullptr)
     , currentLevel(-1)
 {
     // Initial partitioning: partition the GameServer into 8x8 partitions:
@@ -102,15 +105,15 @@ void GameServer::Update()
     PerformPendingDeletes();
     PerformCollisionCheck();
 
-    BuildCommandBuffer(player, commands);
+    BuildCommandBuffer(player, remotePlayer, commands);
     if(client)
     {
-        BuildCommandBuffer(remotePlayer, clientCommands);
+        BuildCommandBuffer(remotePlayer, player, clientCommands);
         clientCommands.Send(client);
     }
 }
 
-void GameServer::BuildCommandBuffer(Actor* player, CommandBuffer& commandBuffer)
+void GameServer::BuildCommandBuffer(Actor* player, Actor* otherPlayer, CommandBuffer& commandBuffer)
 {
     if(!player)
     {
@@ -121,7 +124,10 @@ void GameServer::BuildCommandBuffer(Actor* player, CommandBuffer& commandBuffer)
     View view = View(stage, screen);
     view.SetCenterOffset(playerBounds.origin+playerBounds.size/2);
 
+    Vector<s16> otherPlayerPos = (otherPlayer ? otherPlayer->GetPosition() : Vector<s16>(-1,-1));
+
     commandBuffer.Clear();
+    commandBuffer.SetPlayerPositions(playerBounds.origin, otherPlayerPos);
     commandBuffer.SetViewOffset(view.GetOffset());
     commandBuffer.DrawBackground();
 
@@ -292,14 +298,27 @@ void GameServer::GetPartitionRange(const Rect<s16>& rect, int& x1, int& x2, int&
     }
 }
 
-void GameServer::OnFortressDestroyed()
+void GameServer::OnBaseDestroyed(Base* base)
 {
-    fortressCount --;
-    if (fortressCount == 0)
+    if (minimap)
+    {
+        minimap->Plot(base->GetPosition(), MiniMap::Empty);
+    }
+
+    baseCount --;
+    if (baseCount == 0)
     {
         // TODO: Delay loading of the next level for a bit
         LoadLevel();
     }
+}
+
+void GameServer::AddBase(Base* base)
+{
+    AddActor(base);
+
+    baseCount++;
+    minimap->Plot(base->GetPosition(), base->IsCore() ? MiniMap::BaseCore : MiniMap::BaseEdge);
 }
 
 void GameServer::LoadLevel(int levelIndex)
@@ -319,11 +338,11 @@ void GameServer::LoadLevel(int levelIndex)
     }
     const Level& level = levels[currentLevel];
 
+    baseCount = 0;
     for(auto& fortress : level.fortresses)
     {
         SpawnFortress(fortress);
     }
-    fortressCount = level.fortresses.Size();
 
     for(auto& enemySpec : level.enemies)
     {

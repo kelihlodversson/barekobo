@@ -5,7 +5,7 @@ class Starfield:
     def __init__(self, screen, palette, width, height) :
         self.screen = screen
         self.size = (width, height)
-        self.density = 1250
+        self.density = 625
         self.palette = palette
 
     def draw(self, offset) :

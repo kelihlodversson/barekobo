@@ -170,8 +170,8 @@ namespace hfh3
             return retval;
         }
 
-        /** Swaps element i with the last element and then pops it of the list. */
-        T Pop(int index)
+        /** Swaps element i with the last element and then pulls it out of the list. */
+        T Pull(int index)
         {
             assert(index >=0 && index < count);
             T retval = data[index];

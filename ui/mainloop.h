@@ -37,8 +37,13 @@ namespace hfh3
             {
             }
 
-            void Pause()  { active = false; }
-            void Resume() { active = true;  }
+            virtual void Pause()  { active = false; }
+            virtual void Resume() { active = true;  }
+
+            virtual Rect<s16> GetBounds() const
+            {
+                return screen.GetScreenRect();
+            }
 
         protected:
 

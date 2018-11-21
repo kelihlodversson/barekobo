@@ -25,7 +25,7 @@ namespace hfh3
         {
             return Vector<s16>(vector.x & maskX, vector.y & maskY);
         }
-
+        
         s16 GetWidth() { return size.x; }
         s16 GetHeight() { return size.y; }
         const Vector<s16>& GetSize() { return size; }

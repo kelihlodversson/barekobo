@@ -7,6 +7,8 @@
 #include "util/random.h"
 #include "util/array.h"
 #include "util/log.h"
+#include "ui/minimap.h"
+
 
 using namespace hfh3;
 
@@ -139,10 +141,7 @@ void Base::Destroy(DestructionType type)
         }
     }
 
-    if(this == core)
-    {
-        world.OnFortressDestroyed();
-    }
+    world.OnBaseDestroyed(this);
 }
 
 // Select the correct image based on which siblings are connected
@@ -237,26 +236,26 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
     DEBUG("Start: %d,%d", start.x, start.y);
 
     Grid grid(gridSize); // Allocate a grid of null pointers
-    Array<Vector<s16>> stack; // Temporary stack of nodes to visit later
+    Array<Vector<s16>> set; // Temporary set of nodes to visit later
 
     // Create the initial node
     grid[start] = new Base(server, imageSheet);
 
     
-    // Add the initial nodes above and below or left and right of the core to the stack
+    // Add the initial nodes above and below or left and right of the core to the set
     {
         if(random.Get() & 0x800000)
         {
-            stack.Push(start - halfV);
-            stack.Push(start + halfV);
+            set.Push(start - halfV);
+            set.Push(start + halfV);
         }
         else
         {
-            stack.Push(start - halfH);
-            stack.Push(start + halfH);
+            set.Push(start - halfH);
+            set.Push(start + halfH);
         }
 
-        for(const auto& v : stack)
+        for(const auto& v : set)
         {
             grid[v] = new Base(server, imageSheet); 
         }
@@ -264,10 +263,10 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
 
 
     Array<Vector<s16>> directions;
-    while(!stack.IsEmpty())
+    while(!set.IsEmpty())
     {
-        // pop a random item from the stack
-        auto current = stack.Pop(random.Get() % stack.Size());
+        // pull a random item from the set
+        auto current = set.Pull(random.Get() % set.Size());
         assert(grid[current] != nullptr);
 
         // Select an available direction to move in
@@ -283,7 +282,7 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
 
         if (directions.IsEmpty())
         {
-            // The current node is already full, move to next one on the stack  
+            // The current node is already full, move to next one on the set  
             continue;
         }
 
@@ -294,25 +293,23 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
         // Create a corridor node between the current and the next node
         grid[midpoint] = new Base(server, imageSheet);
 
-        // Create the new node and push it to the stack
+        // Create the new node and push it to the set
         assert(grid[next] == nullptr);
         grid[next] = new Base(server, imageSheet);
-        stack.Push(next);
+        set.Push(next);
 
-        // Return the current node to the stack
-        stack.Push(current);
+        // Return the current node to the set
+        set.Push(current);
     }
 
     // Finalize the maze and add the base elements to the current game
     Vector<s16> v(0,0);
     for (v.y = 0; v.y < gridSize.y; v.y++)
     {
-        Array<u8> tmp;
         for(v.x = 0; v.x < gridSize.x; v.x++)
         {
             if( grid[v] )
             {
-                tmp.Append('#');
                 if(grid.isValid(v-halfV))
                 {
                     grid[v]->north = grid[v-halfV];
@@ -330,18 +327,11 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
                     grid[v]->west = grid[v-halfH];
                 }
                 grid[v]->core = grid[start];
-                grid[v]->UpdateShape();
                 grid[v]->SetPosition(v*16 + area.origin);
+                grid[v]->UpdateShape();
 
-                server.AddActor(grid[v]);
-            }        
-            else 
-            {
-                tmp.Append('.');
-            }
+                server.AddBase(grid[v]);
+            } 
         }
-        tmp.Append(0);
-        DEBUG("%s", (u8*)tmp);
-
     }
 }

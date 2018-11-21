@@ -14,6 +14,11 @@ namespace hfh3
 
         virtual void Update() override;
         virtual void OnCollision(class Actor* other) override;
+        
+        bool IsCore() const 
+        {
+            return this == core;
+        }
 
         static void CreateFort(class GameServer& server, ImageSheet& imageSheet, class Random& random, const Rect<s16>& area);
     private:
@@ -43,6 +48,5 @@ namespace hfh3
         // to acheive a chain reaction when hit.
         DestructionType delayAction;
         int delay;
-
     };
 }

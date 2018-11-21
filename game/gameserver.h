@@ -29,7 +29,7 @@ namespace hfh3
 
         virtual void Update() override;
         
-        void BuildCommandBuffer(class Actor* player, CommandBuffer& commandBuffer);
+        void BuildCommandBuffer(class Actor* player, class Actor* otherPlayer, CommandBuffer& commandBuffer);
 
         void LoadLevel(int level=-1);
 
@@ -41,7 +41,8 @@ namespace hfh3
         void SpawnMissile(const Vector<s16>& position, const class Direction& direction , int speed);
         void SpawnExplosion(const Vector<s16>& position, const class Direction& direction , int speed);
 
-        void OnFortressDestroyed();
+        void OnBaseDestroyed(class Base* base);
+        void AddBase(class Base* base);
 
     private:
 
@@ -97,7 +98,7 @@ namespace hfh3
         List<class Actor*> collisionSources;
         class Actor* player;
         class Actor* remotePlayer;
-        int fortressCount;
+        int baseCount;
 
         CSocket* client;
         CommandBuffer clientCommands;

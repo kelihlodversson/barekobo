@@ -20,7 +20,7 @@ using namespace hfh3;
 
 World::World(MainLoop& inLoop, class Input& inInput, Network& inNetwork)
     : IUpdatable(inLoop)
-    , stage(2048, 4096)
+    , stage(2048, 2048)
     , input(inInput)
     , network(inNetwork)
     , imageSheet(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8)

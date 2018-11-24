@@ -86,11 +86,7 @@ void GameClient::NetworkReader::Run()
     CScheduler* scheduler = CScheduler::Get();
     while(true)
     {
-        if(!commands.Receive(server))
-        {
-            // When there is no data ready, sleep for 60th of a second
-            // before trying again. This will also yield control to other threads
-            scheduler->MsSleep(16); 
-        }
+        commands.Receive(server);
+        scheduler->Yield(); 
     }  
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "util/arrayiterator.h"
+#include "util/callback.h"
 #include "util/log.h"
 #include "util/new.h"
 #include <circle/alloc.h>
@@ -183,6 +184,61 @@ namespace hfh3
             data[count].~T();
 
             return retval;
+        }
+
+        /** Removes the first num entries off the front of the array, shortening the
+          * array and moving the remaining items up front.
+          */
+        void RemoveFront(int num)
+        {
+            assert(num > 0);
+            if (num >= count)
+            {
+                ClearFast();
+            }
+            else
+            {
+                count -= num;
+                int items_to_move = count;
+                T* src = &data[num];
+                T* dst = data;
+                // Note, we don't have memmove, so we have to call memcpy on each non-overlapping chunk_size of data
+                while(items_to_move)
+                {
+                    int chunk_size = items_to_move > num ? num : items_to_move;
+                    memcpy(dst, src, sizeof(T)*chunk_size);
+                    items_to_move -= chunk_size;
+                    dst += chunk_size;
+                    src += chunk_size;
+                }
+            }
+        }
+
+        /** Replaces the contents of the array with consecutive calls to the reader callback
+          * until it returns 0 bytes read.
+          * If the first call to the reader returns 0, the original contents of the array are
+          * preserved.
+          */
+        int ReadFrom( Callback<int(T* buffer, int bufferSize)> reader, bool replace, int chunkSize = 1600)
+        {
+            int readOffset = replace ? 0 : count;
+            int readCount = 0;
+            do {
+                int required = readOffset+chunkSize;
+                if ( reserved < required )
+                {
+                    Reserve(required>MIN_RESERVE ? required*2 : MIN_RESERVE);
+                }
+
+                int readCount = reader(data+readOffset, chunkSize);
+                readOffset += readCount;
+            } while(readCount);
+
+            if (readOffset)
+            {
+                count = readOffset;
+            }
+            return readOffset;
         }
 
         T& operator[](int index)

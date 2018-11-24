@@ -85,6 +85,11 @@ namespace hfh3
             return ptr == other.ptr;
         }
 
+        bool operator<(const _ArrayIterator<T,reverse>& other) const
+        {
+            return ptr < other.ptr;
+        }
+
         bool operator!=(const _ArrayIterator<T,reverse>& other) const
         {
             return ptr != other.ptr;

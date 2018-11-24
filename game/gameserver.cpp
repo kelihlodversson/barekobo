@@ -77,6 +77,10 @@ GameServer::~GameServer()
 
 void GameServer::Update()
 {
+    commands.Clear();
+    if(client)
+    {
+    }
     for(Partition& partition : partitions)
     {
         Rect<s16> bounds = partition.GetBounds();
@@ -110,6 +114,7 @@ void GameServer::Update()
     {
         BuildCommandBuffer(remotePlayer, player, clientCommands);
         clientCommands.Send(client);
+        clientCommands.Clear();
     }
 }
 
@@ -126,7 +131,6 @@ void GameServer::BuildCommandBuffer(Actor* player, Actor* otherPlayer, CommandBu
 
     Vector<s16> otherPlayerPos = (otherPlayer ? otherPlayer->GetPosition() : Vector<s16>(-1,-1));
 
-    commandBuffer.Clear();
     commandBuffer.SetPlayerPositions(playerBounds.origin, otherPlayerPos);
     commandBuffer.SetViewOffset(view.GetOffset());
     commandBuffer.DrawBackground();
@@ -303,6 +307,10 @@ void GameServer::OnBaseDestroyed(Base* base)
     if (minimap)
     {
         minimap->Plot(base->GetPosition(), MiniMap::Empty);
+        if (client)
+        {
+            clientCommands.PlotMap(base->GetPosition(), MiniMap::Empty);
+        }
     }
 
     baseCount --;
@@ -318,7 +326,15 @@ void GameServer::AddBase(Base* base)
     AddActor(base);
 
     baseCount++;
-    minimap->Plot(base->GetPosition(), base->IsCore() ? MiniMap::BaseCore : MiniMap::BaseEdge);
+
+    Vector<s16> position = base->GetPosition();
+    MiniMap::EntryType mapType = base->IsCore() ? MiniMap::BaseCore : MiniMap::BaseEdge;
+    minimap->Plot(position, mapType);
+
+    if(client)
+    {
+        clientCommands.PlotMap(position, mapType);
+    }
 }
 
 void GameServer::LoadLevel(int levelIndex)

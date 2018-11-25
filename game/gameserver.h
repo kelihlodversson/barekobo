@@ -42,6 +42,7 @@ namespace hfh3
         void SpawnExplosion(const Vector<s16>& position, const class Direction& direction , int speed);
 
         void OnBaseDestroyed(class Base* base);
+        void OnBaseChanged(class Base* base, u8 imageGroup, u8 imageIndex);
         void AddBase(class Base* base);
 
     private:

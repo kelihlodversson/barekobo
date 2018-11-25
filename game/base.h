@@ -1,18 +1,21 @@
 #pragma once
-#include "game/sprite.h"
+#include "game/actor.h"
 #include "util/vector.h"
 #include "util/rect.h"
 #include "util/direction.h"
 
 namespace hfh3
 {
-    class Base : public Sprite
+    class Base : public Actor
     {
     public:
-        Base(class GameServer& inWorld, class ImageSheet& imageSheet);
+        Base(class GameServer& inWorld);
 
 
         virtual void Update() override;
+        virtual void Draw(class CommandBuffer& commands) override;
+        virtual Rect<s16> GetBounds() override;
+
         virtual void OnCollision(class Actor* other) override;
         
         bool IsCore() const 
@@ -20,7 +23,7 @@ namespace hfh3
             return this == core;
         }
 
-        static void CreateFort(class GameServer& server, ImageSheet& imageSheet, class Random& random, const Rect<s16>& area);
+        static void CreateFort(class GameServer& server, class Random& random, const Rect<s16>& area);
     private:
         enum DestructionType {
             None,

@@ -17,14 +17,8 @@ namespace hfh3
         
         virtual Rect<s16> GetBounds() const override;
 
-        void Clear();
-        enum EntryType 
-        {
-            Empty,
-            BaseEdge,
-            BaseCore,
-        };
-        void Plot(const Vector<s16>& at, EntryType type);
+        void Clear(u8 color = 143);
+        void Plot(const Vector<u8>& at, u8 color);
         void SetPlayerPosition(u8 player, const Vector<s16>& position);
 
     protected:

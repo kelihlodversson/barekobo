@@ -214,33 +214,6 @@ namespace hfh3
             }
         }
 
-        /** Replaces the contents of the array with consecutive calls to the reader callback
-          * until it returns 0 bytes read.
-          * If the first call to the reader returns 0, the original contents of the array are
-          * preserved.
-          */
-        int ReadFrom( Callback<int(T* buffer, int bufferSize)> reader, bool replace, int chunkSize = 1600)
-        {
-            int readOffset = replace ? 0 : count;
-            int readCount = 0;
-            do {
-                int required = readOffset+chunkSize;
-                if ( reserved < required )
-                {
-                    Reserve(required>MIN_RESERVE ? required*2 : MIN_RESERVE);
-                }
-
-                int readCount = reader(data+readOffset, chunkSize);
-                readOffset += readCount;
-            } while(readCount);
-
-            if (readOffset)
-            {
-                count = readOffset;
-            }
-            return readOffset;
-        }
-
         T& operator[](int index)
         {
             assert(index >=0 && index < count);

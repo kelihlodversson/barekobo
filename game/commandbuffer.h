@@ -16,9 +16,8 @@ namespace hfh3
     class CommandBuffer
     {
     public:
-        CommandBuffer(class ImageSheet& inImageSheet, class MiniMap* inMap) 
+        CommandBuffer(class ImageSheet& inImageSheet) 
             : imageSheet(inImageSheet)
-            , map(inMap)
             , hasBeenRun(false)
         {
             FrameStart(0);
@@ -30,7 +29,8 @@ namespace hfh3
         void DrawBackground();
         void DrawSprite(const Vector<s16>& position, u8 imageGroup, u8 subImage);
         void SetPlayerPositions(const Vector<s16>& p0, const Vector<s16>& p1);
-        void PlotMap(const Vector<s16>& pos, MiniMap::EntryType type);
+        void SetBackgroundCell(const Vector<u8>& pos, u8 imageGroup, u8 subImage);
+        void ClearBackgroundCell(const Vector<u8>& pos);
         void Clear() 
         {
             commands.ClearFast();
@@ -39,10 +39,10 @@ namespace hfh3
         }
 
         // This method will execute the buffered commands
-        void Run(class View& view, class Starfield& backround);
+        void Run(class View& view, class Background& backround, class MiniMap* map);
 
         // Utility methods for sending and receiving command buffers
-        void Send (CSocket* stream);
+        void Send (CSocket* stream, bool wait=false);
         bool Receive (CSocket* stream);
         
         
@@ -51,7 +51,6 @@ namespace hfh3
         int GetExpectedSize();
         void PatchSize();
         class ImageSheet& imageSheet;
-        class MiniMap* map;
         Array<u8> commands;
         volatile bool hasBeenRun;
     };

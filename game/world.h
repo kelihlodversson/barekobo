@@ -4,7 +4,7 @@
 #include "render/screenmanager.h"
 #include "render/imagesheet.h"
 
-#include "game/starfield.h"
+#include "game/background.h"
 #include "game/commandbuffer.h"
 
 namespace hfh3
@@ -34,8 +34,8 @@ namespace hfh3
         class Input& input;
         class Network& network;
         ImageSheet imageSheet;
-        Starfield background;
         MiniMap* minimap;
+        Background background;
         CommandBuffer commands;
     };
 }

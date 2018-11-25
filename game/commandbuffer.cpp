@@ -1,7 +1,7 @@
 #include "game/commandbuffer.h"
 
 #include "game/view.h"
-#include "game/starfield.h"
+#include "game/background.h"
 
 #include "util/log.h"
 #include "render/image.h"
@@ -19,7 +19,8 @@ enum class Opcode : u8
     DrawBackground,
     DrawSprite,
     SetPlayerPositions,
-    PlotMap,
+    SetBackgroundCell,
+    ClearBackgroundCell,
     FrameStart = 0xff
 };
 
@@ -90,6 +91,20 @@ public:
     }
 };
 
+template<typename T>
+static void operator >> (CommandIterator& iter, Vector<T>& value)
+{
+    iter >> value.x;
+    iter >> value.y;
+}
+
+template<typename T>
+static void operator << (CommandArray& array, const Vector<T>& value)
+{
+    array << value.x;
+    array << value.y;
+}
+
 static void operator >> (CommandIterator& iter, s32& value)
 {
     u8 tmp;
@@ -149,25 +164,24 @@ void CommandBuffer::SetPlayerPositions(const Vector<s16>& p0, const Vector<s16>&
     commands << VectorU12(p1);
 }
 
-void CommandBuffer::PlotMap(const Vector<s16>& pos, MiniMap::EntryType type)
+void CommandBuffer::SetBackgroundCell(const Vector<u8>& pos, u8 imageGroup, u8 subImage)
 {
-    commands << Opcode::PlotMap;
+    commands << Opcode::SetBackgroundCell;
+    commands << pos;
+    commands << u8((imageGroup<<4)|(subImage&0xF));
+}
 
-    // Cut off the unneeded 8 most significant bits of each coordinate
-    VectorU12 packed = pos;
-
-    // Since the map is scaled by 16 pixels, we don't need the four least
-    // significant bits either, so we cram the type into the x coordinate
-    packed.x &= 0xff0;
-    packed.x |= u8(type) & 0xf;
-
-    commands << packed;
+void CommandBuffer::ClearBackgroundCell(const Vector<u8>& pos)
+{
+    commands << Opcode::ClearBackgroundCell;
+    commands << pos;
 }
 
 
-void CommandBuffer::Run(class View& view, Starfield& background)
+void CommandBuffer::Run(class View& view, Background& background, MiniMap* map)
 {
     Opcode op = Opcode::DrawBackground;
+    int retryCount = 4;
     for(auto iter = commands.begin(); iter < commands.end();)
     {
         int offset = (u8*)iter - (u8*)commands;
@@ -183,16 +197,43 @@ void CommandBuffer::Run(class View& view, Starfield& background)
                 if (size+offset > commands.Size())
                 {
 
-                    // Additionally trim off complete frames before the current one
-                    // in case offset is larger than zero.
-                    if(offset)
+                    if(!offset && retryCount--) 
                     {
-                        commands.RemoveFront(offset);
+                        // Yield the thread and try again from when more data has arrived
+                        CScheduler::Get()->MsSleep(2); 
+                        CompilerBarrier();
+                        iter = commands.begin();
+                    }
+                    else
+                    {
+                        // Return immediately so hasRun will not be set to true.
+                        return;
                     }
 
-                    // Return immediately so hasRun will not be set to true.
-                    return;
                 }
+                #if 0
+                else if (offset)
+                {
+                    // If we have a complete frame not at the beginning of the
+                    // buffer. Trim of the old data and contintue.
+                    s32 sameSize;
+                    commands.RemoveFront(offset);
+
+                    // Since we've moved everything, we have to reset the iterator
+                    iter = commands.begin();
+                    iter >> op;
+                    iter >> sameSize;
+
+                    // Sanity check that we still have the same data now at the head
+                    // of the command list.
+                    assert(op == Opcode::FrameStart);
+                    if(size != sameSize)
+                    {
+                        ERROR("%d != %d", size, sameSize);
+                        assert(size == sameSize);
+                    }
+                }
+                #endif
             }
             break;
             case Opcode::SetViewOffset:
@@ -229,25 +270,26 @@ void CommandBuffer::Run(class View& view, Starfield& background)
                 }
             }
             break;
-            case Opcode::PlotMap:
+            case Opcode::SetBackgroundCell:
             {
-                VectorU12 position;
+                Vector<u8> position;
+                u8 image;
                 iter >> position;
-
-                if (map)
-                {
-                    MiniMap::EntryType entryType = (MiniMap::EntryType)(position.x & 0xf);
-                    position.x &= 0xff0;
-                    map->Plot(position, entryType);
-                }
+                iter >> image;
+                background.SetCell(position, image >> 4, image & 0xF);
+            }
+            break;
+            case Opcode::ClearBackgroundCell:
+            {
+                Vector<u8> position;
+                iter >> position;
+                background.ClearCell(position);
             }
             break;
             default:
             {
                 ERROR("Invalid command index %x offset %d. (size %d)", (u8)op, offset, commands.Size());
                 iter = commands.end();
-                assert(false);
-                assert(commands.Size() > offset);
             }
             break;
         }
@@ -256,16 +298,10 @@ void CommandBuffer::Run(class View& view, Starfield& background)
 }
 
 // Utility methods for sending and receiving command buffers
-void CommandBuffer::Send (CSocket* stream)
+void CommandBuffer::Send (CSocket* stream, bool wait)
 {
-    static int max_size = 0;
-    if(commands.Size() > max_size)
-    {
-        max_size = commands.Size();
-        WARN("Command buffer size (%d) / FRAME_BUFFER_SIZE (%d)",commands.Size() , FRAME_BUFFER_SIZE );
-    }
     PatchSize();
-    stream->Send(commands, commands.Size(), MSG_DONTWAIT);
+    stream->Send(commands, commands.Size(), wait?0:MSG_DONTWAIT);
 }
 
 int CommandBuffer::GetExpectedSize()
@@ -286,14 +322,20 @@ int CommandBuffer::GetExpectedSize()
 
 bool CommandBuffer::Receive (CSocket* stream)
 {
-    int countTotal = commands.ReadFrom([=](u8* buffer, int read_size)
+    u8 tmp[FRAME_BUFFER_SIZE];
+
+    int count = stream->Receive(tmp, FRAME_BUFFER_SIZE, MSG_DONTWAIT);
+    CompilerBarrier();
+
+    if (count > 0)
     {
-        return stream->Receive(buffer, read_size, MSG_DONTWAIT);
-    }, hasBeenRun, FRAME_BUFFER_SIZE);
-    if (countTotal > 0)
-    {
+        if (hasBeenRun && tmp[0] == u8(Opcode::FrameStart))
+        {
+            commands.ClearFast();
+        }
+        commands.AppendRaw(tmp, count);
         hasBeenRun = false;
     }
 
-    return countTotal > 0;
+    return count > 0;
 }

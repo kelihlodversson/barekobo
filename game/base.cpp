@@ -17,10 +17,8 @@ static const ImageSet edges[2] = {
     ImageSet::Fort1, ImageSet::Fort2
 };
 
-Base::Base(GameServer& inWorld, ImageSheet& imageSheet) :
-    Sprite(inWorld,
-          (u8)edges[0],
-          imageSheet.GetGroupSize(),
+Base::Base(GameServer& inWorld) :
+    Actor(inWorld,
           CollisionMask::EnemyBase, CollisionMask::None),
     north(nullptr),
     east(nullptr),
@@ -99,7 +97,7 @@ Direction Base::MaskToDirection(u8 mask)
 void Base::Destroy(DestructionType type)
 {
     Array<Base*> needsUpdate;
-    Sprite::Destroy();
+    Actor::Destroy();
     u8 neigbourMask = 0;
 
     if(north)
@@ -149,20 +147,18 @@ void Base::UpdateShape()
 {
     if(core == this)
     {
-        SetImageGroup((u8)misc);
-        SetImageIndex(7);
+        world.OnBaseChanged(this, u8(misc), 7);
         destructible = true;
     }
     else
     {
         u8 subImage = (north ? 1 : 0 )
                     | (east  ? 2 : 0 )
-                   | (south ? 4 : 0 ) ;
+                    | (south ? 4 : 0 ) ;
         u8 group = (u8)edges[west ? 1 : 0];
 
-        SetImageGroup(group);
-        SetImageIndex(subImage);
-        
+        world.OnBaseChanged(this, group, subImage);
+
         // The base node is destructible if there is only one edge connected to this node.
         destructible = EdgeCount() == 1;
     }
@@ -221,7 +217,7 @@ struct Grid
     Vector<s16> size;
 };
 
-void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random, const Rect<s16>& area)
+void Base::CreateFort(GameServer& server, Random& random, const Rect<s16>& area)
 {
     
     // The grid size is the size of the area divided by 16 rounded to the nearest integer and then
@@ -239,7 +235,7 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
     Array<Vector<s16>> set; // Temporary set of nodes to visit later
 
     // Create the initial node
-    grid[start] = new Base(server, imageSheet);
+    grid[start] = new Base(server);
 
     
     // Add the initial nodes above and below or left and right of the core to the set
@@ -257,7 +253,7 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
 
         for(const auto& v : set)
         {
-            grid[v] = new Base(server, imageSheet); 
+            grid[v] = new Base(server); 
         }
     }
 
@@ -291,11 +287,11 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
         auto midpoint = (next + current) / 2;
         
         // Create a corridor node between the current and the next node
-        grid[midpoint] = new Base(server, imageSheet);
+        grid[midpoint] = new Base(server);
 
         // Create the new node and push it to the set
         assert(grid[next] == nullptr);
-        grid[next] = new Base(server, imageSheet);
+        grid[next] = new Base(server);
         set.Push(next);
 
         // Return the current node to the set
@@ -334,4 +330,45 @@ void Base::CreateFort(GameServer& server, ImageSheet& imageSheet, Random& random
             } 
         }
     }
+}
+
+/** The drawing of bases is handled by the background class
+ */
+void Base::Draw(class CommandBuffer&)
+{
+
+}
+
+// The bounds of a base object are determined by the number of connections
+// and whether it is destructible.
+Rect<s16> Base::GetBounds()
+{
+    Rect<s16> result {GetPosition(), {16,16}};
+    if(destructible)
+    {
+        return result;
+    }
+
+    if( !east )
+    {
+        result.size.x   -= 3;
+    }
+
+    if( !south )
+    {
+        result.size.y   -= 3;
+    }
+
+    if( !west )
+    {
+        result.origin.x += 3;
+        result.size.x   -= 3;
+    }
+
+    if( !north )
+    {
+        result.origin.y += 3;
+        result.size.y   -= 3;
+    }
+    return result;
 }

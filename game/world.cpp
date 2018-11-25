@@ -24,9 +24,9 @@ World::World(MainLoop& inLoop, class Input& inInput, Network& inNetwork)
     , input(inInput)
     , network(inNetwork)
     , imageSheet(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8)
-    , background(*this)
     , minimap(mainLoop.CreateClient<MiniMap>(stage.GetSize()))
-    , commands(imageSheet, minimap)
+    , background(*this, imageSheet, minimap)
+    , commands(imageSheet)
 {
 }
 
@@ -41,7 +41,7 @@ void World::Render()
 {
     View view = View(stage, screen);
     screen.DrawRect(World::GetBounds(),0);
-    commands.Run(view, background);
+    commands.Run(view, background, minimap);
 }
 
 Rect<s16> World::GetBounds() const

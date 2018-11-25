@@ -30,7 +30,7 @@ GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNe
     , remotePlayer(nullptr)
     , baseCount(0)
     , client(nullptr)
-    , clientCommands(imageSheet, nullptr)
+    , clientCommands(imageSheet)
     , currentLevel(-1)
 {
     // Initial partitioning: partition the GameServer into 8x8 partitions:
@@ -190,7 +190,7 @@ void GameServer::PerformCollisionCheck()
 
 void GameServer::SpawnFortress(const Level::FortressSpec& area)
 {
-    Base::CreateFort(*this, imageSheet, random, area);
+    Base::CreateFort(*this, random, area);
 }
 
 void GameServer::SpawnEnemy(const Level::EnemySpec& enemy)
@@ -304,37 +304,37 @@ void GameServer::GetPartitionRange(const Rect<s16>& rect, int& x1, int& x2, int&
 
 void GameServer::OnBaseDestroyed(Base* base)
 {
-    if (minimap)
+    Background::GridPosition position = Background::WorldToGrid(base->GetPosition());
+ 
+    background.ClearCell(position);
+    if (client)
     {
-        minimap->Plot(base->GetPosition(), MiniMap::Empty);
-        if (client)
-        {
-            clientCommands.PlotMap(base->GetPosition(), MiniMap::Empty);
-        }
+        clientCommands.ClearBackgroundCell(position);
     }
 
     baseCount --;
     if (baseCount == 0)
     {
         // TODO: Delay loading of the next level for a bit
-        LoadLevel();
+        LoadLevel();        
+    }
+}
+
+void GameServer::OnBaseChanged(Base* base, u8 imageGroup, u8 imageIndex)
+{
+    Background::GridPosition position = Background::WorldToGrid(base->GetPosition());
+
+    background.SetCell(base->GetPosition(), imageGroup, imageIndex);
+    if(client)
+    {
+        clientCommands.SetBackgroundCell(position, imageGroup, imageIndex);
     }
 }
 
 void GameServer::AddBase(Base* base)
 {
     AddActor(base);
-
     baseCount++;
-
-    Vector<s16> position = base->GetPosition();
-    MiniMap::EntryType mapType = base->IsCore() ? MiniMap::BaseCore : MiniMap::BaseEdge;
-    minimap->Plot(position, mapType);
-
-    if(client)
-    {
-        clientCommands.PlotMap(position, mapType);
-    }
 }
 
 void GameServer::LoadLevel(int levelIndex)
@@ -375,6 +375,11 @@ void GameServer::LoadLevel(int levelIndex)
             remoteSpawnPoint = random.Get() % level.playerStarts.Size();
         } while (remoteSpawnPoint == localSpawnPoint);
         SpawnRemotePlayer(level.playerStarts[remoteSpawnPoint]);
+
+        // Send updated level data to the client immediately
+        // Block until the setup commands have been sent
+        clientCommands.Send(client, true);
+        clientCommands.Clear();
     }
 }
 

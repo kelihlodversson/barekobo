@@ -1,15 +1,17 @@
 import enum
 import struct
 from  render.starfield import Starfield
+from  render.background import Background
 from pygame import Rect
 
 class Opcode(enum.Enum) :
-    SetViewOffset      = 0
-    DrawBackground     = 1
-    DrawSprite         = 2
-    SetPlayerPositions = 3
-    PlotMap            = 4
-    FrameStart         = 255
+    SetViewOffset       = 0
+    DrawBackground      = 1
+    DrawSprite          = 2
+    SetPlayerPositions  = 3
+    SetBackgroundCell   = 4
+    ClearBackgroundCell = 5
+    FrameStart          = 255
 
 def decode_vectorS12(a,b,c):
     return (a | ((b & 0xf0) <<4), (c << 4) | (b &0xf))
@@ -20,16 +22,19 @@ class CommandBuffer:
         self.screen = screen
         self.sprites = sprites
         self.offset = (0,0)
-        self.starfield = Starfield(screen, sprites.get_palette(), 2048, 2048)
+        self.size = (2048, 2048)
+        self.starfield = Starfield(screen, sprites.get_palette(), *self.size)
+        self.background = Background(screen, sprites, *self.size)
 
         self.buffer = b''
         self.commands = {
-            Opcode.SetViewOffset      : (self.set_view_offset, '<3B'),
-            Opcode.DrawBackground     : (self.draw_background, ''),
-            Opcode.DrawSprite         : (self.draw_sprite,     '<3BB'),
-            Opcode.SetPlayerPositions : (self.set_positions,   '<3B3B'),
-            Opcode.PlotMap            : (self.plot_map,        '<3B'),
-            Opcode.FrameStart         : (self.frame_start,     '<i')
+            Opcode.SetViewOffset       : (self.set_view_offset,  '<3B'),
+            Opcode.DrawBackground      : (self.draw_background,  ''),
+            Opcode.DrawSprite          : (self.draw_sprite,      '<3BB'),
+            Opcode.SetPlayerPositions  : (self.set_positions,    '<3B3B'),
+            Opcode.SetBackgroundCell   : (self.set_background,   '<3B'),
+            Opcode.ClearBackgroundCell : (self.clear_background, '<2B'),
+            Opcode.FrameStart          : (self.frame_start,      '<i')
         }
 
     def frame_start(self, frame_size) :
@@ -40,24 +45,37 @@ class CommandBuffer:
 
     def draw_background(self) :
         self.starfield.draw(self.offset)
+        self.background.draw(self.offset)
 
     def draw_sprite(self, a, b, c, image) :
         sprite = self.sprites[image >> 4][image & 0xF]
         x, y = decode_vectorS12(a, b, c)
-        self.screen.blit(sprite, ((x - self.offset[0]) & 2047, (y - self.offset[1]) & 2047))
+        width, height = self.size
+        screen_x = (x - self.offset[0]) % width
+        screen_y = (y - self.offset[1]) % height
+
+        if width - screen_x < 16:
+            screen_x -= width
+        if height - screen_y < 16:
+            screen_y -= height
+ 
+        self.screen.blit(sprite, (screen_x, screen_y))
 
     def set_positions(self, a0,b0,c0, a1,b1,c1) :
         pass
 
-    def plot_map(self, a,b,c) :
-        print("plot map (%d, %d)" % decode_vectorS12(a, b, c))
+    def set_background(self, x,y, image) :
+        self.background.set_cell(x,y,image)
+
+    def clear_background(self, x,y) :
+        self.background.clear_cell(x,y)
 
     def invalid_opcode(self, op) :
         print("Error: invalid opcode", op)
     
     def run(self):
         offset = 0
-        self.screen.set_clip(Rect(0,10,512,512))
+        self.screen.set_clip(Rect(0,10,512,470))
         self.screen.fill(0)
         while offset < len(self.buffer):
             try:
@@ -78,5 +96,5 @@ class CommandBuffer:
         self.buffer = b''
 
     def read(self, socket):
-        new_buffer = socket.recv(4096)
+        new_buffer = socket.recv(40960)
         self.buffer = new_buffer

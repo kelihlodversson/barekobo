@@ -2,10 +2,7 @@
 
 using namespace hfh3;
 
-static const u8 COLOR[] = {
-    143, // Empty
-    254, // BaseEdge
-    224, // BaseCore
+static const u8 PLAYER_COLOR[] = {
     252, // ThisPlayer
      57, // OtherPlayer
 };
@@ -25,9 +22,9 @@ MiniMap::~MiniMap()
     delete[] pixels;
 }
 
-void MiniMap::Clear()
+void MiniMap::Clear(u8 color)
 {
-    memset(pixels, COLOR[Empty], size.x*size.y);
+    memset(pixels, color, size.x*size.y);
 }
 
 void MiniMap::Update()
@@ -38,8 +35,8 @@ void MiniMap::Render()
 {
     Vector<s16> pos = screen.GetSize()-size;
     screen.DrawImage(pos, image);
-    screen.DrawPixel(pos + player_position[0], COLOR[3]);
-    screen.DrawPixel(pos + player_position[1], COLOR[4]);
+    screen.DrawPixel(pos + player_position[0], PLAYER_COLOR[0]);
+    screen.DrawPixel(pos + player_position[1], PLAYER_COLOR[1]);
 }
 
 Rect<s16> MiniMap::GetBounds() const
@@ -47,10 +44,9 @@ Rect<s16> MiniMap::GetBounds() const
     return Rect<s16> (screen.GetSize()-size, size);
 }
 
-void MiniMap::Plot(const Vector<s16>& at, EntryType type)
+void MiniMap::Plot(const Vector<u8>& grid_point, u8 color)
 {
-    Vector<s16> grid_point = at / scale;
-    pixels[grid_point.y*size.x + grid_point.x] = COLOR[type];
+    pixels[grid_point.y*size.x + grid_point.x] = color;
 }
 
 void MiniMap::SetPlayerPosition(u8 player, const Vector<s16>& position)

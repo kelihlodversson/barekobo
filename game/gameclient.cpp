@@ -72,11 +72,10 @@ void GameClient::Update()
     if(server)
     {
         u8 inputState = input.DumpInputState();
-        if(inputState != lastInputState)
+        //if(inputState != lastInputState)
         {
             lastInputState = inputState;
-            DEBUG("Sending %x", lastInputState);
-            server->Send(&lastInputState, 1, MSG_DONTWAIT);
+            server->Send(&inputState, 1, MSG_DONTWAIT);
         }
     }
 }

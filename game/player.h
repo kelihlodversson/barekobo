@@ -12,7 +12,8 @@ namespace hfh3
         virtual void Update() override;
 
     private:
-        void Fire();
+        void Fire(bool repeat);
+        int fireRateCounter;
 
         class Input& input;
         class ImageSheet& imageSheet;

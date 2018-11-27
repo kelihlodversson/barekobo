@@ -132,7 +132,7 @@ void GameMenu::StartHost(bool multiplayer)
             Beacon beacon; // Announce our presence to the local network
             server->Bind(); // Wait for connection
         }
-        server->LoadLevel(13);
+        server->LoadLevel();
         Pause();
     });
 }

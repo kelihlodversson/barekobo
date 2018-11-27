@@ -26,8 +26,8 @@ using namespace hfh3;
 GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNetwork)
     : World(inMainLoop, inInput, inNetwork)
     , partitionSize(stage.GetSize() / partitionGridCount)
-    , player(nullptr)
-    , remotePlayer(nullptr)
+    , player({nullptr, stage.GetSize()/2})
+    , remotePlayer({nullptr, stage.GetSize()/2})
     , baseCount(0)
     , client(nullptr)
     , clientCommands(imageSheet)
@@ -75,12 +75,59 @@ GameServer::~GameServer()
     }
 }
 
+#ifdef DEBUG_GAMESERVER
+void GameServer::Render()
+{
+    World::Render();
+    const Rect<s16> player.actorBounds = player.actor->GetBounds();
+    View view = View(stage, screen);
+    view.SetCenterOffset(player.actorBounds.origin+player.actorBounds.size/2);
+
+    int x_min,x_max,y_min,y_max;
+
+    GetPartitionRange(player.actorBounds, x_min, x_max, y_min, y_max);
+    CString d;
+
+    d.Format("x: %d->%d y: %d->%d", x_min, x_max, y_min, y_max);
+    screen.DrawString({20,20}, d, 22, Font::GetDefault());
+
+    for (int y = y_min; y < y_max; y++)
+    {
+        int dy = y-y_min;
+        for (int x=x_min; x < x_max; x++)
+        {
+            int dx = x-x_min;
+            Partition& part = GetPartition(x,y);
+            view.DrawRect(part.GetBounds(), dy*3 + dx+1);
+        }
+    }
+    view.DrawRect(player.actorBounds, 20);
+    for (int y = y_min; y < y_max; y++)
+    {
+        for (int x=x_min; x < x_max; x++)
+        {
+            Partition& part = GetPartition(x,y);
+
+            for (auto i : part)
+            {
+                auto abounds = i->GetBounds();
+                view.DrawRect(abounds.Inflate(-5), 170);
+                bool collides = player.actor->CollisionCheck(i);
+                if (collides)
+                {
+                    view.DrawRect(player.actorBounds & abounds, 57);
+                }
+            }
+        }
+    }
+
+}
+#endif
+
 void GameServer::Update()
 {
     commands.Clear();
-    if(client)
-    {
-    }
+
     for(Partition& partition : partitions)
     {
         Rect<s16> bounds = partition.GetBounds();
@@ -89,7 +136,7 @@ void GameServer::Update()
             assert(actor);
             actor->Update();
 
-            if( actor->shouldDestruct)
+            if( actor->IsDestroyed())
             {
                 pendingDelete.Append(actor);
             }
@@ -106,8 +153,8 @@ void GameServer::Update()
     }
 
     AssignPartitions();
-    PerformPendingDeletes();
     PerformCollisionCheck();
+    PerformPendingDeletes();
 
     BuildCommandBuffer(player, remotePlayer, commands);
     if(client)
@@ -118,18 +165,56 @@ void GameServer::Update()
     }
 }
 
-void GameServer::BuildCommandBuffer(Actor* player, Actor* otherPlayer, CommandBuffer& commandBuffer)
+void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPlayer, CommandBuffer& commandBuffer)
 {
-    if(!player)
+    if(!thisPlayer.actor)
     {
         return;
     }
 
-    Rect<s16> playerBounds = player->GetBounds();
+    const Vector<s16>& stageSize = stage.GetSize();
+    Rect<s16> playerBounds = thisPlayer.actor->GetBounds();
     View view = View(stage, screen);
-    view.SetCenterOffset(playerBounds.origin+playerBounds.size/2);
 
-    Vector<s16> otherPlayerPos = (otherPlayer ? otherPlayer->GetPosition() : Vector<s16>(-1,-1));
+    // Update the viewpoint of the current player.
+    // Don't snap it directly to the player's position, but have it lag slightly
+    // based on the distance to the previous wiew point.
+    Vector<s16> targetCamera = playerBounds.Center();
+    Vector<s16> diff = targetCamera - thisPlayer.camera;
+
+    // Take wrapping around the stage into account
+    if (diff.x > stageSize.x / 2 )
+    {
+        diff.x = diff.x - stageSize.x;
+    }
+    else if ( diff.x < -stageSize.x / 2)
+    {
+        diff.x += stageSize.x;
+    }
+
+    if (diff.y > stageSize.y / 2)
+    {
+        diff.y = diff.y - stageSize.y;
+    }
+    else if (diff.y < -stageSize.y / 2)
+    {
+        diff.y += stageSize.y;
+    }
+
+    Vector<s16> moveDelta = diff / 20;
+
+    // If we are really close, use the target position.
+    if (moveDelta.IsZero())
+    {
+        thisPlayer.camera = targetCamera;
+    }
+    else
+    {
+        thisPlayer.camera = stage.WrapCoordinate(thisPlayer.camera+moveDelta);
+    }
+ 
+    view.SetCenterOffset(thisPlayer.camera);
+    Vector<s16> otherPlayerPos = (otherPlayer.actor ? otherPlayer.actor->GetPosition() : Vector<s16>(-1,-1));
 
     commandBuffer.SetPlayerPositions(playerBounds.origin, otherPlayerPos);
     commandBuffer.SetViewOffset(view.GetOffset());
@@ -158,7 +243,7 @@ void GameServer::BuildCommandBuffer(Actor* player, Actor* otherPlayer, CommandBu
 void GameServer::PerformCollisionCheck()
 {
     int x_min,x_max,y_min,y_max;
-    List<Actor*>::ReverseIterator found;
+    Array<Actor*> found;
 
     for(Actor* collider : collisionSources)
     {
@@ -170,20 +255,38 @@ void GameServer::PerformCollisionCheck()
             {
                 for (int x=x_min; x < x_max; x++)
                 {
-                    found = GetPartition(x,y).FindLast([collider, &bounds](Actor* other)
+                    for(Actor* other : GetPartition(x,y))
                     {
                         assert(other);
-                        return collider->CollisionCheck(other);
-                    });
+                        if (collider->CollisionCheck(other))
+                        {
+                            found.Append(other);
+                        }
+                    }
                 }
             }
 
-            if(found)
+            for (Actor* collided : found)
             {
-                Actor* collided = *found;
-                collided->OnCollision(collider);
-                collider->OnCollision(collided);
+                if (!collided->IsDestroyed())
+                {
+                    collided->OnCollision(collider);
+                    if (collided->IsDestroyed())
+                    {
+                        pendingDelete.Append(collided);
+                    }
+                }
+
+                if (!collider->IsDestroyed())
+                {
+                    collider->OnCollision(collided);
+                    if (collider->IsDestroyed())
+                    {
+                        pendingDelete.Append(collider);
+                    }
+                }
             }
+            found.ClearFast();
         }
     }
 }
@@ -200,24 +303,24 @@ void GameServer::SpawnEnemy(const Level::EnemySpec& enemy)
 
 void GameServer::SpawnPlayer(const Level::SpawnPoint& point)
 {
-    if (player)
+    if (player.actor)
     {
-        player->Destroy();
+        player.actor->Destroy();
     }
-    player = new Player(*this, imageSheet, input, point.location, point.heading);
-    AddActor(player);
+    player.actor = new Player(*this, imageSheet, input, point.location, point.heading);
+    AddActor(player.actor);
 }
 
 void GameServer::SpawnRemotePlayer(const Level::SpawnPoint& point)
 {
     assert(client);
 
-    if (remotePlayer)
+    if (remotePlayer.actor)
     {
-        remotePlayer->Destroy();
+        remotePlayer.actor->Destroy();
     }
-    remotePlayer = new Player(*this, imageSheet, clientInput, point.location, point.heading);
-    AddActor(remotePlayer);
+    remotePlayer.actor = new Player(*this, imageSheet, clientInput, point.location, point.heading);
+    AddActor(remotePlayer.actor);
 }
 
 void GameServer::SpawnMissile(const Vector<s16>& startPosition, const Direction& direction, int speed)
@@ -243,7 +346,7 @@ void GameServer::PerformPendingDeletes()
 {
     for(Actor* actor : pendingDelete)
     {
-        assert(actor->shouldDestruct);
+        assert(actor->IsDestroyed());
         if(actor->collisionSourceMask != CollisionMask::None)
         {
             auto found = collisionSources.FindFirst([&actor](Actor* other){ return actor == other; });
@@ -251,9 +354,9 @@ void GameServer::PerformPendingDeletes()
             found.Remove();
         }
 
-        if(actor == player)
+        if(actor == player.actor)
         {
-            player = nullptr;
+            player.actor = nullptr;
         }
 
         if(actor->partitionIterator)

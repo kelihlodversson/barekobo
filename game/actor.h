@@ -46,6 +46,11 @@ namespace hfh3
             shouldDestruct = true;
         }
 
+        bool IsDestroyed()
+        {
+            return shouldDestruct;
+        }
+
     protected:
         class GameServer& world;
         class Stage& stage;

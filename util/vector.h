@@ -116,6 +116,13 @@ namespace hfh3
             return {static_cast<U>(x), static_cast<U>(y)};
         }
 
+        /** Returns the square of the magnitude of a vector.
+          */
+        T SqrMagnitude() const
+        {
+            return x*x + y*y;
+        }
+
         T x;
         T y;
     };

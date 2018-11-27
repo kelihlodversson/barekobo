@@ -28,8 +28,10 @@ namespace hfh3
         void Bind();
 
         virtual void Update() override;
+#ifdef DEBUG_GAMESERVER
+        virtual void Render() override;
+#endif
         
-        void BuildCommandBuffer(class Actor* player, class Actor* otherPlayer, CommandBuffer& commandBuffer);
 
         void LoadLevel(int level=-1);
 
@@ -50,6 +52,13 @@ namespace hfh3
         void PerformCollisionCheck();
         void AssignPartitions();
         void PerformPendingDeletes();
+
+        struct PlayerInfo 
+        {
+            class Actor* actor;
+            Vector<s16> camera;
+        };
+        void BuildCommandBuffer(class PlayerInfo& player, class PlayerInfo& otherPlayer, CommandBuffer& commandBuffer);
 
         class NetworkReader : public CTask
         {
@@ -97,8 +106,12 @@ namespace hfh3
         Array<class Actor*> needsNewPartition;
         Array<class Actor*> pendingDelete;
         List<class Actor*> collisionSources;
-        class Actor* player;
-        class Actor* remotePlayer;
+
+
+        PlayerInfo player;
+        PlayerInfo remotePlayer;
+        Vector<s16> playerCamera;
+        Vector<s16> remotePlayerCamera;
         int baseCount;
 
         CSocket* client;

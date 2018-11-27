@@ -18,8 +18,10 @@ Player::Player(class GameServer& inWorld, class ImageSheet& inImageSheet, class 
     Mover(inWorld,
           (u8)ImageSet::Player0,
           inImageSheet.GetGroupSize(),
-          Direction::Stopped, 2,
+          Direction::Stopped, 3,
           CollisionMask::Player, CollisionMask::Enemy),
+    fireRateCounter(0),
+    firePressed(false),
     input(inInput),
     imageSheet(inImageSheet)
 {
@@ -33,7 +35,16 @@ void Player::Update()
     SetDirection(input.GetPlayerDirection());
 
     auto state = input.GetButtonState(Input::ButtonA);
-    if(state & Input::ButtonPressed)
+    if (state == Input::ButtonPressed)
+    {
+        firePressed = true;
+    }
+    else if (!(state & Input::ButtonPressed))
+    {
+        firePressed = false;
+    }
+
+    if(firePressed)
     {
         Fire(state != Input::ButtonPressed);
     }
@@ -46,6 +57,7 @@ void Player::Fire(bool repeat)
 {
     const int shotSpeed = 6;
     const int fireRate = 8;
+
     if (repeat && --fireRateCounter > 0)
     {
         return;

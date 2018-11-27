@@ -14,4 +14,14 @@ namespace hfh3
         return (a > b)?a:b;
     }
 
+    template <typename T> T Abs(const T& a)
+    {
+        return a < 0 ? -a : a;
+    }
+
+    template <typename T> T Sign(const T& a)
+    {
+        return a < 0 ? -1 : 1;
+    }
+
 }

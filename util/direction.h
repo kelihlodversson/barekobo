@@ -34,6 +34,8 @@ namespace hfh3
         Direction(unsigned i) : value(static_cast<Value>(i))
         {}
 
+        explicit Direction(Vector<s16> delta);
+
         operator Value ()
         {
             return value;

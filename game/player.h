@@ -14,6 +14,7 @@ namespace hfh3
     private:
         void Fire(bool repeat);
         int fireRateCounter;
+        bool firePressed; 
 
         class Input& input;
         class ImageSheet& imageSheet;

@@ -201,17 +201,9 @@ void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPla
         diff.y += stageSize.y;
     }
 
-    Vector<s16> moveDelta = diff / 20;
-
-    // If we are really close, use the target position.
-    if (moveDelta.IsZero())
-    {
-        thisPlayer.camera = targetCamera;
-    }
-    else
-    {
-        thisPlayer.camera = stage.WrapCoordinate(thisPlayer.camera+moveDelta);
-    }
+    static const int cameraLag = 20;
+    Vector<s16> moveDelta = Vector<s16>((Vector<s32>(diff) * (cameraLag-1)) / cameraLag);
+    thisPlayer.camera = stage.WrapCoordinate(targetCamera-moveDelta);
  
     view.SetCenterOffset(thisPlayer.camera);
     Vector<s16> otherPlayerPos = (otherPlayer.actor ? otherPlayer.actor->GetPosition() : Vector<s16>(-1,-1));

@@ -7,13 +7,12 @@ namespace hfh3
     class Enemy : public Mover
     {
     public:
-        Enemy(class GameServer& inWorld, class ImageSheet& imageSheet, class Random& inRandom);
+        Enemy(class GameServer& inWorld, class ImageSheet& imageSheet);
 
         virtual void Update() override;
         virtual void OnCollision(class Actor* other) override;
 
     private:
-        class Random& random;
         int relaxed;
     };
 }

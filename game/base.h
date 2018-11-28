@@ -23,15 +23,17 @@ namespace hfh3
             return this == core;
         }
 
-        static void CreateFort(class GameServer& server, class Random& random, const Rect<s16>& area);
+        static void CreateFort(class GameServer& server, const Rect<s16>& area);
     private:
-        enum DestructionType {
+        enum Action {
             None,
-            Leaf,
-            Core
+            DestroyLeaf,
+            DestroyCore,
+            SpawnShot,
         };
 
-        void Destroy(DestructionType type);
+        void Destroy(Action type);
+        void Spawn(Action type);
         void UpdateShape();
         int EdgeCount();
         Direction MaskToDirection(u8 mask);
@@ -49,7 +51,7 @@ namespace hfh3
 
         // Set on dangling nodes after a leaf node has been destroyed
         // to acheive a chain reaction when hit.
-        DestructionType delayAction;
+        Action delayAction;
         int delay;
     };
 }

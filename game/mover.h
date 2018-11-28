@@ -11,13 +11,23 @@ namespace hfh3
     class Mover : public Sprite
     {
     public:
-      Mover(class GameServer &inWorld, u8 inImageGroup, u8 inImageCount,
-            Direction inDir = Direction::Stopped, int inSpeed = 1,
-            CollisionMask inCollisionTargetMask = CollisionMask::Any, CollisionMask inCollisionSourceMask = CollisionMask::None);
+        Mover(class GameServer &inWorld, u8 inImageGroup, u8 inImageCount,
+              Direction inDir = Direction::Stopped, int inSpeed = 1,
+              CollisionMask inCollisionTargetMask = CollisionMask::Any, CollisionMask inCollisionSourceMask = CollisionMask::None);
 
-      /** The default update will simply call UpdatePosition
+        /** The default update will simply call UpdatePosition
           */
-      virtual void Update() override;
+        virtual void Update() override;
+
+        const Direction& GetDirection() const
+        {
+            return direction;
+        }
+
+        int GetSpeed() const
+        {
+            return speed;
+        }
 
     protected:
 
@@ -31,17 +41,9 @@ namespace hfh3
             speed = s;
         }
 
-        int GetSpeed() const
-        {
-            return speed;
-        }
 
         void SetDirection(const Direction& dir);
 
-        const Direction& GetDirection() const
-        {
-            return direction;
-        }
 
     private:
         Direction direction;

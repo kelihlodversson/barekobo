@@ -1,8 +1,10 @@
 #pragma once
-#include "game/mover.h"
 #include "util/direction.h"
 #include "util/vector.h"
+
+#include "game/mover.h"
 #include "game/imagesets.h"
+
 
 namespace hfh3
 {
@@ -10,7 +12,8 @@ namespace hfh3
     {
     public:
         Shot(class GameServer& inWorld, class ImageSheet& imageSheet, ImageSet imageSet,
-             const Vector<s16>& inPosition, Direction direction, int speed = 1);
+             const Vector<s16>& inPosition, Direction direction, int speed = 1,
+             int inOwner = -1);
 
         virtual void Update() override;
         virtual void Draw(class CommandBuffer& commands) override;
@@ -20,5 +23,6 @@ namespace hfh3
     private:
         bool rotator;
         unsigned ttl;
+        int owner;
     };
 }

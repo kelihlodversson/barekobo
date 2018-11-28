@@ -21,7 +21,16 @@ void Actor::SetPosition(const Vector<s16>& newPosition)
 
 bool Actor::CollisionCheck(class Actor* other)
 {
-    return this != other && 
+    return this != other && !shouldDestruct && 
            (collisionSourceMask & other->collisionTargetMask) &&
            GetBounds().OverlapsMod(other->GetBounds(), stage.GetSize());
+}
+
+void Actor::Destroy()
+{
+    if(destructionHandler)
+    {
+        destructionHandler(this);
+    }
+    shouldDestruct = true;
 }

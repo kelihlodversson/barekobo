@@ -3,6 +3,7 @@
 
 #include "util/vector.h"
 #include "util/rect.h"
+#include "util/callback.h"
 #include "game/partition.h"
 #include "game/collisionmask.h"
 
@@ -41,19 +42,12 @@ namespace hfh3
           */
         virtual void OnCollision(class Actor* other) {}
 
-        void Destroy()
-        {
-            shouldDestruct = true;
-        }
+        void Destroy();
 
         bool IsDestroyed()
         {
             return shouldDestruct;
         }
-
-    protected:
-        class GameServer& world;
-        class Stage& stage;
 
         const Vector<s16>& GetPosition() const
         {
@@ -61,6 +55,16 @@ namespace hfh3
         }
 
         void SetPosition(const Vector<s16>& newPosition);
+
+        template<typename T>
+        void SetDestructionHandler(T callable)
+        {
+            destructionHandler = callable;
+        }
+
+    protected:
+        class GameServer& world;
+        class Stage& stage;
 
     private:
         Vector<s16> position;
@@ -83,6 +87,7 @@ namespace hfh3
         // Specifies which layers this object can generate a collision events with.
         const CollisionMask collisionSourceMask;
 
+        Callback<void(Actor*)> destructionHandler;
         friend class GameServer;
     };
 }

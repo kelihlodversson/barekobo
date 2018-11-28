@@ -3,7 +3,6 @@
 
 #include "util/list.h"
 #include "util/array.h"
-#include "util/random.h"
 #include "util/vector.h"
 #include "util/rect.h"
 
@@ -21,6 +20,7 @@ namespace hfh3
     class GameServer : public World
     {
     public:
+
         GameServer(MainLoop& inMainLoop, class Input& inInput, class Network& inNetwork);
         virtual ~GameServer();
 
@@ -35,17 +35,28 @@ namespace hfh3
 
         void LoadLevel(int level=-1);
 
+        Actor* FindPlayer(const Vector<s16>& position, int radius, Vector<s16>& outDelta);
+        Actor* FindPlayer(const Vector<s16>& position, int radius)
+        {
+            Vector<s16> tmp;
+            return FindPlayer(position, radius, tmp);
+        }
 
         void SpawnFortress(const Level::FortressSpec& area);
         void SpawnEnemy(const Level::EnemySpec& enemy);
-        void SpawnPlayer(const Level::SpawnPoint& point);
-        void SpawnRemotePlayer(const Level::SpawnPoint& point);
-        void SpawnMissile(const Vector<s16>& position, const class Direction& direction , int speed);
-        void SpawnExplosion(const Vector<s16>& position, const class Direction& direction , int speed);
+        void SpawnEnemy(const Vector<s16>& position);
+        void SpawnPlayer(int index, const Level::SpawnPoint& point);
+        void SpawnMissile(int playerIndex, Direction direction, int speed);
+        Actor* SpawnExplosion(const Vector<s16>& position, const class Direction& direction , int speed);
+        void SpawnShot(const Vector<s16>& position, const class Direction& direction , int speed);
 
+
+        void OnPlayerDestroyed(int playerIndex);
         void OnBaseDestroyed(class Base* base);
         void OnBaseChanged(class Base* base, u8 imageGroup, u8 imageIndex);
+
         void AddBase(class Base* base);
+
 
     private:
 
@@ -55,9 +66,13 @@ namespace hfh3
 
         struct PlayerInfo 
         {
-            class Actor* actor;
+            PlayerInfo(const Vector<s16>& initialCamera);
+            class Player* actor;
             Vector<s16> camera;
+            int score;
+            int lives;
         };
+
         void BuildCommandBuffer(class PlayerInfo& player, class PlayerInfo& otherPlayer, CommandBuffer& commandBuffer);
 
         class NetworkReader : public CTask
@@ -75,8 +90,7 @@ namespace hfh3
             ProxyInput& remoteInput;
         };        
         
-        Random random;
-
+        static const int maxPlayerCount = 2;
         static const int maxActorSize = 16;
         static const int partitionGridCount = 8;
         static const int partitionGridMask = partitionGridCount-1;
@@ -95,7 +109,7 @@ namespace hfh3
             return GetPartition(pos.x / partitionSize.x, pos.y / partitionSize.y);
         }
 
-        void AddActor(class Actor* newActor);
+        Actor* AddActor(class Actor* newActor);
 
         // Returns a range of indexes to pass to GetPartition(x,y) that potentially contain
         // actors that overlap the rectangle passed in. 
@@ -107,11 +121,7 @@ namespace hfh3
         Array<class Actor*> pendingDelete;
         List<class Actor*> collisionSources;
 
-
-        PlayerInfo player;
-        PlayerInfo remotePlayer;
-        Vector<s16> playerCamera;
-        Vector<s16> remotePlayerCamera;
+        PlayerInfo player[maxPlayerCount];
         int baseCount;
 
         CSocket* client;

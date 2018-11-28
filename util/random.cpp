@@ -21,3 +21,10 @@ Random::Random(u64 inSeed)
     : seed(inSeed)
 {
 }
+
+Random& Random::Instance()
+{
+    return instance;
+}
+
+Random Random::instance;

@@ -13,7 +13,8 @@
 
 using namespace hfh3;
 
-Player::Player(class GameServer& inWorld, class ImageSheet& inImageSheet, class Input& inInput,
+Player::Player(class GameServer& inWorld, int index, 
+               class ImageSheet& inImageSheet, class Input& inInput,
                const Vector<s16>& position, const Direction& heading) :
     Mover(inWorld,
           (u8)ImageSet::Player0,
@@ -22,15 +23,30 @@ Player::Player(class GameServer& inWorld, class ImageSheet& inImageSheet, class 
           CollisionMask::Player, CollisionMask::Enemy),
     fireRateCounter(0),
     firePressed(false),
+    playerIndex(index),
     input(inInput),
-    imageSheet(inImageSheet)
+    imageSheet(inImageSheet),
+    invincibleDelay(150)
 {
     SetImageIndex(heading == Direction::Stopped ? 0 : (int) heading);
     SetPosition(position);
 }
 
+void Player::Draw(class CommandBuffer& view) 
+{
+    // If the player is invincible, blink the sprite 4 times a second
+    if(!invincibleDelay || (invincibleDelay % 15) < 10)
+    {
+        Mover::Draw(view);
+    }
+}
+
 void Player::Update()
 {
+    if(invincibleDelay > 0)
+    {
+        invincibleDelay--;
+    }
     // Update player direction based on input
     SetDirection(input.GetPlayerDirection());
 
@@ -66,10 +82,17 @@ void Player::Fire(bool repeat)
     fireRateCounter = fireRate;
 
     Direction shotDirection = static_cast<Direction>(GetImageIndex());
-    Vector<s16> shotPosition = stage.WrapCoordinate(GetPosition() + shotDirection.ToDelta(16));
-    world.SpawnMissile(shotPosition, shotDirection, shotSpeed);
+    world.SpawnMissile(playerIndex, shotDirection, shotSpeed);
 
     shotDirection = shotDirection + 4;
-    shotPosition = stage.WrapCoordinate(GetPosition() + shotDirection.ToDelta(16));
-    world.SpawnMissile(shotPosition, shotDirection, shotSpeed);
+    world.SpawnMissile(playerIndex, shotDirection, shotSpeed);
+}
+
+void Player::OnCollision(Actor* other)
+{
+    if (! invincibleDelay)
+    {
+        Destroy();
+        world.OnPlayerDestroyed(playerIndex);
+    }
 }

@@ -4,6 +4,7 @@
 #include "graphics/sprite_data.h"
 #include "util/vector.h"
 #include "util/log.h"
+#include "util/random.h"
 
 #include "render/imagesheet.h"
 #include "render/image.h"
@@ -20,14 +21,14 @@
 
 #include <circle/net/socket.h>
 #include <circle/net/in.h>
+#include <limits.h>
 
 using namespace hfh3;
 
 GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNetwork)
     : World(inMainLoop, inInput, inNetwork)
     , partitionSize(stage.GetSize() / partitionGridCount)
-    , player({nullptr, stage.GetSize()/2})
-    , remotePlayer({nullptr, stage.GetSize()/2})
+    , player({stage.GetSize()/2, stage.GetSize()/2})
     , baseCount(0)
     , client(nullptr)
     , clientCommands(imageSheet)
@@ -43,6 +44,14 @@ GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNe
             GetPartition(x,y).SetBounds(bounds);
         }
     }
+}
+
+GameServer::PlayerInfo::PlayerInfo(const Vector<s16>& initialCamera)
+    : actor(nullptr)
+    , camera(initialCamera)
+    , score(0)
+    , lives(10)
+{
 }
 
 GameServer::~GameServer()
@@ -156,10 +165,10 @@ void GameServer::Update()
     PerformCollisionCheck();
     PerformPendingDeletes();
 
-    BuildCommandBuffer(player, remotePlayer, commands);
+    BuildCommandBuffer(player[0], player[1], commands);
     if(client)
     {
-        BuildCommandBuffer(remotePlayer, player, clientCommands);
+        BuildCommandBuffer(player[1], player[0], clientCommands);
         clientCommands.Send(client);
         clientCommands.Clear();
     }
@@ -167,48 +176,47 @@ void GameServer::Update()
 
 void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPlayer, CommandBuffer& commandBuffer)
 {
-    if(!thisPlayer.actor)
-    {
-        return;
-    }
-
+    
     const Vector<s16>& stageSize = stage.GetSize();
-    Rect<s16> playerBounds = thisPlayer.actor->GetBounds();
     View view = View(stage, screen);
 
-    // Update the viewpoint of the current player.
-    // Don't snap it directly to the player's position, but have it lag slightly
-    // based on the distance to the previous wiew point.
-    Vector<s16> targetCamera = playerBounds.Center();
-    Vector<s16> diff = targetCamera - thisPlayer.camera;
+    if (thisPlayer.actor)
+    {
+        // Update the viewpoint of the current player.
+        // Don't snap it directly to the player's position, but have it lag slightly
+        // based on the distance to the previous wiew point.
+        Rect<s16> playerBounds = thisPlayer.actor->GetBounds();
+        Vector<s16> targetCamera = playerBounds.Center();
+        Vector<s16> diff = targetCamera - thisPlayer.camera;
 
-    // Take wrapping around the stage into account
-    if (diff.x > stageSize.x / 2 )
-    {
-        diff.x = diff.x - stageSize.x;
-    }
-    else if ( diff.x < -stageSize.x / 2)
-    {
-        diff.x += stageSize.x;
-    }
+        // Take wrapping around the stage into account
+        if (diff.x > stageSize.x / 2 )
+        {
+            diff.x = diff.x - stageSize.x;
+        }
+        else if ( diff.x < -stageSize.x / 2)
+        {
+            diff.x += stageSize.x;
+        }
 
-    if (diff.y > stageSize.y / 2)
-    {
-        diff.y = diff.y - stageSize.y;
-    }
-    else if (diff.y < -stageSize.y / 2)
-    {
-        diff.y += stageSize.y;
-    }
+        if (diff.y > stageSize.y / 2)
+        {
+            diff.y = diff.y - stageSize.y;
+        }
+        else if (diff.y < -stageSize.y / 2)
+        {
+            diff.y += stageSize.y;
+        }
 
-    static const int cameraLag = 20;
-    Vector<s16> moveDelta = Vector<s16>((Vector<s32>(diff) * (cameraLag-1)) / cameraLag);
-    thisPlayer.camera = stage.WrapCoordinate(targetCamera-moveDelta);
+        static const int cameraLag = 20;
+        Vector<s16> moveDelta = Vector<s16>((Vector<s32>(diff) * (cameraLag-1)) / cameraLag);
+        thisPlayer.camera = stage.WrapCoordinate(targetCamera-moveDelta);
+        Vector<s16> otherPlayerPos = (otherPlayer.actor ? otherPlayer.actor->GetPosition() : Vector<s16>(-1,-1));
+        commandBuffer.SetPlayerPositions(playerBounds.origin, otherPlayerPos);
+    }
  
     view.SetCenterOffset(thisPlayer.camera);
-    Vector<s16> otherPlayerPos = (otherPlayer.actor ? otherPlayer.actor->GetPosition() : Vector<s16>(-1,-1));
 
-    commandBuffer.SetPlayerPositions(playerBounds.origin, otherPlayerPos);
     commandBuffer.SetViewOffset(view.GetOffset());
     commandBuffer.DrawBackground();
 
@@ -285,53 +293,56 @@ void GameServer::PerformCollisionCheck()
 
 void GameServer::SpawnFortress(const Level::FortressSpec& area)
 {
-    Base::CreateFort(*this, random, area);
+    Base::CreateFort(*this, area);
 }
 
 void GameServer::SpawnEnemy(const Level::EnemySpec& enemy)
 {
-    AddActor(new Enemy(*this, imageSheet, random));
+    AddActor(new Enemy(*this, imageSheet));
 }
 
-void GameServer::SpawnPlayer(const Level::SpawnPoint& point)
+void GameServer::SpawnEnemy(const Vector<s16>& location)
 {
-    if (player.actor)
+    AddActor(new Enemy(*this, imageSheet))->SetPosition(location);
+}
+
+void GameServer::SpawnPlayer(int index, const Level::SpawnPoint& point)
+{
+    assert(index >= 0 && index < maxPlayerCount);
+    if (player[index].actor)
     {
-        player.actor->Destroy();
+        player[index].actor->Destroy();
     }
-    player.actor = new Player(*this, imageSheet, input, point.location, point.heading);
-    AddActor(player.actor);
+    player[index].actor = new Player(*this, index, imageSheet, input, point.location, point.heading);
+    AddActor(player[index].actor);
 }
 
-void GameServer::SpawnRemotePlayer(const Level::SpawnPoint& point)
+void GameServer::SpawnMissile(int playerIndex, Direction direction, int speed)
 {
-    assert(client);
-
-    if (remotePlayer.actor)
-    {
-        remotePlayer.actor->Destroy();
-    }
-    remotePlayer.actor = new Player(*this, imageSheet, clientInput, point.location, point.heading);
-    AddActor(remotePlayer.actor);
+    assert(playerIndex >= 0 && playerIndex < maxPlayerCount && player[playerIndex].actor);
+    
+    Vector<s16> startPosition = stage.WrapCoordinate(player[playerIndex].actor->GetPosition() + direction.ToDelta(maxActorSize));
+    AddActor(new Shot(*this, imageSheet, ImageSet::Missile, startPosition, direction, speed, playerIndex));
 }
 
-void GameServer::SpawnMissile(const Vector<s16>& startPosition, const Direction& direction, int speed)
+void GameServer::SpawnShot(const Vector<s16>& startPosition, const Direction& direction, int speed)
 {
-    AddActor(new Shot(*this, imageSheet, ImageSet::Missile, startPosition, direction, speed));
+    AddActor(new Shot(*this, imageSheet, ImageSet::MiniShot, startPosition, direction, speed));
 }
 
-void GameServer::SpawnExplosion(const Vector<s16>& startPosition, const Direction& direction, int speed)
+Actor* GameServer::SpawnExplosion(const Vector<s16>& startPosition, const Direction& direction, int speed)
 {
-    AddActor(new Explosion(*this, imageSheet, startPosition, direction, speed));
+    return AddActor(new Explosion(*this, imageSheet, startPosition, direction, speed));
 }
 
-void GameServer::AddActor(Actor* newActor)
+Actor* GameServer::AddActor(Actor* newActor)
 {
     if(newActor->collisionSourceMask != CollisionMask::None)
     {
         collisionSources.Prepend(newActor);
     }
     needsNewPartition.Append(newActor);
+    return newActor;
 }
 
 void GameServer::PerformPendingDeletes()
@@ -346,9 +357,12 @@ void GameServer::PerformPendingDeletes()
             found.Remove();
         }
 
-        if(actor == player.actor)
+        for (PlayerInfo& p : player)
         {
-            player.actor = nullptr;
+            if(actor == p.actor)
+            {
+                p.actor = nullptr;
+            }
         }
 
         if(actor->partitionIterator)
@@ -396,6 +410,51 @@ void GameServer::GetPartitionRange(const Rect<s16>& rect, int& x1, int& x2, int&
         y1--;
     }
 }
+
+Actor* GameServer::FindPlayer(const Vector<s16>& position, int radius, Vector<s16>& outDelta)
+{
+    int sqRadius = radius*radius;
+
+    int minSquared = sqRadius;
+    Actor* found = nullptr;
+
+    for(PlayerInfo& p : player)
+    {
+        if(!p.actor)
+        {
+            continue;
+        }
+
+        // Use 32 bits when calculating the square magnitude to avoid overflows
+        Vector<s32> delta (p.actor->GetPosition() - position);
+        int sqMagnitude = delta.SqrMagnitude();
+        if (sqMagnitude < minSquared)
+        {
+            found = p.actor;
+            minSquared = sqMagnitude;
+            outDelta = Vector<s16>(delta);
+        }
+
+    }
+
+    return found;
+}
+
+void GameServer::OnPlayerDestroyed(int playerIndex)
+{
+    assert(playerIndex >=0 && playerIndex < maxPlayerCount);
+    assert(player[playerIndex].actor);
+    
+    player[playerIndex].lives --;
+    Player* p = player[playerIndex].actor;
+    Actor* explosion = SpawnExplosion(p->GetPosition(), p->GetDirection(), p->GetSpeed());
+    explosion->SetDestructionHandler([=](Actor*)
+    {
+        auto& spawnPoints = levels[currentLevel].playerStarts;
+        SpawnPlayer(playerIndex, spawnPoints[Rand() % spawnPoints.Size()]);
+    });
+}
+
 
 void GameServer::OnBaseDestroyed(Base* base)
 {
@@ -460,17 +519,16 @@ void GameServer::LoadLevel(int levelIndex)
         SpawnEnemy(enemySpec);
     }
 
-    int localSpawnPoint = random.Get() % level.playerStarts.Size();
-    SpawnPlayer(level.playerStarts[localSpawnPoint]);
+    Array<Level::SpawnPoint> spawnPoints (level.playerStarts);
+    int playerCount = client?2:1;
+    for (int i = 0; i <playerCount; i++)
+    {
+        auto spawnPoint = spawnPoints.Pull(Rand() % spawnPoints.Size());
+        SpawnPlayer(i, spawnPoint);
+    }
+    
     if(client)
     {
-        int remoteSpawnPoint;
-        do
-        {
-            remoteSpawnPoint = random.Get() % level.playerStarts.Size();
-        } while (remoteSpawnPoint == localSpawnPoint);
-        SpawnRemotePlayer(level.playerStarts[remoteSpawnPoint]);
-
         // Send updated level data to the client immediately
         // Block until the setup commands have been sent
         clientCommands.Send(client, true);

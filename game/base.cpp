@@ -26,7 +26,7 @@ Base::Base(GameServer& inWorld) :
     west(nullptr),
     destructible(false),
     delayAction(None),
-    delay(2)
+    delay(60)
 {
 }
 
@@ -34,7 +34,18 @@ void Base::Update()
 {
     if(delayAction != None && --delay <= 0)
     {
-        Destroy(delayAction);
+        switch(delayAction)
+        {
+            case DestroyCore:
+            case DestroyLeaf:
+                Destroy(delayAction);
+            break;
+            case SpawnShot:
+                Spawn(delayAction);
+            break;
+            default:
+            break;
+        }
     }
 }
 
@@ -42,7 +53,7 @@ void Base::OnCollision(class Actor* other)
 {
     if(destructible)
     {
-        Destroy(this == core ? Core : Leaf);
+        Destroy(this == core ? DestroyCore : DestroyLeaf);
     }
 }
 
@@ -93,8 +104,25 @@ Direction Base::MaskToDirection(u8 mask)
     }
 }
 
+void Base::Spawn(Action type)
+{
+    Vector<s16> myPosition = GetPosition();
+    Vector<s16> delta;
+    Actor* player = world.FindPlayer(myPosition, 160, delta);
+    if (player && Rand() % 10 != 0)
+    {
+        Direction dir (delta);
+        world.SpawnShot(myPosition, dir, 1);
+    }
+    else if (player || Rand() % 50 == 0)
+    {
+        world.SpawnEnemy(myPosition);
+    }
+    delay = Rand()%60+30;
+    delayAction = type;
+}
 
-void Base::Destroy(DestructionType type)
+void Base::Destroy(Action type)
 {
     Array<Base*> needsUpdate;
     Actor::Destroy();
@@ -129,9 +157,10 @@ void Base::Destroy(DestructionType type)
     for(Base* base : needsUpdate)
     {
         // Destroy all edges if this was a core hit, else all edgges that would become new leaves. 
-        if (type == Core || (base != core && base->EdgeCount() <= 1) || base->EdgeCount() == 0)
+        if (type == DestroyCore || (base != core && base->EdgeCount() <= 1) || base->EdgeCount() == 0)
         {
             base->delayAction = type;
+            base->delay = 2;
         }
         else 
         {
@@ -161,6 +190,11 @@ void Base::UpdateShape()
 
         // The base node is destructible if there is only one edge connected to this node.
         destructible = EdgeCount() == 1;
+    }
+
+    if(destructible)
+    {
+        delayAction = SpawnShot;
     }
 }
 
@@ -217,9 +251,8 @@ struct Grid
     Vector<s16> size;
 };
 
-void Base::CreateFort(GameServer& server, Random& random, const Rect<s16>& area)
+void Base::CreateFort(GameServer& server, const Rect<s16>& area)
 {
-    
     // The grid size is the size of the area divided by 16 rounded to the nearest integer and then
     // to the nearest odd number.
     Vector<s16> gridSize = ((area.size + Vector<s16>(15,15)) / 32)  * 2 + Vector<s16>(1,1);
@@ -240,7 +273,7 @@ void Base::CreateFort(GameServer& server, Random& random, const Rect<s16>& area)
     
     // Add the initial nodes above and below or left and right of the core to the set
     {
-        if(random.Get() & 0x800000)
+        if(Rand() & 0x800000)
         {
             set.Push(start - halfV);
             set.Push(start + halfV);
@@ -262,7 +295,7 @@ void Base::CreateFort(GameServer& server, Random& random, const Rect<s16>& area)
     while(!set.IsEmpty())
     {
         // pull a random item from the set
-        auto current = set.Pull(random.Get() % set.Size());
+        auto current = set.Pull(Rand() % set.Size());
         assert(grid[current] != nullptr);
 
         // Select an available direction to move in
@@ -283,7 +316,7 @@ void Base::CreateFort(GameServer& server, Random& random, const Rect<s16>& area)
         }
 
         // Get the next coordinate
-        auto next = directions[random.Get() % directions.Size()];
+        auto next = directions[Rand() % directions.Size()];
         auto midpoint = (next + current) / 2;
         
         // Create a corridor node between the current and the next node

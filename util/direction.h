@@ -71,6 +71,24 @@ namespace hfh3
             return *this + (-other);
         }
 
+        // Subtracting two directions returns difference in the range -3 to 4
+        int operator-(const Direction& other) const
+        {
+            if (value == Stopped || other.value == Stopped)
+            {
+                return 0;
+            }
+            else
+            {
+                int value = (int(*this) - int(other)) & 7;
+                if (value > 3)
+                {
+                    value -= 8;
+                }
+                return value;
+            }
+        }
+
         bool operator==(Value other) const
         {
             return value == other;

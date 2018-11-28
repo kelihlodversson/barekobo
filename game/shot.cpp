@@ -3,6 +3,7 @@
 #include "game/gameserver.h"
 #include "game/stage.h"
 #include "game/collisionmask.h"
+
 #include "render/image.h"
 #include "render/imagesheet.h"
 #include "util/random.h"
@@ -10,11 +11,14 @@
 using namespace hfh3;
 
 Shot::Shot(class GameServer &inWorld, ImageSheet &imageSheet, ImageSet imageSet,
-           const Vector<s16> &inPosition, Direction direction, int speed)
+           const Vector<s16> &inPosition, Direction direction, int speed, 
+           int inOwner)
     : Mover(inWorld, (u8)imageSet, imageSheet.GetGroupSize(),
             direction, speed,
-            CollisionMask::None, imageSet == ImageSet::MiniShot?CollisionMask::Player:CollisionMask::Enemy),
-      rotator(imageSet == ImageSet::MiniShot), ttl(800 / speed)
+            inOwner >=0?CollisionMask::None:CollisionMask::EnemyNPC, 
+            inOwner >=0?CollisionMask::Enemy:CollisionMask::Player),
+      rotator(imageSet == ImageSet::MiniShot), ttl(400 / speed),
+      owner(inOwner)
 {
     SetPosition(inPosition);
 }

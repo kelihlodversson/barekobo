@@ -354,6 +354,14 @@ namespace hfh3
             , count(0)
         {}
 
+        Array(const Array<T>& other)
+            : data((T*)malloc(other.count * sizeof(T)))
+            , reserved(other.count)
+            , count(other.count)
+        {
+            memcpy(data, other.data, count * sizeof(T));
+        }
+
         Array(int reserve)
             : data((T*)malloc(reserve * sizeof(T)))
             , reserved(reserve)

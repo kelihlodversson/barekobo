@@ -11,8 +11,10 @@ namespace hfh3
     {
     public:
         Random(u64 inSeed = -1);
+        Random(const Random&) = delete;
 
         u32 Get();
+        static Random& Instance();
 
         template <typename T>
         Vector<T> GetVector()
@@ -26,5 +28,12 @@ namespace hfh3
         static const u64 multiplier = 0x5deece66d;
         static const u32 increment = 11;
         static const u64 mask = 0xffffffffffff; // 2**48 - 1
+        static Random instance;
     };
+
+    /** convenience wrapper for when we just need a single random integer */
+    inline u32 Rand()
+    {
+        return Random::Instance().Get();
+    }
 }

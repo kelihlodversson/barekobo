@@ -38,9 +38,13 @@ void Enemy::Update()
         // If a player is within range, change direction towards him
         if (player)
         {
-            // We only get the sign of the difference, as we only change directions
-            // 45 degrees at at time
-            r = Sign(GetDirection()-Direction(delta));
+            r = Direction(delta)-GetDirection();
+
+            // Limit turning to max 90 degree turns
+            if (Abs(r) > 2) 
+            {
+                r = Sign(r) * 2;
+            }
         }
         // else change direction randomly +/- 45 degrees.
         else

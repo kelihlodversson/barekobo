@@ -80,12 +80,16 @@ namespace hfh3
             }
             else
             {
-                int value = (int(*this) - int(other)) & 7;
-                if (value > 3)
+                int res = (int(*this) - int(other));
+                if (res < -3)
                 {
-                    value -= 8;
+                    res += 8;
                 }
-                return value;
+                if (res > 4)
+                {
+                    res -= 8;
+                }
+                return res;
             }
         }
 

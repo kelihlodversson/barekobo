@@ -313,7 +313,7 @@ void GameServer::SpawnPlayer(int index, const Level::SpawnPoint& point)
     {
         player[index].actor->Destroy();
     }
-    player[index].actor = new Player(*this, index, imageSheet, input, point.location, point.heading);
+    player[index].actor = new Player(*this, index, imageSheet, index==1?clientInput:input, point.location, point.heading);
     AddActor(player[index].actor);
 }
 

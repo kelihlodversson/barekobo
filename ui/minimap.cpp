@@ -36,17 +36,25 @@ void MiniMap::Update()
 
 void MiniMap::Render()
 {
-    CString p0,p1;
-    p0.Format("%4d, %4d", player_position[0].x, player_position[0].y);
-    p1.Format("%4d, %4d", player_position[1].x, player_position[1].y);
-
+    CString tmp;
     Vector<s16> screenSize = screen.GetSize();
     Vector<s16> pos = screenSize-size;
-
+    Vector<s16> linePos (pos.x+2, 12);
 
     screen.Clear(2);
-    screen.DrawString({s16(pos.x+10), 12}, p0, PLAYER_COLOR[0], Font::GetDefault());
-    screen.DrawString({s16(pos.x+10), 22}, p1, PLAYER_COLOR[1], Font::GetDefault());
+    for (int i = 0; i<2; i++)
+    {
+        tmp.Format("Player %d:", i+1);
+        screen.DrawString(linePos, tmp, PLAYER_COLOR[i]-2, Font::GetDefault());
+        linePos.y += 10;
+        tmp.Format("Score: %06d", player_score[i]);
+        screen.DrawString(linePos, tmp, PLAYER_COLOR[i], Font::GetDefault());
+        linePos.y += 10;
+        tmp.Format("Lives: %6d", player_lives[i]);
+        screen.DrawString(linePos, tmp, PLAYER_COLOR[i], Font::GetDefault());
+        linePos.y += 20;
+    }
+
     screen.DrawImage(pos, image);
     screen.DrawPixel(pos + player_position[0]/scale, PLAYER_COLOR[0]);
     screen.DrawPixel(pos + player_position[1]/scale, PLAYER_COLOR[1]);
@@ -67,4 +75,17 @@ void MiniMap::SetPlayerPosition(u8 player, const Vector<s16>& position)
 {
     assert(player < 2);
     player_position[player] = position;
+}
+
+void MiniMap::SetPlayerLives(u8 player, int lives)
+{
+    assert(player < 2);
+    player_lives[player] = lives;
+}
+
+void MiniMap::SetPlayerScore(u8 player, int score)
+{
+    assert(player < 2);
+    player_score[player] = score;
+
 }

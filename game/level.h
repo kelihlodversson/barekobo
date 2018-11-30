@@ -19,21 +19,6 @@ namespace hfh3
             Direction   heading;
         };
 
-        enum EnemyType
-        {
-            Arch,
-            Bomb,
-            Ring,
-            Rock,
-        };
-
-        struct EnemySpec
-        {
-            EnemyType enemyType;
-            SpawnPoint startLocation;
-
-        };
-
         using FortressSpec = Rect<s16>;
         
         /**
@@ -41,11 +26,6 @@ namespace hfh3
          * and when respawning after dying.
          */
         Array<SpawnPoint> playerStarts;
-
-        /**
-         * A list of enemies and where in the level they are spawned.
-         */
-        Array<EnemySpec> enemies;
 
         /**
          * A list of one or more bases that should be created at the start of the level

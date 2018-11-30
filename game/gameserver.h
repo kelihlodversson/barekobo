@@ -42,8 +42,6 @@ namespace hfh3
             return FindPlayer(position, radius, tmp);
         }
 
-        void SpawnFortress(const Level::FortressSpec& area);
-        void SpawnEnemy(const Level::EnemySpec& enemy);
         void SpawnEnemy(const Vector<s16>& position);
         void SpawnPlayer(int index, const Level::SpawnPoint& point);
         void SpawnMissile(int playerIndex, Direction direction, int speed);
@@ -51,18 +49,19 @@ namespace hfh3
         void SpawnShot(const Vector<s16>& position, const class Direction& direction , int speed);
 
 
-        void OnPlayerDestroyed(int playerIndex);
-        void OnBaseDestroyed(class Base* base);
         void OnBaseChanged(class Base* base, u8 imageGroup, u8 imageIndex);
-
         void AddBase(class Base* base);
 
-
     private:
+        void SpawnFortress(const Level::FortressSpec& area);
 
+        void UpdateScore(int player, int scoreChange);
+        void OnPlayerDestroyed(int playerIndex);
+        void OnBaseDestroyed(class Base* base);
         void PerformCollisionCheck();
         void AssignPartitions();
         void PerformPendingDeletes();
+        void ClearLevel();
 
         struct PlayerInfo 
         {
@@ -129,6 +128,7 @@ namespace hfh3
         ProxyInput    clientInput;
         NetworkReader* readerTask;
         int currentLevel;
+        int loadLevelDelay;
         Levels levels;
 
         friend class Base;

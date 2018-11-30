@@ -13,7 +13,6 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 768, 1024,  128,  128},
 			{ 384, 1280,  128,  128},
@@ -25,7 +24,6 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 256,  768,  192,  192},
 			{ 768,  768,  192,  192},
@@ -39,7 +37,6 @@ Levels::Levels()
 			{ { 496, 1024}, Direction::West},
 			{ { 528, 1024}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 256,  640,  128,  128},
 			{ 256,  960,  128,  128},
@@ -55,7 +52,6 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 224,  880,  192,  192},
 			{ 880,  224,  192,  192},
@@ -68,7 +64,6 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 512,  512,  192,  192},
 			{ 512, 1024,  192,  192},
@@ -80,7 +75,6 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 512, 1024,  256,  256},
 		},
@@ -91,7 +85,6 @@ Levels::Levels()
 			{ { 496, 1024}, Direction::West},
 			{ { 528, 1024}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 512,  864,   96,   96},
 			{ 672,  864,   96,   96},
@@ -109,7 +102,6 @@ Levels::Levels()
 			{ { 496, 1024}, Direction::West},
 			{ { 528, 1024}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 768, 1024,  128,  128},
 			{ 256, 1024,  128,  128},
@@ -127,7 +119,6 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 512,  512,  224,  224},
 		},
@@ -138,7 +129,6 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
 		.fortresses = {
 			{ 512, 1024,  384,  384},
 		},
@@ -149,7 +139,7 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 240, 1024,   96,   96},
 			{ 400, 1024,   96,   96},
@@ -164,7 +154,7 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 400,  848,  224,  192},
 			{ 640, 1120,  160,  128},
@@ -176,7 +166,7 @@ Levels::Levels()
 			{ { 496, 1024}, Direction::West},
 			{ { 528, 1024}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 384,  128,  160,  160},
 			{ 640,  128,  160,  160},
@@ -210,7 +200,7 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 512, 1024,  768,  768},
 		},
@@ -221,7 +211,7 @@ Levels::Levels()
 			{ { 496, 1024}, Direction::West},
 			{ { 528, 1024}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 512,  768,  224,  224},
 			{ 768,  768,  224,  224},
@@ -239,7 +229,7 @@ Levels::Levels()
 			{ { 496, 1024}, Direction::West},
 			{ { 528, 1024}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 256,  320,  128,  128},
 			{ 256,  640,  128,  128},
@@ -259,7 +249,7 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 512,  928,  576,  576},
 		},
@@ -270,7 +260,7 @@ Levels::Levels()
 			{ { 496, 1152}, Direction::West},
 			{ { 528, 1152}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 256,  768,   96,   96},
 			{ 384,  768,   96,   96},
@@ -300,7 +290,7 @@ Levels::Levels()
 			{ { 496,  800}, Direction::West},
 			{ { 528,  800}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 544,  224,  128,  128},
 			{ 256,  352,  128,  128},
@@ -317,7 +307,7 @@ Levels::Levels()
 			{ { 496, 1536}, Direction::West},
 			{ { 528, 1536}, Direction::East},
 		},
-		.enemies = {},
+
 		.fortresses = {
 			{ 512, 1024,  576,  576},
 		},

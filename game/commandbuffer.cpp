@@ -21,6 +21,10 @@ enum class Opcode : u8
     SetPlayerPositions,
     SetBackgroundCell,
     ClearBackgroundCell,
+    SetPlayer0Score,
+    SetPlayer1Score,
+    SetPlayer0Lives,
+    SetPlayer1Lives,
     FrameStart = 0xff
 };
 
@@ -108,7 +112,7 @@ static void operator << (CommandArray& array, const Vector<T>& value)
 static void operator >> (CommandIterator& iter, s32& value)
 {
     u8 tmp;
-    iter >> tmp; value |= tmp;
+    iter >> tmp; value  = tmp;
     iter >> tmp; value |= tmp << 8;
     iter >> tmp; value |= tmp << 16;
     iter >> tmp; value |= tmp << 24;
@@ -177,6 +181,19 @@ void CommandBuffer::ClearBackgroundCell(const Vector<u8>& pos)
     commands << pos;
 }
 
+void CommandBuffer::SetPlayerScore(u8 player, s32 score)
+{
+    assert(player >=0 && player < 2);
+    commands << (player?Opcode::SetPlayer1Score:Opcode::SetPlayer0Score);
+    commands << score;
+}
+
+void CommandBuffer::SetPlayerLives(u8 player, s32 lives)
+{
+    assert(player >=0 && player < 2);
+    commands << (player?Opcode::SetPlayer1Lives:Opcode::SetPlayer0Lives);
+    commands << lives;
+}
 
 void CommandBuffer::Run(class View& view, Background& background, MiniMap* map)
 {
@@ -268,6 +285,30 @@ void CommandBuffer::Run(class View& view, Background& background, MiniMap* map)
                     map->SetPlayerPosition(0, p0);
                     map->SetPlayerPosition(1, p1);
                 }
+            }
+            break;
+            case Opcode::SetPlayer0Lives:
+            case Opcode::SetPlayer1Lives:
+            {
+                s32 lives;
+                iter >> lives;
+                if (map)
+                {
+                    map->SetPlayerLives(u8(op) - u8(Opcode::SetPlayer0Lives), lives);
+
+                }
+                DEBUG("%x: %d ( %x ) @ %d ", u8(op), lives , lives, offset);
+            }
+            break;
+            case Opcode::SetPlayer0Score:
+            case Opcode::SetPlayer1Score:
+            {
+                s32 score;
+                iter >> score;
+                if (map)
+                {
+                    map->SetPlayerScore(u8(op) - u8(Opcode::SetPlayer0Score), score);
+                }   
             }
             break;
             case Opcode::SetBackgroundCell:

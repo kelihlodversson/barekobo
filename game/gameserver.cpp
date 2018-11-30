@@ -44,6 +44,17 @@ GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNe
             GetPartition(x,y).SetBounds(bounds);
         }
     }
+
+    for(int i = 0; i < 2; i++)
+    {
+        minimap->SetPlayerLives(i, player[i].lives);
+        minimap->SetPlayerScore(i, player[i].score);
+        if (client)
+        {
+            clientCommands.SetPlayerLives(i, player[i].lives);
+            clientCommands.SetPlayerScore(i, player[i].score);
+        }
+    }
 }
 
 GameServer::PlayerInfo::PlayerInfo(const Vector<s16>& initialCamera)
@@ -136,6 +147,10 @@ void GameServer::Render()
 void GameServer::Update()
 {
     commands.Clear();
+    if(baseCount == 0 && loadLevelDelay-- == 0)
+    {
+        LoadLevel();
+    }
 
     for(Partition& partition : partitions)
     {
@@ -296,14 +311,15 @@ void GameServer::SpawnFortress(const Level::FortressSpec& area)
     Base::CreateFort(*this, area);
 }
 
-void GameServer::SpawnEnemy(const Level::EnemySpec& enemy)
-{
-    AddActor(new Enemy(*this, imageSheet));
-}
-
 void GameServer::SpawnEnemy(const Vector<s16>& location)
 {
-    AddActor(new Enemy(*this, imageSheet))->SetPosition(location);
+    Actor* enemy = new Enemy(*this, imageSheet);
+    enemy->SetPosition(location);
+    enemy->SetDestructionHandler([=]()
+    {
+        UpdateScore(enemy->GetKiller(), enemy->GetScore());
+    });
+    AddActor(enemy);
 }
 
 void GameServer::SpawnPlayer(int index, const Level::SpawnPoint& point)
@@ -315,6 +331,10 @@ void GameServer::SpawnPlayer(int index, const Level::SpawnPoint& point)
     }
     player[index].actor = new Player(*this, index, imageSheet, index==1?clientInput:input, point.location, point.heading);
     AddActor(player[index].actor);
+    player[index].actor->SetDestructionHandler([=]()
+    {
+        OnPlayerDestroyed(index);
+    });
 }
 
 void GameServer::SpawnMissile(int playerIndex, Direction direction, int speed)
@@ -373,6 +393,27 @@ void GameServer::PerformPendingDeletes()
         delete actor;
     }
     pendingDelete.Clear();
+}
+
+void GameServer::ClearLevel()
+{
+    pendingDelete.Clear();
+    collisionSources.Clear();
+
+    for (PlayerInfo& p : player)
+    {
+        p.actor = nullptr;
+    }   
+
+    for(Partition& partition : partitions)
+    {
+        for(Actor* actor : partition.Reverse())
+        {
+            assert(actor);
+            delete actor;
+        }
+        partition.Clear();
+    }
 }
 
 void GameServer::AssignPartitions()
@@ -440,6 +481,19 @@ Actor* GameServer::FindPlayer(const Vector<s16>& position, int radius, Vector<s1
     return found;
 }
 
+void GameServer::UpdateScore(int playerIndex, int scoreChange)
+{
+    if (playerIndex >= 0 && playerIndex < 2 && scoreChange)
+    {
+        player[playerIndex].score += scoreChange;
+        minimap->SetPlayerScore(playerIndex, player[playerIndex].score);
+        if (client)
+        {
+            clientCommands.SetPlayerScore(playerIndex, player[playerIndex].score);
+        }
+    }
+}
+
 void GameServer::OnPlayerDestroyed(int playerIndex)
 {
     assert(playerIndex >=0 && playerIndex < maxPlayerCount);
@@ -448,11 +502,16 @@ void GameServer::OnPlayerDestroyed(int playerIndex)
     player[playerIndex].lives --;
     Player* p = player[playerIndex].actor;
     Actor* explosion = SpawnExplosion(p->GetPosition(), p->GetDirection(), p->GetSpeed());
-    explosion->SetDestructionHandler([=](Actor*)
+    explosion->SetDestructionHandler([=]()
     {
         auto& spawnPoints = levels[currentLevel].playerStarts;
         SpawnPlayer(playerIndex, spawnPoints[Rand() % spawnPoints.Size()]);
     });
+    minimap->SetPlayerLives(playerIndex, player[playerIndex].lives);
+    if (client)
+    {
+        clientCommands.SetPlayerLives(playerIndex, player[playerIndex].lives);
+    }
 }
 
 
@@ -465,13 +524,20 @@ void GameServer::OnBaseDestroyed(Base* base)
     {
         clientCommands.ClearBackgroundCell(position);
     }
-
     baseCount --;
-    if (baseCount == 0)
+
+    for(Partition& partition : partitions)
     {
-        // TODO: Delay loading of the next level for a bit
-        LoadLevel();        
+        for(Actor* actor : partition.Reverse())
+        {
+            assert(actor);
+            if( !actor->IsDestroyed())
+            {
+                actor->OnBaseDestroyed(baseCount);
+            }
+        }
     }
+    UpdateScore(base->GetKiller(), base->GetScore());
 }
 
 void GameServer::OnBaseChanged(Base* base, u8 imageGroup, u8 imageIndex)
@@ -489,10 +555,18 @@ void GameServer::AddBase(Base* base)
 {
     AddActor(base);
     baseCount++;
+    base->SetDestructionHandler([=]()
+    {
+        OnBaseDestroyed(base);
+    });
 }
 
 void GameServer::LoadLevel(int levelIndex)
 {
+    // Remove all objects from the current level
+    ClearLevel();
+
+    loadLevelDelay = 60 * 5; // Wait 5 seconds before loading the next level
     if (levelIndex < 0)
     {
         currentLevel ++;
@@ -512,11 +586,6 @@ void GameServer::LoadLevel(int levelIndex)
     for(auto& fortress : level.fortresses)
     {
         SpawnFortress(fortress);
-    }
-
-    for(auto& enemySpec : level.enemies)
-    {
-        SpawnEnemy(enemySpec);
     }
 
     Array<Level::SpawnPoint> spawnPoints (level.playerStarts);

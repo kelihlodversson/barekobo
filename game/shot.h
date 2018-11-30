@@ -19,7 +19,11 @@ namespace hfh3
         virtual void Draw(class CommandBuffer& commands) override;
         virtual void OnCollision(class Actor* other) override;
         virtual Rect<s16> GetBounds() override;
-
+        
+        virtual int GetOwner() const override
+        {
+            return owner;
+        }
     private:
         bool rotator;
         unsigned ttl;

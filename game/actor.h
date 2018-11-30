@@ -42,6 +42,13 @@ namespace hfh3
           */
         virtual void OnCollision(class Actor* other) {}
 
+        /** Called on all actors when a base actor has been destroyed.
+          * The number of base Actors left is passed in as argument.
+          */
+        virtual void OnBaseDestroyed(int basesLeft)
+        {
+        }
+
         void Destroy();
 
         bool IsDestroyed()
@@ -55,6 +62,30 @@ namespace hfh3
         }
 
         void SetPosition(const Vector<s16>& newPosition);
+
+        void SetKiller(int player)
+        {
+            killer = player;
+        }
+
+        int GetKiller() const
+        {
+            return killer;
+        }
+
+        /** The player index of the owner of this object.
+         */
+        virtual int GetOwner() const
+        {
+            return -1;
+        }
+
+        /** Should return the score for destroying this object.
+          */
+        virtual int GetScore() const
+        {
+            return 0;
+        }
 
         template<typename T>
         void SetDestructionHandler(T callable)
@@ -80,6 +111,10 @@ namespace hfh3
         // whether the actor needs to be moved to another partition.
         bool positionDirty;
 
+        // The index of the player that should be awarded points for destroying this object.
+        // May be -1 if no player caused the destruction or if the object has not been destroyed.
+        int killer;
+
         // Specifies which collision layers this object can be the target of.
         // Set this to 0 to make the object immune to collisions from other objects.
         const CollisionMask collisionTargetMask;
@@ -87,7 +122,7 @@ namespace hfh3
         // Specifies which layers this object can generate a collision events with.
         const CollisionMask collisionSourceMask;
 
-        Callback<void(Actor*)> destructionHandler;
+        Callback<void()> destructionHandler;
         friend class GameServer;
     };
 }

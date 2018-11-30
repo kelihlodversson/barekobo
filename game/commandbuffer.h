@@ -31,6 +31,8 @@ namespace hfh3
         void SetPlayerPositions(const Vector<s16>& p0, const Vector<s16>& p1);
         void SetBackgroundCell(const Vector<u8>& pos, u8 imageGroup, u8 subImage);
         void ClearBackgroundCell(const Vector<u8>& pos);
+        void SetPlayerScore(u8 player, int score);
+        void SetPlayerLives(u8 player, int lives);
         void Clear() 
         {
             commands.ClearFast();

@@ -53,6 +53,7 @@ void Base::OnCollision(class Actor* other)
 {
     if(destructible)
     {
+        SetKiller(other->GetOwner());
         Destroy(this == core ? DestroyCore : DestroyLeaf);
     }
 }
@@ -114,11 +115,11 @@ void Base::Spawn(Action type)
         Direction dir (delta);
         world.SpawnShot(myPosition, dir, 1);
     }
-    else if (player || Rand() % 50 == 0)
+    else if (player || Rand() % 200 == 0)
     {
         world.SpawnEnemy(myPosition);
     }
-    delay = Rand()%60+30;
+    delay = (Rand()%120)+45;
     delayAction = type;
 }
 
@@ -159,6 +160,7 @@ void Base::Destroy(Action type)
         // Destroy all edges if this was a core hit, else all edgges that would become new leaves. 
         if (type == DestroyCore || (base != core && base->EdgeCount() <= 1) || base->EdgeCount() == 0)
         {
+            base->SetKiller(GetKiller());
             base->delayAction = type;
             base->delay = 2;
         }
@@ -167,8 +169,6 @@ void Base::Destroy(Action type)
             base->UpdateShape();
         }
     }
-
-    world.OnBaseDestroyed(this);
 }
 
 // Select the correct image based on which siblings are connected

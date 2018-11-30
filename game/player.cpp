@@ -93,6 +93,5 @@ void Player::OnCollision(Actor* other)
     if (! invincibleDelay)
     {
         Destroy();
-        world.OnPlayerDestroyed(playerIndex);
     }
 }

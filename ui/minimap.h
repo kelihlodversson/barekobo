@@ -20,6 +20,8 @@ namespace hfh3
         void Clear(u8 color = 143);
         void Plot(const Vector<u8>& at, u8 color);
         void SetPlayerPosition(u8 player, const Vector<s16>& position);
+        void SetPlayerLives(u8 player, int lives);
+        void SetPlayerScore(u8 player, int score);
 
     protected:
         virtual void Update() override;
@@ -29,6 +31,8 @@ namespace hfh3
         s16 scale;
         Vector<s16> size;
         Vector<s16> player_position[2];
+        int player_lives[2];
+        int player_score[2];
         u8* pixels;
         Image image;
     };

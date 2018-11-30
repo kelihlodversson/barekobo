@@ -28,6 +28,10 @@ World::World(MainLoop& inLoop, class Input& inInput, Network& inNetwork)
     , background(*this, imageSheet, minimap)
     , commands(imageSheet)
 {
+    minimap->SetPlayerLives(0,0);
+    minimap->SetPlayerLives(1,0);
+    minimap->SetPlayerScore(0,0);
+    minimap->SetPlayerScore(1,0);
 }
 
 World::~World()

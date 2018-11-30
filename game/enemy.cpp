@@ -28,38 +28,72 @@ void Enemy::Update()
 {
     UpdatePosition();
 
-    // Change direction at random intervals 
-    if (Rand() % relaxed == 0)
+    // Change direction more often when in locked state
+    if (Rand() % relaxed > (state == Locked ? 1 : 0))
     {
-        Vector<s16> delta;
-        Actor* player = world.FindPlayer(GetPosition(), 256, delta);
-        
-        int r = 0;
-        // If a player is within range, change direction towards him
-        if (player)
-        {
-            r = Direction(delta)-GetDirection();
-
-            // Limit turning to max 90 degree turns
-            if (Abs(r) > 2) 
-            {
-                r = Sign(r) * 2;
-            }
-        }
-        // else change direction randomly +/- 45 degrees.
-        else
-        {
-            //    _ 0 or 1 _
-            //   ____ 0 or 2 ____
-            //   _____ -1 or +1 _____
-             r = (Rand() % 2) * 2 - 1; // Chose -1 or +1 at random
-        }
-        SetDirection(GetDirection() + r); // Add it to the current direction to rotate it
+        return;
     }
+
+    Vector<s16> delta;
+    Actor* player;
+    player = world.FindPlayer(GetPosition(), state == Roaming ? 128 : 256, delta);
+    int directionAdjustment = 0;
+
+    Direction currentDirection = GetDirection();
+    // If a player is within range, change direction towards him
+    if (player)
+    {
+        if (state == Roaming)
+        {
+            state = Locked;
+        }
+        Direction targetDirection(delta);
+
+        if (state == Fleeing)
+        {
+            targetDirection = targetDirection + 4; // When fleeing try to move away instead of towards the player
+        }
+        directionAdjustment = targetDirection-currentDirection;
+
+        // Limit turning to max 90 degree turns
+        if (Abs(directionAdjustment) > 2) 
+        {
+            directionAdjustment = Sign(directionAdjustment) * 2;
+        }
+    }
+    // else change direction randomly +/- 45 degrees.
+    else
+    {
+        if (state == Locked)
+        {
+            state = Roaming;
+        }
+
+        //                     _ 0 or 1 _
+        //                    ____ 0 or 2 ____
+        //                    _____ -1 or +1 _____
+        directionAdjustment = (Rand() % 2) * 2 - 1; // Chose -1 or +1 at random
+    }
+
+    // Apply the selected direction adjustment to the current direction:
+    SetDirection(currentDirection + directionAdjustment); 
 }
 
 void Enemy::OnCollision(class Actor* other)
 {
+    SetKiller(other->GetOwner());
     Destroy();
     world.SpawnExplosion(GetPosition(), GetDirection(), GetSpeed());
+}
+
+void Enemy::OnBaseDestroyed(int basesRemaining)
+{
+    if(basesRemaining == 0)
+    {
+        state = Fleeing;
+    }
+    else if (state == Roaming)
+    {
+        state = Locked; // Increases the search range for the next direction change.
+    }
 }

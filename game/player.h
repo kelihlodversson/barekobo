@@ -14,6 +14,10 @@ namespace hfh3
         virtual void Update() override;
         virtual void OnCollision(class Actor* other) override;
 
+        virtual int GetOwner() const override
+        {
+            return playerIndex;
+        }
     private:
         void Fire(bool repeat);
         int fireRateCounter;

@@ -9,6 +9,7 @@ Actor::Actor(GameServer& inWorld, CollisionMask inCollisionTargetMask, Collision
     , stage(inWorld.GetStage())
     , shouldDestruct(false)
     , positionDirty(true)
+    , killer(-1)
     , collisionTargetMask(inCollisionTargetMask)
     , collisionSourceMask(inCollisionSourceMask)
 {}
@@ -30,7 +31,7 @@ void Actor::Destroy()
 {
     if(destructionHandler)
     {
-        destructionHandler(this);
+        destructionHandler();
     }
     shouldDestruct = true;
 }

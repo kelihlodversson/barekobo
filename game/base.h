@@ -16,6 +16,11 @@ namespace hfh3
         virtual void Draw(class CommandBuffer& commands) override;
         virtual Rect<s16> GetBounds() override;
 
+        virtual int GetScore() const override
+        {
+            return IsCore()?100:destructible?10:1;
+        }
+
         virtual void OnCollision(class Actor* other) override;
         
         bool IsCore() const 

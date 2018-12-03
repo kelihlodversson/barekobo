@@ -11,6 +11,8 @@ class Opcode(enum.Enum) :
     SetPlayerPositions  = 3
     SetBackgroundCell   = 4
     ClearBackgroundCell = 5
+    SetPlayerStat       = 6
+    SetMessage          = 7
     FrameStart          = 255
 
 def decode_vectorS12(a,b,c):
@@ -34,6 +36,8 @@ class CommandBuffer:
             Opcode.SetPlayerPositions  : (self.set_positions,    '<3B3B'),
             Opcode.SetBackgroundCell   : (self.set_background,   '<3B'),
             Opcode.ClearBackgroundCell : (self.clear_background, '<2B'),
+            Opcode.SetPlayerStat       : (self.set_player_stat,  '<Bi'),
+            Opcode.SetMessage          : (self.set_message,      '<Bhh'),
             Opcode.FrameStart          : (self.frame_start,      '<i')
         }
 
@@ -69,6 +73,12 @@ class CommandBuffer:
 
     def clear_background(self, x,y) :
         self.background.clear_cell(x,y)
+
+    def set_player_stat(self, player_and_stat, value) :
+        pass
+    
+    def set_message(self, message, level, timeout) :
+        pass
 
     def invalid_opcode(self, op) :
         print("Error: invalid opcode", op)

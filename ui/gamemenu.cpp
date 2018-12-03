@@ -127,6 +127,7 @@ void GameMenu::StartHost(bool multiplayer)
     new Async([=]()
     {
         auto server = mainLoop.CreateClient<GameServer>(input, network);
+        server->SetDestructionHandler([=](){Resume(); InitMenu();});
         if(multiplayer)
         {
             Beacon beacon; // Announce our presence to the local network
@@ -152,6 +153,8 @@ void GameMenu::SelectServer(ipv4_address_t address)
     new Async([=]()
     {
         auto client = mainLoop.CreateClient<GameClient>(input, network);
+        client->SetDestructionHandler([=](){Resume(); InitMenu();});
+
         client->Connect(address);
         Pause();
     });

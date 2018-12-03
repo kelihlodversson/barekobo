@@ -14,7 +14,7 @@
 #include "game/player.h"
 #include "game/shot.h"
 #include "game/view.h"
-#include "game/commandbuffer.h"
+#include "game/commandlist.h"
 
 using namespace hfh3;
 
@@ -25,6 +25,7 @@ World::World(MainLoop& inLoop, class Input& inInput, Network& inNetwork)
     , network(inNetwork)
     , imageSheet(sprites_pixels, sprites_width, sprites_height, 16, 16, 255, 8)
     , minimap(mainLoop.CreateClient<MiniMap>(stage.GetSize()))
+    , overlay(mainLoop.CreateClient<MessageOverlay>(GetBounds()))
     , background(*this, imageSheet, minimap)
     , commands(imageSheet)
 {
@@ -36,8 +37,11 @@ World::World(MainLoop& inLoop, class Input& inInput, Network& inNetwork)
 
 World::~World()
 {
+    mainLoop.DestroyClient(overlay);
     mainLoop.DestroyClient(minimap);
     minimap = nullptr;
+    overlay = nullptr;
+    
 }
 
 // Actually execute the scheduled draw commands

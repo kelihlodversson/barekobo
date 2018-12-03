@@ -16,7 +16,7 @@ namespace hfh3
              int inOwner = -1);
 
         virtual void Update() override;
-        virtual void Draw(class CommandBuffer& commands) override;
+        virtual void Draw(class CommandList& commands) override;
         virtual void OnCollision(class Actor* other) override;
         virtual Rect<s16> GetBounds() override;
         

@@ -1,6 +1,6 @@
 #include "game/sprite.h"
 #include "game/stage.h"
-#include "game/commandbuffer.h"
+#include "game/commandlist.h"
 
 #include "render/image.h"
 
@@ -18,7 +18,7 @@ Sprite::Sprite(class GameServer &inWorld,
     , size(inSize)
 {}
 
-void Sprite::Draw(CommandBuffer& commands)
+void Sprite::Draw(CommandList& commands)
 {
     commands.DrawSprite(GetPosition(), imageGroup, current);
 }

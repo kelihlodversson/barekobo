@@ -17,7 +17,7 @@
 #include "game/player.h"
 #include "game/shot.h"
 #include "game/view.h"
-#include "game/commandbuffer.h"
+#include "game/commandlist.h"
 
 #include <circle/net/socket.h>
 #include <circle/net/in.h>
@@ -44,24 +44,13 @@ GameServer::GameServer(MainLoop& inMainLoop, class Input& inInput, Network& inNe
             GetPartition(x,y).SetBounds(bounds);
         }
     }
-
-    for(int i = 0; i < 2; i++)
-    {
-        minimap->SetPlayerLives(i, player[i].lives);
-        minimap->SetPlayerScore(i, player[i].score);
-        if (client)
-        {
-            clientCommands.SetPlayerLives(i, player[i].lives);
-            clientCommands.SetPlayerScore(i, player[i].score);
-        }
-    }
 }
 
 GameServer::PlayerInfo::PlayerInfo(const Vector<s16>& initialCamera)
     : actor(nullptr)
     , camera(initialCamera)
     , score(0)
-    , lives(10)
+    , lives(2)
 {
 }
 
@@ -84,14 +73,24 @@ GameServer::~GameServer()
 
     if(readerTask)
     {
-        delete readerTask;
+        readerTask->active = false;
         readerTask = nullptr;
     }
 
+    
+    // Closing the client connection will be handled by the NetworkReader
     if(client)
     {
-        delete client;
         client = nullptr;
+    }
+}
+
+GameServer::NetworkReader::~NetworkReader()
+{
+    if(connection)
+    {
+        delete connection;
+        connection = nullptr;
     }
 }
 
@@ -152,6 +151,13 @@ void GameServer::Update()
         LoadLevel();
     }
 
+    // Exit the game if no players are left
+    if(player[0].lives == 0 && (!client || player[1].lives == 0) && loadLevelDelay-- == 0)
+    {
+        mainLoop.DestroyClient(this);
+        return;
+    }
+
     for(Partition& partition : partitions)
     {
         Rect<s16> bounds = partition.GetBounds();
@@ -189,7 +195,7 @@ void GameServer::Update()
     }
 }
 
-void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPlayer, CommandBuffer& commandBuffer)
+void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPlayer, CommandList& commandBuffer)
 {
     
     const Vector<s16>& stageSize = stage.GetSize();
@@ -502,11 +508,22 @@ void GameServer::OnPlayerDestroyed(int playerIndex)
     player[playerIndex].lives --;
     Player* p = player[playerIndex].actor;
     Actor* explosion = SpawnExplosion(p->GetPosition(), p->GetDirection(), p->GetSpeed());
-    explosion->SetDestructionHandler([=]()
+
+    if (player[playerIndex].lives > 0)
     {
-        auto& spawnPoints = levels[currentLevel].playerStarts;
-        SpawnPlayer(playerIndex, spawnPoints[Rand() % spawnPoints.Size()]);
-    });
+        explosion->SetDestructionHandler([=]()
+        {
+            auto& spawnPoints = levels[currentLevel].playerStarts;
+            SpawnPlayer(playerIndex, spawnPoints[Rand() % spawnPoints.Size()]);
+        });
+        overlay->SetMessage(Message::GetReady, currentLevel, 150);
+    }
+    else
+    {
+        overlay->SetMessage(Message::GameOver, currentLevel, -1);
+    }
+
+
     minimap->SetPlayerLives(playerIndex, player[playerIndex].lives);
     if (client)
     {
@@ -537,6 +554,11 @@ void GameServer::OnBaseDestroyed(Base* base)
             }
         }
     }
+
+    if (baseCount == 0)
+    {
+        overlay->SetMessage(Message::LevelCleared, currentLevel, loadLevelDelay);
+    }
     UpdateScore(base->GetKiller(), base->GetScore());
 }
 
@@ -563,6 +585,24 @@ void GameServer::AddBase(Base* base)
 
 void GameServer::LoadLevel(int levelIndex)
 {
+    // Initialize scores and lives if this is the first level loaded
+    if (currentLevel < 0)
+    {
+        if (!client)
+        {
+            player[1].lives = -1;
+        }
+        for(int i = 0; i < 2; i++)
+        {
+            minimap->SetPlayerLives(i, player[i].lives);
+            minimap->SetPlayerScore(i, player[i].score);
+            if (client)
+            {
+                clientCommands.SetPlayerLives(i, player[i].lives);
+                clientCommands.SetPlayerScore(i, player[i].score);
+            }
+        }
+    }
     // Remove all objects from the current level
     ClearLevel();
 
@@ -595,7 +635,9 @@ void GameServer::LoadLevel(int levelIndex)
         auto spawnPoint = spawnPoints.Pull(Rand() % spawnPoints.Size());
         SpawnPlayer(i, spawnPoint);
     }
-    
+
+    overlay->SetMessage(Message::GetReady, currentLevel, 150);
+
     if(client)
     {
         // Send updated level data to the client immediately
@@ -626,23 +668,27 @@ void GameServer::Bind()
 void GameServer::NetworkReader::Run()
 {
     CScheduler* scheduler = CScheduler::Get();
-    while(true)
+    while(active)
     {
         u8 buffer[FRAME_BUFFER_SIZE];
         int count = connection->Receive(buffer, FRAME_BUFFER_SIZE, MSG_DONTWAIT);
-    
-        if(count)
+
+        if(!active) // remoteInput may be invalid if active is false
+            break;
+
+        if(count > 0)
         {
             for(int i = 0; i < count; i++)
             {
                 remoteInput.SetInputState(buffer[i]);
             }
         }
+        // TODO: add error handling when count is negative
         else
         {
             // When there is no data ready, sleep for 60th of a second
             // before trying again. This will also yield control to other threads
             scheduler->MsSleep(16); 
         }
-    }  
+    }
 }

@@ -27,20 +27,23 @@ namespace hfh3
         class NetworkReader : public CTask
         {
         public:
-            NetworkReader(CSocket* inServer, CommandBuffer& inCommandBuffer)
+            NetworkReader(CSocket* inServer, CommandList& inCommandBuffer, GameClient* me)
                 : server(inServer)
                 , commands(inCommandBuffer)
+                , outer(me)
             {}
 
             virtual void Run() override;
-
+            volatile bool active;
         private:
             CSocket* server;
-            CommandBuffer& commands;
+            CommandList& commands;
+            GameClient* outer;
         };
 
         u8 lastInputState;
         CSocket* server;
         NetworkReader* readerTask;
+        volatile bool active;
     };
 }

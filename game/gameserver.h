@@ -72,18 +72,21 @@ namespace hfh3
             int lives;
         };
 
-        void BuildCommandBuffer(class PlayerInfo& player, class PlayerInfo& otherPlayer, CommandBuffer& commandBuffer);
+        void BuildCommandBuffer(class PlayerInfo& player, class PlayerInfo& otherPlayer, CommandList& commandBuffer);
 
         class NetworkReader : public CTask
         {
         public:
             NetworkReader(CSocket* inConnection, ProxyInput& inRemoteInput)
-                : connection(inConnection)
+                : active(true)
+                , connection(inConnection)
                 , remoteInput(inRemoteInput)
             {}
 
-            virtual void Run() override;
+            virtual ~NetworkReader();
 
+            virtual void Run() override;
+            volatile bool active;
         private:
             CSocket* connection;
             ProxyInput& remoteInput;
@@ -124,7 +127,7 @@ namespace hfh3
         int baseCount;
 
         CSocket* client;
-        CommandBuffer clientCommands;
+        CommandList clientCommands;
         ProxyInput    clientInput;
         NetworkReader* readerTask;
         int currentLevel;

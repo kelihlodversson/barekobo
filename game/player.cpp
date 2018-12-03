@@ -32,7 +32,7 @@ Player::Player(class GameServer& inWorld, int index,
     SetPosition(position);
 }
 
-void Player::Draw(class CommandBuffer& view) 
+void Player::Draw(class CommandList& view) 
 {
     // If the player is invincible, blink the sprite 4 times a second
     if(!invincibleDelay || (invincibleDelay % 15) < 10)

@@ -9,6 +9,8 @@
 #include "util/log.h"
 #include "ui/minimap.h"
 
+#include <limits.h>
+
 
 using namespace hfh3;
 
@@ -107,19 +109,29 @@ Direction Base::MaskToDirection(u8 mask)
 
 void Base::Spawn(Action type)
 {
+    const int closeRange = 160*160;
     Vector<s16> myPosition = GetPosition();
     Vector<s16> delta;
-    Actor* player = world.FindPlayer(myPosition, 160, delta);
-    if (player && Rand() % 10 != 0)
+
+    if(world.FindPlayer(myPosition, SHRT_MAX, delta))
     {
         Direction dir (delta);
-        world.SpawnShot(myPosition, dir, 1);
+        int sqrDistance = Vector<s32>(delta).SqrMagnitude();
+        bool isCloseRange = sqrDistance <= closeRange;
+        // If player is in close range, fire a shot 9 out of ten times
+        if (isCloseRange && Rand() % 10 > 0)
+        {
+            world.SpawnShot(myPosition, dir, 1);
+        }
+        // 1 out of 10 close range, spawn an enemy.
+        // Else spawn an enemy with a probability inverse of the distance squared.
+        else if(isCloseRange || Rand() % sqrDistance < 40*40)
+        {
+            world.SpawnEnemy(myPosition + dir.ToDelta(16));
+        }
     }
-    else if (player || Rand() % 200 == 0)
-    {
-        world.SpawnEnemy(myPosition);
-    }
-    delay = (Rand()%120)+45;
+
+    delay = (Rand()%240)+30;
     delayAction = type;
 }
 
@@ -367,7 +379,7 @@ void Base::CreateFort(GameServer& server, const Rect<s16>& area)
 
 /** The drawing of bases is handled by the background class
  */
-void Base::Draw(class CommandBuffer&)
+void Base::Draw(class CommandList&)
 {
 
 }

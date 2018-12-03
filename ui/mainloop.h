@@ -33,9 +33,6 @@ namespace hfh3
                 , screen(mainLoop.GetScreenManager())
             {}
 
-            virtual ~IUpdatable() 
-            {
-            }
 
             virtual void Pause()  { active = false; }
             virtual void Resume() { active = true;  }
@@ -45,7 +42,20 @@ namespace hfh3
                 return screen.GetScreenRect();
             }
 
+            template<typename T>
+            void SetDestructionHandler(T callable)
+            {
+                destructionHandler = callable;
+            }
+
         protected:
+            virtual ~IUpdatable() 
+            {
+                if(destructionHandler)
+                {
+                    destructionHandler();
+                }
+            }
 
             virtual void Update() = 0;
             virtual void Render() {};
@@ -55,14 +65,26 @@ namespace hfh3
 
             MainLoop& mainLoop;
             ScreenManager& screen;
+            Callback<void()> destructionHandler;
             friend MainLoop;
         };
 
         template<typename T, typename ...Args>
         T* CreateClient(Args&& ...args)
-        {
+        {   
+            // Grab the last client at the time of creation.
+            // That way, any clients created while invoking the 
+            // constructor will come after this one.
+            auto last = clients.rbegin();
             T* client = new T(*this, args...);
-            clients.Append(client);
+            if (last != clients.rend())
+            {
+                last.InsertBefore(client);
+            }
+            else // Special case for the first client added
+            {
+                clients.Prepend(client);
+            }
             return client;
         }
 

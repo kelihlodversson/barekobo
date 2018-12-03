@@ -11,7 +11,7 @@
 #include "render/font.h"
 
 #include "game/view.h"
-#include "game/commandbuffer.h"
+#include "game/commandlist.h"
 
 #include <circle/net/socket.h>
 #include <circle/net/in.h>
@@ -25,28 +25,31 @@ GameClient::GameClient(MainLoop& inMainLoop, class Input& inInput, Network& inNe
     , lastInputState(0)
     , server(nullptr)
     , readerTask(nullptr)
+    , active(true)
 {
+    Pause();
 }
 
 GameClient::~GameClient()
 {
-    if(readerTask)
+    if (active)
     {
-        delete readerTask;
-        readerTask = nullptr;
-    }
-
-    if(server)
-    {
-        delete server;
-        server = nullptr;
+        if(readerTask)
+        {
+            readerTask->active = false;
+            readerTask = nullptr;
+        }
+        if(server)
+        {
+            delete server;
+            server = nullptr;
+        }
     }
 }
 
 
 void GameClient::Connect(ipv4_address_t address, ipv4_port_t port)
 {
-    Pause();
     assert(readerTask == nullptr);
     DEBUG("Connecting to %d", address);
     auto connection = network.ConnectToServer(address, port);
@@ -61,7 +64,7 @@ void GameClient::Connect(ipv4_address_t address, ipv4_port_t port)
         int count = server->Receive(buffer, FRAME_BUFFER_SIZE, 0);
         // TODO Verify reply
         DEBUG("Connected %d", count);
-        readerTask = new NetworkReader(server, commands);
+        readerTask = new NetworkReader(server, commands, this);
     }
     Resume();
 }
@@ -69,7 +72,7 @@ void GameClient::Connect(ipv4_address_t address, ipv4_port_t port)
 
 void GameClient::Update()
 {
-    if(server)
+    if(server && active)
     {
         u8 inputState = input.DumpInputState();
         if(inputState != lastInputState)
@@ -78,14 +81,25 @@ void GameClient::Update()
             server->Send(&inputState, 1, MSG_DONTWAIT);
         }
     }
+    else
+    {
+        mainLoop.DestroyClient(this);
+    }
 }
 
 void GameClient::NetworkReader::Run()
 {
     CScheduler* scheduler = CScheduler::Get();
-    while(true)
+    while(active && commands.Receive(server))
     {
-        commands.Receive(server);
         scheduler->Yield(); 
-    }  
+    }
+
+    if (active) // Signal to the outer class that we lost connection if still active
+    {
+        DEBUG("Server disconnected");
+        delete server;
+        server = nullptr;
+        outer->active = false;
+    }
 }

@@ -41,7 +41,7 @@ void Shot::Update()
     }
 }
 
-void Shot::Draw(class CommandBuffer& commands)
+void Shot::Draw(class CommandList& commands)
 {
     // Flash the shot the last 15 frames of its lifetime
     if ( ttl > 15 || ttl % 2)

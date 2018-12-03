@@ -1,11 +1,12 @@
 #pragma once
 #include "ui/mainloop.h"
 #include "ui/minimap.h"
+#include "ui/messageoverlay.h"
 #include "render/screenmanager.h"
 #include "render/imagesheet.h"
 
 #include "game/background.h"
-#include "game/commandbuffer.h"
+#include "game/commandlist.h"
 
 namespace hfh3
 {
@@ -35,7 +36,8 @@ namespace hfh3
         class Network& network;
         ImageSheet imageSheet;
         MiniMap* minimap;
+        MessageOverlay* overlay;
         Background background;
-        CommandBuffer commands;
+        CommandList commands;
     };
 }

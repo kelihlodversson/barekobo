@@ -10,7 +10,7 @@ namespace hfh3
                class ImageSheet& imageSheet, class Input& inInput,
                const Vector<s16>& position, const Direction& heading);
 
-        virtual void Draw(class CommandBuffer& view) override;
+        virtual void Draw(class CommandList& view) override;
         virtual void Update() override;
         virtual void OnCollision(class Actor* other) override;
 

@@ -407,5 +407,6 @@ namespace hfh3
         unsigned count;
 
         friend Iterator;
+        friend ReverseIterator;
     };
 }

@@ -18,7 +18,7 @@ namespace hfh3
 
       /** After updating all actors, each will get a chance to render itself to screen
           */
-      virtual void Draw(class CommandBuffer& view) override;
+      virtual void Draw(class CommandList& view) override;
       virtual Rect<s16> GetBounds() override;
 
     protected:

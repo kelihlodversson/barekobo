@@ -13,7 +13,7 @@ namespace hfh3
 
 
         virtual void Update() override;
-        virtual void Draw(class CommandBuffer& commands) override;
+        virtual void Draw(class CommandList& commands) override;
         virtual Rect<s16> GetBounds() override;
 
         virtual int GetScore() const override

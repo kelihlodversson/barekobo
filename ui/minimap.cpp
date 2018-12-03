@@ -6,7 +6,7 @@
 using namespace hfh3;
 
 static const u8 PLAYER_COLOR[] = {
-    252, // ThisPlayer
+     28, // ThisPlayer
      57, // OtherPlayer
 };
 
@@ -44,13 +44,18 @@ void MiniMap::Render()
     screen.Clear(2);
     for (int i = 0; i<2; i++)
     {
+        if (player_lives[i] < 0)
+        {
+            continue;
+        }
         tmp.Format("Player %d:", i+1);
         screen.DrawString(linePos, tmp, PLAYER_COLOR[i]-2, Font::GetDefault());
         linePos.y += 10;
         tmp.Format("Score: %06d", player_score[i]);
         screen.DrawString(linePos, tmp, PLAYER_COLOR[i], Font::GetDefault());
         linePos.y += 10;
-        tmp.Format("Lives: %6d", player_lives[i]);
+
+        tmp.Format(player_lives[i]?"Lives: %6d":"  GAME OVER", player_lives[i]);
         screen.DrawString(linePos, tmp, PLAYER_COLOR[i], Font::GetDefault());
         linePos.y += 20;
     }

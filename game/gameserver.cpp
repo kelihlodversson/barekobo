@@ -50,7 +50,7 @@ GameServer::PlayerInfo::PlayerInfo(const Vector<s16>& initialCamera)
     : actor(nullptr)
     , camera(initialCamera)
     , score(0)
-    , lives(2)
+    , lives(10)
 {
 }
 
@@ -195,7 +195,30 @@ void GameServer::Update()
     }
 }
 
-void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPlayer, CommandList& commandBuffer)
+void GameServer::SetMessage(int playerIndex, Message message, s16 level, s16 duration)
+{
+    if(playerIndex < 0)
+    {
+        for(int i = 0; i<maxPlayerCount; i++)
+        {
+            SetMessage(i, message, level, duration);
+        }
+    }
+    else if (player[playerIndex].lives >= 0)
+    {
+
+        if (player[playerIndex].lives == 0 && message == Message::GetReady)
+        {
+            message = Message::GameOver;
+            duration = -1;
+        }
+
+        (playerIndex==0?commands:clientCommands).SetMessage(message, level, duration);
+    }
+}
+
+
+void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPlayer, CommandList& commandList)
 {
     
     const Vector<s16>& stageSize = stage.GetSize();
@@ -233,13 +256,13 @@ void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPla
         Vector<s16> moveDelta = Vector<s16>((Vector<s32>(diff) * (cameraLag-1)) / cameraLag);
         thisPlayer.camera = stage.WrapCoordinate(targetCamera-moveDelta);
         Vector<s16> otherPlayerPos = (otherPlayer.actor ? otherPlayer.actor->GetPosition() : Vector<s16>(-1,-1));
-        commandBuffer.SetPlayerPositions(playerBounds.origin, otherPlayerPos);
+        commandList.SetPlayerPositions(playerBounds.origin, otherPlayerPos);
     }
  
     view.SetCenterOffset(thisPlayer.camera);
 
-    commandBuffer.SetViewOffset(view.GetOffset());
-    commandBuffer.DrawBackground();
+    commandList.SetViewOffset(view.GetOffset());
+    commandList.DrawBackground();
 
     // Loop trhough all partitions and call render on actors in partitions that
     // extend into the visible area.
@@ -253,7 +276,7 @@ void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPla
             {
                 if(view.IsVisible(actor->GetBounds()))
                 {
-                    actor->Draw(commandBuffer);
+                    actor->Draw(commandList);
                 }
             }
 
@@ -331,6 +354,12 @@ void GameServer::SpawnEnemy(const Vector<s16>& location)
 void GameServer::SpawnPlayer(int index, const Level::SpawnPoint& point)
 {
     assert(index >= 0 && index < maxPlayerCount);
+
+    if (player[index].lives <= 0)
+    {
+        return;
+    }
+
     if (player[index].actor)
     {
         player[index].actor->Destroy();
@@ -516,11 +545,11 @@ void GameServer::OnPlayerDestroyed(int playerIndex)
             auto& spawnPoints = levels[currentLevel].playerStarts;
             SpawnPlayer(playerIndex, spawnPoints[Rand() % spawnPoints.Size()]);
         });
-        overlay->SetMessage(Message::GetReady, currentLevel, 150);
+        SetMessage(playerIndex, Message::GetReady, currentLevel, 150);
     }
     else
     {
-        overlay->SetMessage(Message::GameOver, currentLevel, -1);
+        SetMessage(playerIndex, Message::GameOver, currentLevel, -1);
     }
 
 
@@ -557,7 +586,7 @@ void GameServer::OnBaseDestroyed(Base* base)
 
     if (baseCount == 0)
     {
-        overlay->SetMessage(Message::LevelCleared, currentLevel, loadLevelDelay);
+        SetMessage(-1, Message::LevelCleared, currentLevel, loadLevelDelay);
     }
     UpdateScore(base->GetKiller(), base->GetScore());
 }
@@ -636,7 +665,7 @@ void GameServer::LoadLevel(int levelIndex)
         SpawnPlayer(i, spawnPoint);
     }
 
-    overlay->SetMessage(Message::GetReady, currentLevel, 150);
+    SetMessage(-1, Message::GetReady, currentLevel, 150);
 
     if(client)
     {

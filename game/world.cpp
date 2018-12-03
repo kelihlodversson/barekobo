@@ -49,7 +49,7 @@ void World::Render()
 {
     View view = View(stage, screen);
     screen.DrawRect(World::GetBounds(),0);
-    commands.Run(view, background, minimap);
+    commands.Run(view, background, overlay, minimap);
 }
 
 Rect<s16> World::GetBounds() const

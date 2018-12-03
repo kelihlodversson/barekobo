@@ -37,16 +37,20 @@ void MessageOverlay::SetMessage(Message message, s16 inLevel, s16 timeout)
     {
         if (message == Message::None)
         {
-            //Pause();
+            Pause();
         }
         else
         {
-            //Resume();
+            Resume();
         }
     }
     current = message;
 }
 
+void MessageOverlay::SetPlayerId(int inPlayer)
+{
+    player = inPlayer;
+}
 
 void MessageOverlay::Clear()
 {

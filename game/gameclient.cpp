@@ -28,6 +28,10 @@ GameClient::GameClient(MainLoop& inMainLoop, class Input& inInput, Network& inNe
     , active(true)
 {
     Pause();
+    if(overlay)
+    {
+        overlay->SetPlayerId(1);
+    }
 }
 
 GameClient::~GameClient()

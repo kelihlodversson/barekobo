@@ -72,7 +72,7 @@ namespace hfh3
             int lives;
         };
 
-        void BuildCommandBuffer(class PlayerInfo& player, class PlayerInfo& otherPlayer, CommandList& commandBuffer);
+        void BuildCommandBuffer(class PlayerInfo& player, class PlayerInfo& otherPlayer, CommandList& commandList);
 
         class NetworkReader : public CTask
         {
@@ -112,6 +112,8 @@ namespace hfh3
         }
 
         Actor* AddActor(class Actor* newActor);
+
+        void SetMessage(int player, Message message, s16 level, s16 duration=-1);
 
         // Returns a range of indexes to pass to GetPartition(x,y) that potentially contain
         // actors that overlap the rectangle passed in. 

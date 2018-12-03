@@ -7,6 +7,7 @@
 #include "util/array.h"
 #include "util/list.h"
 #include "ui/minimap.h"
+#include "ui/messageoverlay.h"
 
 
 namespace hfh3
@@ -40,10 +41,12 @@ namespace hfh3
         void ClearBackgroundCell(const Vector<u8>& pos);
         void SetPlayerScore(u8 player, int score);
         void SetPlayerLives(u8 player, int lives);
+        void SetMessage(Message message, s16 level, s16 timeout);
         void Clear();
 
         // This method will execute the buffered commands
-        void Run(class View& view, class Background& backround, class MiniMap* map);
+        void Run(class View& view, class Background& backround, 
+                 MessageOverlay* overlay, MiniMap* map);
 
         // Utility methods for sending and receiving command buffers
         void Send (CSocket* stream, bool wait=false);

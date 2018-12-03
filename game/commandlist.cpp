@@ -19,6 +19,7 @@ struct CommandContext
     ImageSheet& imageSheet;
     View& view;
     Background& backround;
+    MessageOverlay* overlay;
     MiniMap* map;
 };
 
@@ -72,6 +73,7 @@ enum class Opcode : u8
     SetBackgroundCell,
     ClearBackgroundCell,
     SetPlayerStat,
+    SetMessage,
     FrameStart = 0xff
 };
 
@@ -385,6 +387,42 @@ void CommandList::SetPlayerLives(u8 player, s32 lives)
     commands.Append(new hfh3::SetPlayerStat(player, SetPlayerStat::Lives, lives));
 }
 
+struct SetMessage : public Command
+{
+    SetMessage()
+        : Command(Opcode::SetMessage)
+    {}
+
+    SetMessage(Message inMessage, s16 inLevel, s16 inTimeout)
+        : Command(Opcode::SetMessage)
+        , message(inMessage)
+        , level(inLevel)
+        , timeout(inTimeout)
+    {}
+
+    virtual void Run(CommandContext& context) override
+    {
+        context.overlay->SetMessage(message, level, timeout);
+    }
+
+    virtual void Serialize(ISerializer& serializer) override 
+    {
+        Command::Serialize(serializer);
+        hfh3::Serialize(serializer, message);
+        hfh3::Serialize(serializer, level);
+        hfh3::Serialize(serializer, timeout);
+    }
+
+    Message message;
+    s16 level;
+    s16 timeout;
+};
+
+void CommandList::SetMessage(Message message, s16 level, s16 timeout)
+{
+    commands.Append(new hfh3::SetMessage(message, level, timeout));
+}
+
 Command* Command::Parse(ArrayReader& reader)
 {
     Opcode op;
@@ -413,6 +451,9 @@ Command* Command::Parse(ArrayReader& reader)
         case Opcode::SetPlayerStat:
             result = new SetPlayerStat;
         break;
+        case Opcode::SetMessage:
+            result = new SetMessage;
+        break;
         case Opcode::FrameStart:
             result = new FrameStart;
         break;
@@ -427,9 +468,10 @@ Command* Command::Parse(ArrayReader& reader)
 }
 
 
-void CommandList::Run(class View& view, Background& background, MiniMap* map)
+void CommandList::Run(class View& view, Background& background, 
+                      MessageOverlay* overlay, MiniMap* map)
 {
-    CommandContext context {imageSheet, view, background, map};
+    CommandContext context {imageSheet, view, background, overlay, map};
     for(Command* command : commands)
     {
         command->Run(context);

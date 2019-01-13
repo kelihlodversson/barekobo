@@ -152,7 +152,6 @@ void ScreenManager::CopyFrameData()
     assert(renderBuffer);
 #if CONFIG_DMA_FRAME_COPY
     dma.Start();
-    dma.Wait();
 #else
     memcpy(bufferAddress, renderBuffer, size.y * stride);
 #endif
@@ -162,6 +161,17 @@ void ScreenManager::CopyFrameData()
 void ScreenManager::WaitForVerticalSync()
 {
     vsync.Wait();
+}
+
+void ScreenManager::WaitForScreenBufferReady()
+{
+#if CONFIG_DMA_FRAME_COPY
+    CTimer *timer = CTimer::Get();
+    // Get the current timer tick count
+    const unsigned currentTick = timer->GetClockTicks();
+    dma.Wait();
+    current.presentTicks = timer->GetClockTicks() - currentTick;    
+#endif
 }
 
 void ScreenManager::UpdateStatsPreSync()
@@ -187,21 +197,6 @@ void ScreenManager::UpdateStatsPostSync()
 
     // save the time stamp of the start of the current frame
     lastSync = currentTick;
-
-    UPDATE_SUM(gameTicks);
-    UPDATE_SUM(presentTicks);
-    UPDATE_SUM(ticksPerFrame);
-
-    UPDATE_MAX(gameTicks);
-    UPDATE_MAX(presentTicks);
-    UPDATE_MAX(ticksPerFrame);
-    
-    UPDATE_MIN(gameTicks);
-    UPDATE_MIN(presentTicks);
-    UPDATE_MIN(ticksPerFrame);
-
-    // Update current frame number
-    frame ++;
 }
 
 unsigned ScreenManager::GetTimers(Timer& outSum, Timer& outMin, Timer& outMax)
@@ -224,7 +219,28 @@ void ScreenManager::UpdateStatsPostCopy()
     CTimer *timer = CTimer::Get();
     // Get the current timer tick count
     const unsigned currentTick = timer->GetClockTicks();
+
+#if CONFIG_DMA_FRAME_COPY
+    // When using DMA, part of the time waiting for copying is spent inside WaitForScreenBufferReady
+    current.presentTicks += currentTick - lastSync;
+#else
     current.presentTicks = currentTick - lastSync;
+#endif
+
+    UPDATE_SUM(gameTicks);
+    UPDATE_SUM(presentTicks);
+    UPDATE_SUM(ticksPerFrame);
+
+    UPDATE_MAX(gameTicks);
+    UPDATE_MAX(presentTicks);
+    UPDATE_MAX(ticksPerFrame);
+    
+    UPDATE_MIN(gameTicks);
+    UPDATE_MIN(presentTicks);
+    UPDATE_MIN(ticksPerFrame);
+
+    // Update current frame number
+    frame ++;
 }
 
 unsigned ScreenManager::GetFPS()

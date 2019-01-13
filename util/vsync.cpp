@@ -71,5 +71,9 @@ void VSync::VsyncInt()
     else
     {
         missedFrames ++;
+        if(missedFrames % 1000 == 0)
+        {
+            WARN("%d missed frames!", missedFrames);
+        }
     }
 }

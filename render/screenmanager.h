@@ -28,7 +28,7 @@
 // at a time to the destination using NEON intrinsics. This is currently disabled,
 // as it seems to have a neglible effect.
 #ifndef CONFIG_NEON_RENDER
-#   define CONFIG_NEON_RENDER 1
+#   define CONFIG_NEON_RENDER 0
 #endif
 
 #if CONFIG_GPU_PAGE_FLIPPING && CONFIG_DMA_FRAME_COPY
@@ -103,6 +103,11 @@ namespace hfh3
           * Use this to show the current frame after rendering.
           */
         void Present();
+
+        /** Wait until it is okay to write to start drawing to the frame buffer.
+          * This must be called at least once after calling Present().
+          */
+        void WaitForScreenBufferReady();
 
         /** Return the current frame rate in frames per second */
         unsigned GetFPS();

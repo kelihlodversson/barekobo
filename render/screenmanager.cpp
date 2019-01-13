@@ -1,5 +1,6 @@
 #include <circle/util.h>
 #include <circle/sched/scheduler.h>
+#include <climits>
 
 #include "graphics/sprite_data.h"
 #include "render/screenmanager.h"
@@ -36,11 +37,10 @@ ScreenManager::ScreenManager()
     , stride(0)
     , clip()
     , lastSync(0)
-    , ticksPerFrame(0)
-    , gameTicks(0)
-    , presentTicks(0)
     , frame(0)
 {
+    current = {0,0,0};
+    ClearTimers();
 }
 
 ScreenManager::~ScreenManager()
@@ -169,8 +169,12 @@ void ScreenManager::UpdateStatsPreSync()
     CTimer *timer = CTimer::Get();
     // Get the current timer tick count
     const unsigned currentTick = timer->GetClockTicks();
-    gameTicks = currentTick - lastSync - presentTicks;
+    current.gameTicks = currentTick - lastSync - current.presentTicks;
 }
+
+#define UPDATE_SUM(field) sum.field += current.field
+#define UPDATE_MAX(field) if (max.field < current.field) max.field = current.field
+#define UPDATE_MIN(field) if (min.field > current.field) min.field = current.field
 
 void ScreenManager::UpdateStatsPostSync()
 {
@@ -179,13 +183,40 @@ void ScreenManager::UpdateStatsPostSync()
     const unsigned currentTick = timer->GetClockTicks();
 
     // Calculate the time from one vsync to the next
-    ticksPerFrame = currentTick - lastSync;
+    current.ticksPerFrame = currentTick - lastSync;
 
     // save the time stamp of the start of the current frame
     lastSync = currentTick;
 
+    UPDATE_SUM(gameTicks);
+    UPDATE_SUM(presentTicks);
+    UPDATE_SUM(ticksPerFrame);
+
+    UPDATE_MAX(gameTicks);
+    UPDATE_MAX(presentTicks);
+    UPDATE_MAX(ticksPerFrame);
+    
+    UPDATE_MIN(gameTicks);
+    UPDATE_MIN(presentTicks);
+    UPDATE_MIN(ticksPerFrame);
+
     // Update current frame number
     frame ++;
+}
+
+unsigned ScreenManager::GetTimers(Timer& outSum, Timer& outMin, Timer& outMax)
+{
+    outSum = sum;
+    outMin = min;
+    outMax = max;
+    return frame;
+}
+
+void ScreenManager::ClearTimers()
+{
+    sum = max = {0,0,0};
+    frame = 0;
+    min = {UINT_MAX,UINT_MAX,UINT_MAX};
 }
 
 void ScreenManager::UpdateStatsPostCopy()
@@ -193,22 +224,22 @@ void ScreenManager::UpdateStatsPostCopy()
     CTimer *timer = CTimer::Get();
     // Get the current timer tick count
     const unsigned currentTick = timer->GetClockTicks();
-    presentTicks = currentTick - lastSync;
+    current.presentTicks = currentTick - lastSync;
 }
 
 unsigned ScreenManager::GetFPS()
 {
-    return DivRound(CLOCKHZ, ticksPerFrame);
+    return DivRound(CLOCKHZ, current.ticksPerFrame);
 }
 
 unsigned ScreenManager::GetGameTimePCT()
 {
-    return DivRound(100 * gameTicks, ticksPerFrame);
+    return DivRound(100 * current.gameTicks, current.ticksPerFrame);
 }
 
 unsigned ScreenManager::GetFlipTimePCT()
 {
-    return DivRound(100 * presentTicks, ticksPerFrame);
+    return DivRound(100 * current.presentTicks, current.ticksPerFrame);
 }
 
 void ScreenManager::SetClip(const Rect<s16>& rect)

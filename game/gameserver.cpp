@@ -218,7 +218,7 @@ void GameServer::SetMessage(int playerIndex, Message message, s16 level, s16 dur
 }
 
 
-void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPlayer, CommandList& commandList)
+int GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPlayer, CommandList& commandList)
 {
     
     const Vector<s16>& stageSize = stage.GetSize();
@@ -264,6 +264,7 @@ void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPla
     commandList.SetViewOffset(view.GetOffset());
     commandList.DrawBackground();
 
+    int visible_actors = 0;
     // Loop trhough all partitions and call render on actors in partitions that
     // extend into the visible area.
     int x_min,x_max,y_min,y_max;
@@ -277,11 +278,13 @@ void GameServer::BuildCommandBuffer(PlayerInfo& thisPlayer, PlayerInfo& otherPla
                 if(view.IsVisible(actor->GetBounds()))
                 {
                     actor->Draw(commandList);
+                    visible_actors++;
                 }
             }
 
         }
     }
+    return visible_actors;
 }
 
 void GameServer::PerformCollisionCheck()

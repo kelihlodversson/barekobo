@@ -11,6 +11,7 @@
 #include "render/font.h"
 #include "game/gameserver.h"
 #include "game/gameclient.h"
+#include "game/perftester.h"
 
 
 using namespace hfh3;
@@ -54,8 +55,8 @@ void GameMenu::InitMenu()
     entries.Append("Start Server",                   22, 0, [&](){StartHost(true);});
     entries.Append("Connect to Server",              22, 0, [&](){StartClient();});
     entries.Append();
-    entries.Append();
-    entries.Append();
+    entries.Append("Performance:",                   82, 0);
+    entries.Append("Run Performance Test",           22, 0, [&](){StartPerfTest();});
     entries.Append();
     entries.Append();
     entries.Append();
@@ -109,6 +110,20 @@ void GameMenu::StartClient()
     SelectFirst();
     SetupAbortToMainMenu();
     DEBUG("GameMenu::StartClient end");
+}
+
+void GameMenu::StartPerfTest()
+{
+    entries.Clear();
+    entries.Append("Starting performance tests...", 80, 0);
+    SelectFirst();
+    new Async([=]()
+    {
+        auto perfTester = mainLoop.CreateClient<PerfTester>(input, network);
+        perfTester->SetDestructionHandler([=](){Resume(); InitMenu();});
+        perfTester->LoadLevel();
+        Pause();
+    });
 }
 
 void GameMenu::StartHost(bool multiplayer)

@@ -51,7 +51,7 @@ namespace hfh3
         // Utility methods for sending and receiving command buffers
         void Send (CSocket* stream, bool wait=false);
         bool Receive (CSocket* stream);
-        
+        int Size() const { return commands.Size(); }
        
     private:
         class ImageSheet& imageSheet;

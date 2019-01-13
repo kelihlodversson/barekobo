@@ -63,6 +63,12 @@ namespace hfh3
             VISIBLE
         };
 
+        struct Timer {
+          unsigned ticksPerFrame;
+          unsigned gameTicks;
+          unsigned presentTicks;
+        };
+
         bool Initialize();
 
         void DrawImage(const Vector<s16>& at, const class Image& image);
@@ -110,6 +116,14 @@ namespace hfh3
           * If CONFIG_GPU_PAGE_FLIPPING is 1 this will be zero as
           * no extra copying is done. */
         unsigned GetFlipTimePCT();
+
+        /** Clears the sum, min and max timers and the frame coutner*/
+        void ClearTimers();
+
+        /** Get a dump of the current stats. Returns the number of frames since
+          * last reset and the values in the passed in references. */
+        unsigned GetTimers(Timer& outSum, Timer& outMin, Timer& outMax);
+
 
         /** Return the number of frames missed due to too much time spent between
           * calls to Present
@@ -178,11 +192,10 @@ namespace hfh3
         int stride;
         Rect<s16> clip;
 
-        unsigned lastSync;
-        unsigned ticksPerFrame;
-        unsigned gameTicks;
-        unsigned presentTicks;
         unsigned frame;
+        unsigned lastSync;
+        Timer    current;
+        Timer    max, min, sum;
         VSync    vsync;
     };
 

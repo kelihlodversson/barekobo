@@ -124,5 +124,6 @@ namespace hfh3
 
         Callback<void()> destructionHandler;
         friend class GameServer;
+        friend class PerfTester;
     };
 }

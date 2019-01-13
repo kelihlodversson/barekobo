@@ -18,6 +18,7 @@ namespace hfh3
 
         void StartClient();
         void StartHost(bool multiplayer);
+        void StartPerfTest();
 
         void SelectServer(ipv4_address_t address);
         void SetupAbortToMainMenu();

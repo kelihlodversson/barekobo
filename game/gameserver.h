@@ -33,7 +33,7 @@ namespace hfh3
 #endif
         
 
-        void LoadLevel(int level=-1);
+        virtual void LoadLevel(int level=-1);
 
         Actor* FindPlayer(const Vector<s16>& position, int radius, Vector<s16>& outDelta);
         Actor* FindPlayer(const Vector<s16>& position, int radius)
@@ -52,7 +52,7 @@ namespace hfh3
         void OnBaseChanged(class Base* base, u8 imageGroup, u8 imageIndex);
         void AddBase(class Base* base);
 
-    private:
+    protected:
         void SpawnFortress(const Level::FortressSpec& area);
 
         void UpdateScore(int player, int scoreChange);
@@ -72,7 +72,7 @@ namespace hfh3
             int lives;
         };
 
-        void BuildCommandBuffer(class PlayerInfo& player, class PlayerInfo& otherPlayer, CommandList& commandList);
+        int BuildCommandBuffer(class PlayerInfo& player, class PlayerInfo& otherPlayer, CommandList& commandList);
 
         class NetworkReader : public CTask
         {

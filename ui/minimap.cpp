@@ -1,5 +1,6 @@
 #include "ui/minimap.h"
 #include "render/font.h"
+#include "util/memops.h"
 
 #include <circle/string.h>
 

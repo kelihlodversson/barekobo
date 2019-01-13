@@ -1,4 +1,3 @@
-#include <circle/util.h>
 #include <circle/sched/scheduler.h>
 #include <climits>
 
@@ -8,6 +7,7 @@
 #include "render/font.h"
 
 #include "util/log.h"
+#include "util/memops.h"
 
 #if CONFIG_NEON_RENDER
 #include <arm_neon.h>
@@ -36,8 +36,8 @@ ScreenManager::ScreenManager()
     , size(0,0)
     , stride(0)
     , clip()
-    , lastSync(0)
     , frame(0)
+    , lastSync(0)
 {
     current = {0,0,0};
     ClearTimers();

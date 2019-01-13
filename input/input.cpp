@@ -1,6 +1,6 @@
-#include <circle/util.h>
-
+#include "util/memops.h"
 #include "input/input.h"
+
 using namespace hfh3;
 
 

@@ -4,10 +4,10 @@
 #include <circle/usb/usbgamepad.h>
 #include <circle/usb/usbkeyboard.h>
 #include <circle/startup.h>
-#include <circle/util.h>
 
 #include "input/localinput.h"
 #include "util/log.h"
+#include "util/memops.h"
 using namespace hfh3;
 #define SET_IDLE 0x0A
 

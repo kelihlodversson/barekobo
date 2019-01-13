@@ -23,7 +23,7 @@ PerfTester::~PerfTester()
 
 static const int FRAMES_PER_TEST = 60 * 10; // Run each test for 600 frames or at least 10 seconds (longer if we miss frames.)
 static const int ACTOR_INCREMENT = 1000; // Number of objects to add each test.
-static const int MAX_ACTOR_COUNT = 20000; // The test will exit after reaching this number of actors in the level.
+static const int MAX_ACTOR_COUNT = 10000; // The test will exit after reaching this number of actors in the level.
 
 void PerfTester::Update()
 {

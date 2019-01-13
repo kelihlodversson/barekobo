@@ -12,23 +12,37 @@ PerfTester::PerfTester(MainLoop& inMainLoop, class Input& inInput, Network& inNe
     : GameServer(inMainLoop, inInput, inNetwork)
     , frameCount(0)
     , actorCount(0)
-{}
+{
+    INFO("[BEGIN TEST RUN]");
+}
 
 PerfTester::~PerfTester()
-{}
+{
+    INFO("[END OF TEST RUN]");
+}
 
-static const int FRAMES_PER_TEST = 60 * 10; // Run each test for 10 seconds
-static const int OBJECT_COUNT = 1000; // Number of objects to add each test
+static const int FRAMES_PER_TEST = 60 * 10; // Run each test for 600 frames or at least 10 seconds (longer if we miss frames.)
+static const int ACTOR_INCREMENT = 1000; // Number of objects to add each test.
+static const int MAX_ACTOR_COUNT = 20000; // The test will exit after reaching this number of actors in the level.
 
 void PerfTester::Update()
 {
-    commands.Clear();
     if(frameCount == FRAMES_PER_TEST)
     {
         LogStats();
-        LoadLevel();
+
+        if(actorCount >= MAX_ACTOR_COUNT)
+        {
+            mainLoop.DestroyClient(this);
+            return;
+        }
+        else
+        {
+            LoadLevel(1);
+        }
     }
     InitTicks();
+    commands.Clear();
 
     for(Partition& partition : partitions)
     {
@@ -72,16 +86,23 @@ void PerfTester::Render()
 
 
 
-void PerfTester::LoadLevel(int /*unused*/)
+void PerfTester::LoadLevel(int level)
 {
+    DEBUG("\tClear stats");
     ClearStats();
     screen.ClearTimers();
 
-    for(int i=0; i<OBJECT_COUNT; i++)
+    if(level >= 0)
     {
-        SpawnEnemy(Random::Instance().GetVector<s16>());
+        DEBUG("\tAdding %d actors", ACTOR_INCREMENT);
+        for(int i=0; i<ACTOR_INCREMENT; i++)
+        {
+            SpawnEnemy(Random::Instance().GetVector<s16>());
+        }
+        actorCount += ACTOR_INCREMENT;
     }
-    actorCount += OBJECT_COUNT;
+
+    DEBUG("\tRunning test for %d frames", FRAMES_PER_TEST);
 }
 
 #define UPDATE_SUM(field) sum.field += current.field
@@ -120,15 +141,15 @@ void PerfTester::UpdateStats()
 }
 
 #define LOG_FIELD(name, field, pfx) \
-    INFO("  " name ": %.2fus (min: %.0fus, max: %.0fus)", \
+    INFO("\t\t" name ": %.2fus (min: %.0fus, max: %.0fus)", \
         double(pfx ## sum.field) / frameCount / CLOCKHZ * 1000000.0, \
         double(pfx ## min.field) / CLOCKHZ * 1000000.0, \
         double(pfx ## max.field) / CLOCKHZ * 1000000.0) 
 
 void PerfTester::LogStats()
 {
-    INFO("[BEGIN STAT] Actor count: %d", actorCount);
-    INFO("Actors on-screen: %.2f (min: %d, max: %d)", 
+    INFO("\t[BEGIN STAT] Actor count: %d", actorCount);
+    INFO("\t\tActors on-screen: %.2f (min: %d, max: %d)", 
         double(sum.visibleActors) / frameCount, min.visibleActors, max.visibleActors);
 
     LOG_FIELD("Updating Actors", actorUpdate, );
@@ -141,5 +162,5 @@ void PerfTester::LogStats()
     LOG_FIELD("Game time", gameTicks, screen_);
     LOG_FIELD("Flip time", presentTicks, screen_);
     LOG_FIELD("Frame time", ticksPerFrame, screen_);
-    INFO("[END STAT] Frame count: %d. Screen frames: %d", frameCount, screen_frames);
+    INFO("\t[END STAT] Frame count: %d. Screen frames: %d", frameCount, screen_frames);
 }

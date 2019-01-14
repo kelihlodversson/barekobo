@@ -62,6 +62,7 @@ void VSync::VsyncInt()
     write32(ARM_SMI_CS, 0);
 
     // Wake up the screen manager task if it's waiting
+    spinlock.Acquire();
     syncEvent.Set();
     if (isWaiting)
     {
@@ -71,4 +72,5 @@ void VSync::VsyncInt()
     {
         missedFrames ++;
     }
+    spinlock.Release();
 }

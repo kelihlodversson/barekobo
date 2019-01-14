@@ -48,7 +48,11 @@ void CSynchronizationEvent::Clear (void)
 #endif
 }
 
+#ifdef HFH3_PATCH
+bool CSynchronizationEvent::Set (void)
+#else
 void CSynchronizationEvent::Set (void)
+#endif
 {
 	if (!m_bState)
 	{
@@ -61,8 +65,14 @@ void CSynchronizationEvent::Set (void)
 		if (m_pWaitTask != 0)
 		{
 			CScheduler::Get ()->WakeTask (&m_pWaitTask);
+#ifdef HFH3_PATCH
+			return TRUE;
+#endif
 		}
 	}
+#ifdef HFH3_PATCH
+	return FALSE;
+#endif
 }
 
 void CSynchronizationEvent::Wait (void)
@@ -71,7 +81,8 @@ void CSynchronizationEvent::Wait (void)
 	{
 		assert (m_pWaitTask == 0);
 		CScheduler::Get ()->BlockTask (&m_pWaitTask);
-
+#ifndef HFH3_PATCH 
 		assert (m_bState);
+#endif
 	}
 }

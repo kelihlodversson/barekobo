@@ -1,6 +1,5 @@
 #pragma once
 #include <circle/types.h>
-#include <circle/spinlock.h>
 #include <circle/sched/synchronizationevent.h>
 
 namespace hfh3
@@ -53,12 +52,8 @@ namespace hfh3
         // thread of execution when waiting for vertical sync
         CSynchronizationEvent syncEvent;
 
-        // The spinlock is used to avoid reentrancy issues with syncEvent.Set();
-        CSpinLock spinlock;
-
         // The following two are accessed from interrupt context and are marked
         // as volatile to prevent the compiler from optimizing access to them.
-        volatile bool isWaiting;
         volatile unsigned missedFrames;
     };
 }

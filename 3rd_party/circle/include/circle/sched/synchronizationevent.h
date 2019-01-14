@@ -32,8 +32,11 @@ public:
 	boolean GetState (void);
 
 	void Clear (void);
+#ifdef HFH3_PATCH
+	bool Set (void);	// can be called from interrupt context
+#else
 	void Set (void);	// can be called from interrupt context
-
+#endif
 	void Wait (void);
 
 private:

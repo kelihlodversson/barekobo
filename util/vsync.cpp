@@ -15,7 +15,6 @@ const uintptr  ARM_SMI_CS =(ARM_IO_BASE + 0x600000);
 
 VSync::VSync()
     : syncEvent(false)
-    , isWaiting(false)
     , missedFrames(0)
 {}
 
@@ -36,12 +35,6 @@ VSync::~VSync()
 
 void VSync::Wait()
 {
-    syncEvent.Clear(); // clear the event so the task will block until the next vsync
-    isWaiting = true;
-
-    // This is needed for some reason to ensure isWaiting is written back to
-    // memory before calling Wait.
-    CompilerBarrier();
     syncEvent.Wait();
 }
 
@@ -62,15 +55,13 @@ void VSync::VsyncInt()
     write32(ARM_SMI_CS, 0);
 
     // Wake up the screen manager task if it's waiting
-    spinlock.Acquire();
-    syncEvent.Set();
-    if (isWaiting)
-    {
-        isWaiting = false;
-    }
-    else
+    #ifdef HFH3_PATCH // We need the patched version of Circle in order to detect whether a task was waiting
+    if(!syncEvent.Set())
     {
         missedFrames ++;
     }
-    spinlock.Release();
+    #else
+    syncEvent.Set();
+    #endif
+    syncEvent.Clear(); // clear the event so the task will block until the next vsync
 }

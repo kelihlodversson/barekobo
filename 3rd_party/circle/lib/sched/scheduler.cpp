@@ -158,11 +158,20 @@ void CScheduler::RemoveTask (CTask *pTask)
 void CScheduler::BlockTask (CTask **ppTask)
 {
 	assert (ppTask != 0);
+#ifndef HFH3_PATCH
 	*ppTask = m_pCurrent;
+#endif
 
 	assert (m_pCurrent != 0);
 	assert (m_pCurrent->GetState () == TaskStateReady);
 	m_pCurrent->SetState (TaskStateBlocked);
+#ifdef HFH3_PATCH
+	// Set the outer pointer after the task state has been set
+	// otherwise, we can get a race condition in WakeTask,
+	// if we try to call it from an interrupt handler.
+	*ppTask = m_pCurrent;
+	CompilerBarrier();
+#endif
 
 	Yield ();
 }

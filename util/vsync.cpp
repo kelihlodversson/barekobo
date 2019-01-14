@@ -36,14 +36,13 @@ VSync::~VSync()
 
 void VSync::Wait()
 {
+    syncEvent.Clear(); // clear the event so the task will block until the next vsync
     isWaiting = true;
 
     // This is needed for some reason to ensure isWaiting is written back to
     // memory before calling Wait.
     CompilerBarrier();
-
     syncEvent.Wait();
-    syncEvent.Clear(); // immediately clear the event so the next call will block again
 }
 
 void VSync::VsyncIntStub(void* param)
@@ -63,17 +62,13 @@ void VSync::VsyncInt()
     write32(ARM_SMI_CS, 0);
 
     // Wake up the screen manager task if it's waiting
+    syncEvent.Set();
     if (isWaiting)
     {
         isWaiting = false;
-        syncEvent.Set();
     }
     else
     {
         missedFrames ++;
-        if(missedFrames % 1000 == 0)
-        {
-            WARN("%d missed frames!", missedFrames);
-        }
     }
 }

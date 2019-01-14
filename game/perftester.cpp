@@ -22,7 +22,7 @@ PerfTester::PerfTester(MainLoop& inMainLoop, class Input& inInput, Network& inNe
 PerfTester::~PerfTester()
 {
     INFO("}\\table_%s%s%s%s%s",
-        CONFIG_GPU_PAGE_FLIPPING?"pageflip":CONFIG_DMA_FRAME_COPY?"dma":"memcpy",
+        CONFIG_GPU_PAGE_FLIPPING?"pageflip":CONFIG_DMA_PARALLEL?"dma2":CONFIG_DMA_FRAME_COPY?"dma1":"memcpy",
         CONFIG_NEON_RENDER?"_neon":"",
         CONFIG_USE_ITEM_POOL?"_itemPool":"",
         CONFIG_OWN_MEMSET?"_customMemSet":"",
@@ -94,6 +94,7 @@ void PerfTester::Update()
 
 void PerfTester::Render()
 {
+    renderStart = GetTicks();
     GameServer::Render();
     current.render = GetTicks();
 
@@ -126,7 +127,7 @@ void PerfTester::UpdateStats()
 
     // Convert current absolute time stamps to relative by subtracting the previous 
     // stamp from the next one:
-    current.render -= current.buildCommandBuffer;
+    current.render -= renderStart;
     current.buildCommandBuffer -= current.assignPartitions;
     current.assignPartitions -= current.actorUpdate;
     current.actorUpdate -= frameStart;

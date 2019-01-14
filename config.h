@@ -40,7 +40,14 @@
 // but further refinements could be done to allow non-rendering code to run
 // in parallel with the copying.
 #ifndef CONFIG_DMA_FRAME_COPY
-#   define CONFIG_DMA_FRAME_COPY 0
+#   define CONFIG_DMA_FRAME_COPY 1
+#endif
+
+// CONFIG_DMA_PARALLELL will allow the main loop to start running non-rendering updates
+// while the DMA operation is still copying frame data to the GPU.
+// It will not block until just before starting rendering the next frame.
+#ifndef CONFIG_DMA_PARALLEL
+#   define CONFIG_DMA_PARALLEL CONFIG_DMA_FRAME_COPY
 #endif
 
 // If set to 1, the ScreenManager class will use neon intrinsics to copy 16 pixels
@@ -50,10 +57,22 @@
 #   define CONFIG_NEON_RENDER 0
 #endif
 
+// When set to 1, this will use the Circle framebuffer WaitForVerticalSync method
+// instead of the custom interrupt handler. Should only be used for testing purposes
+// as it will reduce input and network responsiveness.
+#ifndef CONFIG_OLD_VSYNC
+#   define CONFIG_OLD_VSYNC 0
+#endif
+
+// Sanity checks
 #if CONFIG_GPU_PAGE_FLIPPING && CONFIG_DMA_FRAME_COPY
 #   error "CONFIG_GPU_PAGE_FLIPPING and CONFIG_DMA_FRAME_COPY are mutually exclusive"
 #endif
 
 #if CONFIG_NEON_RENDER && CONFIG_DMA_FRAME_COPY
 #   error "CONFIG_NEON_RENDER and CONFIG_DMA_FRAME_COPY are currently not compatible with each other"
+#endif
+
+#if CONFIG_DMA_PARALLEL && !CONFIG_DMA_FRAME_COPY
+#   error "CONFIG_DMA_PARALLEL requires CONFIG_DMA_FRAME_COPY"
 #endif

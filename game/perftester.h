@@ -55,6 +55,7 @@ namespace hfh3
 
         unsigned frameCount;
         unsigned frameStart;
+        unsigned renderStart;
         Timer current;
         Timer sum;
         Timer max;

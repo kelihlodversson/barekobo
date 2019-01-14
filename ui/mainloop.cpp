@@ -36,7 +36,6 @@ void MainLoop::Run()
     {
         Update();
         screen.WaitForScreenBufferReady();
-        screen.Clear(0);
         Render();
         screen.Present();
         PostRender();

@@ -15,6 +15,7 @@
 #include "game/shot.h"
 #include "game/view.h"
 #include "game/commandlist.h"
+#include "config.h"
 
 using namespace hfh3;
 
@@ -48,7 +49,9 @@ World::~World()
 void World::Render()
 {
     View view = View(stage, screen);
-    screen.DrawRect(World::GetBounds(),0);
+    #if !CONFIG_PRERENDER_STARFIELD
+        screen.DrawRect(World::GetBounds(),0);
+    #endif
     commands.Run(view, background, overlay, minimap);
 }
 

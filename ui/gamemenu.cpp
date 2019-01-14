@@ -121,7 +121,6 @@ void GameMenu::StartPerfTest()
     {
         auto perfTester = mainLoop.CreateClient<PerfTester>(input, network);
         perfTester->SetDestructionHandler([=](){Resume(); InitMenu();});
-        perfTester->LoadLevel();
         Pause();
     });
 }

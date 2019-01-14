@@ -15,7 +15,7 @@ Starfield::Starfield(class World& inWorld, int inDensity, u64 inSeed)
         Stage(nearSize.x, nearSize.y),
         Stage(farSize.x, farSize.y),
     })
-#if CONF_PRERENDER_STARFIELD
+#if CONFIG_PRERENDER_STARFIELD
     , nearPixels(new u8[nearSize.x * nearSize.y])
     , farPixels(new u8[farSize.x * farSize.y])
     , near(nearPixels, nearSize.x, nearSize.y, 255)
@@ -33,7 +33,7 @@ Starfield::Starfield(class World& inWorld, int inDensity, u64 inSeed)
 }
 #endif
 
-#if CONF_PRERENDER_STARFIELD
+#if CONFIG_PRERENDER_STARFIELD
 void Starfield::InitImages(int density, u64 seed)
 #else
 void Starfield::Draw(class View& view)
@@ -42,7 +42,7 @@ void Starfield::Draw(class View& view)
     // Initialize starfield randomizer with the same seed every frame
     Random random(seed);
 
-#if !CONF_PRERENDER_STARFIELD
+#if !CONFIG_PRERENDER_STARFIELD
     // starfield uses two separate stages and views that are half and quarter
     // the width respectively of the main one. This will result in a parallax
     // effect when moving around the scene.
@@ -61,7 +61,7 @@ void Starfield::Draw(class View& view)
         // Use some of the bits we're going to throw away for random brightness variation
         int brightness = (star.y >> 20) & 5;
 
-#if CONF_PRERENDER_STARFIELD
+#if CONFIG_PRERENDER_STARFIELD
         DrawStar(farPixels, farSize, star, 5+brightness);
         DrawStar(nearPixels, nearSize, star, 22+brightness);
 #else
@@ -72,7 +72,7 @@ void Starfield::Draw(class View& view)
 }
 
 
-#if CONF_PRERENDER_STARFIELD
+#if CONFIG_PRERENDER_STARFIELD
 void Starfield::DrawStar(u8* dest, const Vector<s16>& size, Vector<s16> pos, u8 color)
 {
     pos.x &= (size.x - 1);

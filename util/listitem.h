@@ -1,12 +1,6 @@
 #pragma once
 #include <circle/types.h>
-
-// Set CONFIG_USE_ITEM_POOL to 0 use the standard memory allocator for link list
-// items. When set to 1, freed items will be added to a pool of items to be reused
-// instead of deallocating the memory.
-#ifndef CONFIG_USE_ITEM_POOL
-#define CONFIG_USE_ITEM_POOL 1
-#endif
+#include "config.h"
 
 namespace hfh3
 {

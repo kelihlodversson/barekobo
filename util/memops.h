@@ -1,8 +1,5 @@
 #include <circle/util.h>
-
-#ifndef CONFIG_OWN_MEMSET
-#   define CONFIG_OWN_MEMSET 1
-#endif
+#include "config.h"
 
 namespace hfh3
 {

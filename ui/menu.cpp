@@ -125,6 +125,9 @@ void Menu::Render()
     Vector<s16> size = screen.GetSize();
     int line_height = font.GetHeight();
 
+    // Clear the menu background
+    screen.DrawRect(Rect<s16>( 0, 10 , size.x , size.y - 10),0);
+
     // Center the entries vertically
     Vector<s16> pos (0, (size.y - entries.Size() * line_height) / 2);
 

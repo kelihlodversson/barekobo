@@ -22,7 +22,7 @@ void *hfh3::MemSet(void *mem, int val, size_t len)
     while(len >= 8)
     {
         *aligned = fill;
-        *aligned++; len-=8;
+        aligned++; len-=8;
     }
 
     // copy any remaining bytes

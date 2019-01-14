@@ -4,12 +4,9 @@
 #include "game/actor.h"
 #include "game/stage.h"
 #include "util/rect.h"
+#include "config.h"
 
-#ifndef CONF_PRERENDER_STARFIELD
-#   define CONF_PRERENDER_STARFIELD 0
-#endif
-
-#if CONF_PRERENDER_STARFIELD
+#if CONFIG_PRERENDER_STARFIELD
 #   include "render/image.h"
 #endif
 
@@ -30,7 +27,7 @@ namespace hfh3
         Vector<s16> nearSize;
         Vector<s16> farSize;
         Stage parallax[2];
-#if CONF_PRERENDER_STARFIELD
+#if CONFIG_PRERENDER_STARFIELD
         void InitImages(int density, u64 seed);
         void DrawStar(u8* dest, const Vector<s16>& size, Vector<s16> pos, u8 color);
 

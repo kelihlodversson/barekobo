@@ -4,36 +4,7 @@
 #include "util/vector.h"
 #include "util/rect.h"
 #include "util/vsync.h"
-
-// Set CONFIG_GPU_PAGE_FLIPPING to 1 to allocate both the active and visible
-// frame buffers in GPU memory. The GPU will be used to page between them.
-// If set to 0 rendering will be to a temporary buffer in CPU ram and
-// page flipping will be implemented by memcpy-ing the contents to GPU ram.
-// Due to CPU memory being cached and GPU not, the latter is actually
-// around 3 times faster than the former despite the final memcpy.
-#ifndef CONFIG_GPU_PAGE_FLIPPING
-#   define CONFIG_GPU_PAGE_FLIPPING 0
-#endif
-
-// If CONFIG_DMA_FRAME_COPY is set (and CONFIG_GPU_PAGE_FLIPPING is not set)
-// the final memory copy from CPU to GPU ram is done using a DMA transfer instead
-// of using the CPU. This is approximately 5 times slower thant the CPU methhod,
-// but further refinements could be done to allow non-rendering code to run
-// in parallel with the copying.
-#ifndef CONFIG_DMA_FRAME_COPY
-#   define CONFIG_DMA_FRAME_COPY 0
-#endif
-
-// If set to 1, the ScreenManager class will use neon intrinsics to copy 16 pixels
-// at a time to the destination using NEON intrinsics. This is currently disabled,
-// as it seems to have a neglible effect.
-#ifndef CONFIG_NEON_RENDER
-#   define CONFIG_NEON_RENDER 0
-#endif
-
-#if CONFIG_GPU_PAGE_FLIPPING && CONFIG_DMA_FRAME_COPY
-#   error "CONFIG_GPU_PAGE_FLIPPING and CONFIG_DMA_FRAME_COPY are mutually exclusive"
-#endif
+#include "config.h"
 
 
 #if CONFIG_DMA_FRAME_COPY

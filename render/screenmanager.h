@@ -104,7 +104,10 @@ namespace hfh3
         /** Return the number of frames missed due to too much time spent between
           * calls to Present
           */
-        unsigned GetMissedFrames() { return vsync.GetMissed(); }
+        unsigned GetMissedFrames() 
+        { 
+          return vsync.GetMissed(); 
+        }
 
     private:
         static const unsigned fbWidth = 640;
@@ -170,7 +173,8 @@ namespace hfh3
 
         unsigned frame;
         unsigned lastSync;
-        Timer    current;
+        unsigned lastPresent;
+        Timer    current, prev;
         Timer    max, min, sum;
         VSync    vsync;
     };

@@ -38,6 +38,7 @@ ScreenManager::ScreenManager()
     , clip()
     , frame(0)
     , lastSync(0)
+    , lastPresent(0)
 {
     current = {0,0,0};
     ClearTimers();
@@ -152,6 +153,9 @@ void ScreenManager::CopyFrameData()
     assert(renderBuffer);
 #if CONFIG_DMA_FRAME_COPY
     dma.Start();
+#   if !CONFIG_DMA_PARALLEL
+    dma.Wait();
+#   endif
 #else
     memcpy(bufferAddress, renderBuffer, size.y * stride);
 #endif
@@ -165,12 +169,8 @@ void ScreenManager::WaitForVerticalSync()
 
 void ScreenManager::WaitForScreenBufferReady()
 {
-#if CONFIG_DMA_FRAME_COPY
-    CTimer *timer = CTimer::Get();
-    // Get the current timer tick count
-    const unsigned currentTick = timer->GetClockTicks();
+#if CONFIG_DMA_PARALLEL
     dma.Wait();
-    current.presentTicks = timer->GetClockTicks() - currentTick;    
 #endif
 }
 
@@ -179,7 +179,7 @@ void ScreenManager::UpdateStatsPreSync()
     CTimer *timer = CTimer::Get();
     // Get the current timer tick count
     const unsigned currentTick = timer->GetClockTicks();
-    current.gameTicks = currentTick - lastSync - current.presentTicks;
+    current.gameTicks = currentTick - lastPresent;
 }
 
 #define UPDATE_SUM(field) sum.field += current.field
@@ -209,7 +209,7 @@ unsigned ScreenManager::GetTimers(Timer& outSum, Timer& outMin, Timer& outMax)
 
 void ScreenManager::ClearTimers()
 {
-    sum = max = {0,0,0};
+    sum = max = current = prev = {0,0,0};
     frame = 0;
     min = {UINT_MAX,UINT_MAX,UINT_MAX};
 }
@@ -220,12 +220,7 @@ void ScreenManager::UpdateStatsPostCopy()
     // Get the current timer tick count
     const unsigned currentTick = timer->GetClockTicks();
 
-#if CONFIG_DMA_FRAME_COPY
-    // When using DMA, part of the time waiting for copying is spent inside WaitForScreenBufferReady
-    current.presentTicks += currentTick - lastSync;
-#else
     current.presentTicks = currentTick - lastSync;
-#endif
 
     UPDATE_SUM(gameTicks);
     UPDATE_SUM(presentTicks);
@@ -239,23 +234,27 @@ void ScreenManager::UpdateStatsPostCopy()
     UPDATE_MIN(presentTicks);
     UPDATE_MIN(ticksPerFrame);
 
+    prev = current;
+    current = {0,0,0};
+
     // Update current frame number
     frame ++;
+    lastPresent = currentTick;
 }
 
 unsigned ScreenManager::GetFPS()
 {
-    return DivRound(CLOCKHZ, current.ticksPerFrame);
+    return DivRound(CLOCKHZ, prev.ticksPerFrame);
 }
 
 unsigned ScreenManager::GetGameTimePCT()
 {
-    return DivRound(100 * current.gameTicks, current.ticksPerFrame);
+    return DivRound(100 * prev.gameTicks, prev.ticksPerFrame);
 }
 
 unsigned ScreenManager::GetFlipTimePCT()
 {
-    return DivRound(100 * current.presentTicks, current.ticksPerFrame);
+    return DivRound(100 * prev.presentTicks, prev.ticksPerFrame);
 }
 
 void ScreenManager::SetClip(const Rect<s16>& rect)

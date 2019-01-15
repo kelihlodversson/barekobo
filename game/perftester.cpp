@@ -14,20 +14,18 @@ PerfTester::PerfTester(MainLoop& inMainLoop, class Input& inInput, Network& inNe
     , frameCount(UINT_MAX)
     , actorCount(0)
 {
-    INFO("%%[BEGIN TEST RUN]");
-    INFO("\\pgfplotstableread{");
-    INFO("actor_count visible update partitioning build_command_list exec_command_list other_game_loop frame_copy total_frame_time fps");
-}
-
-PerfTester::~PerfTester()
-{
-    INFO("}\\table_%s%s%s%s%s",
+    INFO("%%[BEGIN TEST RUN %s%s%s%s%s]",
         CONFIG_GPU_PAGE_FLIPPING?"pageflip":CONFIG_DMA_PARALLEL?"dma2":CONFIG_DMA_FRAME_COPY?"dma1":"memcpy",
         CONFIG_NEON_RENDER?"_neon":"",
         CONFIG_USE_ITEM_POOL?"_itemPool":"",
         CONFIG_OWN_MEMSET?"_customMemSet":"",
         CONFIG_PRERENDER_STARFIELD?"_prerender":""
     );
+    INFO("actorCount visible updateActors updatePartition renderPrepare renderRun otherGameLoop present totalFrameTime fps");
+}
+
+PerfTester::~PerfTester()
+{
     INFO("%%[END OF TEST RUN]");
 }
 
@@ -167,7 +165,7 @@ void PerfTester::LogStats()
     double total = avg_update + avg_partitions + avg_build + avg_render;
     double other_main_loop = AVG(gameTicks, screen_) - total;
 
-    INFO("\t%d %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f",
+    INFO("%d %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f",
         actorCount,
         double(sum.visibleActors) / frameCount,
         avg_update,

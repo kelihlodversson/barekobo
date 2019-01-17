@@ -18,7 +18,6 @@ namespace hfh3
         virtual ~PerfTester();
 
         virtual void Update() override;
-        virtual void Render() override;
         virtual void LoadLevel(int level=-1) override;
     private:
 
@@ -26,19 +25,12 @@ namespace hfh3
             unsigned actorUpdate;
             unsigned assignPartitions;
             unsigned buildCommandBuffer;
-            unsigned render;
             int visibleActors;
         };
 
         void UpdateStats();
 
-        void ClearStats()
-        {
-            sum = {0,0,0,0,0};
-            max = {0,0,0,0,0};
-            min = {UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, INT_MAX};
-            frameCount = 0;
-        }
+        void ClearStats();
 
         void LogStats();
 
@@ -49,17 +41,14 @@ namespace hfh3
 
         void InitTicks()
         {
-            current = {0,0,0,0,0};
+            current = {0,0,0,0};
             frameStart = GetTicks();
         }
 
         unsigned frameCount;
         unsigned frameStart;
-        unsigned renderStart;
         Timer current;
         Timer sum;
-        Timer max;
-        Timer min;
 
         int actorCount;
     };

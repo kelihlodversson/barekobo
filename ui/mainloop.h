@@ -69,6 +69,13 @@ namespace hfh3
             friend MainLoop;
         };
 
+        struct Timer {
+          unsigned update;
+          unsigned render;
+          unsigned postRender;
+        };
+
+
         template<typename T, typename ...Args>
         T* CreateClient(Args&& ...args)
         {   
@@ -95,11 +102,21 @@ namespace hfh3
             return screen;
         }
 
+        /** Clears the timers and the frame coutner*/
+        void ClearTimers();
+
+        /** Get a dump of the current stats. Returns the number of frames since
+          * last reset and the values in the passed in references. */
+        unsigned GetTimers(Timer& outSum);
+
     private:
 
         void Update();
         void Render();
         void PostRender();
+
+        unsigned frame;
+        Timer current, sum;
 
         List<IUpdatable*> clients;
         ScreenManager& screen;

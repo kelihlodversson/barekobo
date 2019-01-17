@@ -93,7 +93,7 @@ bool ScreenManager::Initialize()
 #endif
 
 #if CONFIG_DMA_FRAME_COPY
-    dma.SetupMemCopy2D(bufferAddress, renderBuffer, size.x, size.y, stride-size.x);
+    dma.SetupMemCopy(bufferAddress, renderBuffer, size.y * stride);
 #endif
 
     return bufferAddress != nullptr;
@@ -170,7 +170,10 @@ void ScreenManager::WaitForVerticalSync()
 void ScreenManager::WaitForScreenBufferReady()
 {
 #if CONFIG_DMA_PARALLEL
+    CTimer *timer = CTimer::Get();
+    const unsigned waitStart = timer->GetClockTicks();   
     dma.Wait();
+    current.presentTicks = timer->GetClockTicks() - waitStart;
 #endif
 }
 
@@ -180,11 +183,14 @@ void ScreenManager::UpdateStatsPreSync()
     // Get the current timer tick count
     const unsigned currentTick = timer->GetClockTicks();
     current.gameTicks = currentTick - lastPresent;
+#if CONFIG_DMA_PARALLEL
+    // We have an extra wait during game code when it calls WaitForScreenBufferReady
+    // and have to subtract the current value of current.presentTicks to credit that
+    // time back to the game code.
+    current.gameTicks -= current.presentTicks;
+#endif
 }
 
-#define UPDATE_SUM(field) sum.field += current.field
-#define UPDATE_MAX(field) if (max.field < current.field) max.field = current.field
-#define UPDATE_MIN(field) if (min.field > current.field) min.field = current.field
 
 void ScreenManager::UpdateStatsPostSync()
 {
@@ -199,20 +205,19 @@ void ScreenManager::UpdateStatsPostSync()
     lastSync = currentTick;
 }
 
-unsigned ScreenManager::GetTimers(Timer& outSum, Timer& outMin, Timer& outMax)
+unsigned ScreenManager::GetTimers(Timer& outSum)
 {
     outSum = sum;
-    outMin = min;
-    outMax = max;
     return frame;
 }
 
 void ScreenManager::ClearTimers()
 {
-    sum = max = current = prev = {0,0,0};
+    sum = current = prev = {0,0,0};
     frame = 0;
-    min = {UINT_MAX,UINT_MAX,UINT_MAX};
 }
+
+#define UPDATE_SUM(field) sum.field += current.field
 
 void ScreenManager::UpdateStatsPostCopy()
 {
@@ -220,19 +225,17 @@ void ScreenManager::UpdateStatsPostCopy()
     // Get the current timer tick count
     const unsigned currentTick = timer->GetClockTicks();
 
+#if CONFIG_DMA_PARALLEL
+    // current.presentTicks already contains the amount of time
+    // spent in WaitForScreenBufferReady.
+    current.presentTicks += currentTick - lastSync;
+#else
     current.presentTicks = currentTick - lastSync;
+#endif
 
     UPDATE_SUM(gameTicks);
     UPDATE_SUM(presentTicks);
     UPDATE_SUM(ticksPerFrame);
-
-    UPDATE_MAX(gameTicks);
-    UPDATE_MAX(presentTicks);
-    UPDATE_MAX(ticksPerFrame);
-    
-    UPDATE_MIN(gameTicks);
-    UPDATE_MIN(presentTicks);
-    UPDATE_MIN(ticksPerFrame);
 
     prev = current;
     current = {0,0,0};

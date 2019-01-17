@@ -93,12 +93,12 @@ namespace hfh3
           * no extra copying is done. */
         unsigned GetFlipTimePCT();
 
-        /** Clears the sum, min and max timers and the frame coutner*/
+        /** Clears the timers and the frame coutner*/
         void ClearTimers();
 
         /** Get a dump of the current stats. Returns the number of frames since
           * last reset and the values in the passed in references. */
-        unsigned GetTimers(Timer& outSum, Timer& outMin, Timer& outMax);
+        unsigned GetTimers(Timer& outSum);
 
 
         /** Return the number of frames missed due to too much time spent between
@@ -175,7 +175,7 @@ namespace hfh3
         unsigned lastSync;
         unsigned lastPresent;
         Timer    current, prev;
-        Timer    max, min, sum;
+        Timer    sum;
         VSync    vsync;
     };
 

@@ -21,7 +21,7 @@ PerfTester::PerfTester(MainLoop& inMainLoop, class Input& inInput, Network& inNe
         CONFIG_OWN_MEMSET?"_customMemSet":"",
         CONFIG_PRERENDER_STARFIELD?"_prerender":""
     );
-    INFO("actorCount visible updateActors updatePartition renderPrepare renderRun otherGameLoop present totalFrameTime fps");
+    INFO("actorCount visible update render postRender otherGameLoop present totalFrameTime updateActors updatePartition renderPrepare fps");
 }
 
 PerfTester::~PerfTester()
@@ -29,9 +29,9 @@ PerfTester::~PerfTester()
     INFO("%%[END OF TEST RUN]");
 }
 
-static const int FRAMES_PER_TEST = 60 * 30; // Run each test for 1800 frames or at least 30 seconds (longer if we miss frames.)
-static const int ACTOR_INCREMENT = 1000; // Number of objects to add each test.
-static const int MAX_ACTOR_COUNT = 20000; // The test will exit after reaching this number of actors in the level.
+static const int FRAMES_PER_TEST = 60 * 60; // Run each test for 3600 frames or at least 60 seconds (longer if we miss frames.)
+static const int ACTOR_INCREMENT = 2000;    // Number of objects to add each test.
+static const int MAX_ACTOR_COUNT = 14000;   // The test will exit after reaching this number of actors in the level.
 
 void PerfTester::Update()
 {
@@ -88,23 +88,13 @@ void PerfTester::Update()
 
     current.visibleActors = BuildCommandBuffer(player[0], player[1], commands);
     current.buildCommandBuffer = GetTicks();
-}
-
-void PerfTester::Render()
-{
-    renderStart = GetTicks();
-    GameServer::Render();
-    current.render = GetTicks();
 
     UpdateStats();
 }
 
-
-
 void PerfTester::LoadLevel(int level)
 {
     ClearStats();
-    screen.ClearTimers();
 
     if(level >= 0)
     {
@@ -116,16 +106,20 @@ void PerfTester::LoadLevel(int level)
     }
 }
 
+void PerfTester::ClearStats()
+{
+    screen.ClearTimers();
+    mainLoop.ClearTimers();
+    sum = {0,0,0,0};
+    frameCount = 0;
+}
+
 #define UPDATE_SUM(field) sum.field += current.field
-#define UPDATE_MAX(field) if (max.field < current.field) max.field = current.field
-#define UPDATE_MIN(field) if (min.field > current.field) min.field = current.field
 
 void PerfTester::UpdateStats()
 {
-
     // Convert current absolute time stamps to relative by subtracting the previous 
     // stamp from the next one:
-    current.render -= renderStart;
     current.buildCommandBuffer -= current.assignPartitions;
     current.assignPartitions -= current.actorUpdate;
     current.actorUpdate -= frameStart;
@@ -134,47 +128,45 @@ void PerfTester::UpdateStats()
     UPDATE_SUM(assignPartitions);
     UPDATE_SUM(buildCommandBuffer);
     UPDATE_SUM(visibleActors);
-    UPDATE_SUM(render);
-
-    UPDATE_MAX(actorUpdate);
-    UPDATE_MAX(assignPartitions);
-    UPDATE_MAX(buildCommandBuffer);
-    UPDATE_MAX(visibleActors);
-    UPDATE_MAX(render);
-    
-    UPDATE_MIN(actorUpdate);
-    UPDATE_MIN(assignPartitions);
-    UPDATE_MIN(buildCommandBuffer);
-    UPDATE_MIN(visibleActors);
-    UPDATE_MIN(render);
-
     frameCount++;
 }
 
-#define AVG(field, pfx) double(pfx ## sum.field) / frameCount / CLOCKHZ * 1000000.0
+#define AVG(val) double(val) / frameCount / CLOCKHZ * 1000000.0
 
 void PerfTester::LogStats()
 {
-    ScreenManager::Timer screen_sum, screen_min, screen_max;
-    screen.GetTimers(screen_sum, screen_min, screen_max);
+    ScreenManager::Timer screen_sum;
+    MainLoop::Timer mainLoop_sum;
+    unsigned screenFrame = screen.GetTimers(screen_sum);
+    unsigned mainLoopFrame = mainLoop.GetTimers(mainLoop_sum);
+    if(!(frameCount == mainLoopFrame && frameCount == screenFrame))
+    {
+        ERROR("frameCount = %u, mainLoopFrame = %u, screenFrame = %u",
+        frameCount, mainLoopFrame, screenFrame);
+        assert(false);
+    }
 
-    double avg_update = AVG(actorUpdate,);
-    double avg_partitions = AVG(assignPartitions,);
-    double avg_build = AVG(buildCommandBuffer,);
-    double avg_render = AVG(render,);
-    double total = avg_update + avg_partitions + avg_build + avg_render;
-    double other_main_loop = AVG(gameTicks, screen_) - total;
+    double avg_actorUpdate = AVG(sum.actorUpdate);
+    double avg_partitions = AVG(sum.assignPartitions);
+    double avg_build = AVG(sum.buildCommandBuffer);
+    double avg_update = AVG(mainLoop_sum.update);
+    double avg_render = AVG(mainLoop_sum.render);
+    double avg_postRender = AVG(mainLoop_sum.postRender);
+    unsigned mainLoop_total = mainLoop_sum.update + mainLoop_sum.render + mainLoop_sum.postRender;
+    double other_main_loop = AVG(screen_sum.gameTicks - mainLoop_total);
 
-    INFO("%d %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f",
+    INFO("%d %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f",
         actorCount,
         double(sum.visibleActors) / frameCount,
         avg_update,
+        avg_render,
+        avg_postRender,
+        other_main_loop,
+        AVG(screen_sum.presentTicks),
+        AVG(screen_sum.ticksPerFrame),
+        avg_actorUpdate,
         avg_partitions,
         avg_build,
-        avg_render,
-        other_main_loop,
-        AVG(presentTicks, screen_),
-        AVG(ticksPerFrame, screen_),
         double(CLOCKHZ) / (double(screen_sum.ticksPerFrame) / frameCount)
     );
 }

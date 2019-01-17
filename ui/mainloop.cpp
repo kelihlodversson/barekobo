@@ -10,7 +10,10 @@ using namespace hfh3;
 
 
 MainLoop::MainLoop(ScreenManager& inScreen)
-    : screen(inScreen)
+    : frame(0)
+    , current({0,0,0})
+    , sum({0,0,0})
+    , screen(inScreen)
 {}
 
 MainLoop::~MainLoop()
@@ -45,6 +48,9 @@ void MainLoop::Run()
 
 void MainLoop::Update()
 {
+    current = {0,0,0};
+    CTimer *timer = CTimer::Get();
+    const unsigned updateStart = timer->GetClockTicks();
     for(IUpdatable* client : clients)
     {
         if(client->active)
@@ -54,10 +60,13 @@ void MainLoop::Update()
             screen.ClearClip();
         }
     }
+    current.update = timer->GetClockTicks() - updateStart;
 }
 
 void MainLoop::Render()
 {
+    CTimer *timer = CTimer::Get();
+    const unsigned renderStart = timer->GetClockTicks();
     for(IUpdatable* client : clients)
     {
         if(client->active)
@@ -67,9 +76,13 @@ void MainLoop::Render()
             screen.ClearClip();
         }
     }
+    current.render = timer->GetClockTicks() - renderStart;
 }
+
 void MainLoop::PostRender()
 {
+    CTimer *timer = CTimer::Get();
+    const unsigned postRenderStart = timer->GetClockTicks();
     for(IUpdatable* client : clients)
     {
         if(client->active)
@@ -77,4 +90,22 @@ void MainLoop::PostRender()
             client->PostRender();
         }
     }
+    current.postRender = timer->GetClockTicks() - postRenderStart;
+
+    sum.update += current.update;
+    sum.render += current.render;
+    sum.postRender += current.postRender;
+    frame++;
+}
+
+void MainLoop::ClearTimers()
+{
+    frame = 0;
+    sum = {0,0,0};
+}
+
+unsigned MainLoop::GetTimers(Timer& outSum)
+{
+    outSum = sum;
+    return frame;
 }

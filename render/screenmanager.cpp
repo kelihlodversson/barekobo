@@ -368,8 +368,6 @@ void ScreenManager::DrawImage(const Vector<s16>& at, const Image& image)
             const u8* srcRow = image.GetPixelAddress(image_min_x, image_y);
             int i=0;
 #if CONFIG_NEON_RENDER
-            // There is no attempt of aligning the data, which may explain why
-            // there is little if no speed gain compared to the naive method.
             for(; i < neonWidth; i+= sizeof(uint8x16_t))
             {
                 // Grab 16 pixels of source and destination data

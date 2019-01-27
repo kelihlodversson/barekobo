@@ -9,7 +9,7 @@ namespace hfh3
     class Base : public Actor
     {
     public:
-        Base(class GameServer& inWorld);
+        Base(class GameServer& inWorld, Vector<s16> position, bool inCore = true);
 
 
         virtual void Update() override;
@@ -18,15 +18,10 @@ namespace hfh3
 
         virtual int GetScore() const override
         {
-            return IsCore()?100:destructible?10:1;
+            return isCore?100:destructible?10:1;
         }
 
         virtual void OnCollision(class Actor* other) override;
-        
-        bool IsCore() const 
-        {
-            return this == core;
-        }
 
         static void CreateFort(class GameServer& server, const Rect<s16>& area);
     private:
@@ -42,9 +37,10 @@ namespace hfh3
         void UpdateShape();
         int EdgeCount();
         Direction MaskToDirection(u8 mask);
+        Base* CreateNeighbor(Direction dir);
 
         // The parent core node
-        class Base* core;
+        bool isCore;
         // Sibling base nodes
         class Base* north;
         class Base* east;

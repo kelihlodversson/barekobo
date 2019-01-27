@@ -19,9 +19,10 @@ static const ImageSet edges[2] = {
     ImageSet::Fort1, ImageSet::Fort2
 };
 
-Base::Base(GameServer& inWorld) :
+Base::Base(GameServer& inWorld, Vector<s16> position, bool inCore) :
     Actor(inWorld,
           CollisionMask::EnemyBase, CollisionMask::None),
+    isCore(inCore),
     north(nullptr),
     east(nullptr),
     south(nullptr),
@@ -30,6 +31,7 @@ Base::Base(GameServer& inWorld) :
     delayAction(None),
     delay(60)
 {
+    SetPosition(position);
 }
 
 void Base::Update() 
@@ -56,7 +58,7 @@ void Base::OnCollision(class Actor* other)
     if(destructible)
     {
         SetKiller(other->GetOwner());
-        Destroy(this == core ? DestroyCore : DestroyLeaf);
+        Destroy(isCore ? DestroyCore : DestroyLeaf);
     }
 }
 
@@ -170,7 +172,7 @@ void Base::Destroy(Action type)
     for(Base* base : needsUpdate)
     {
         // Destroy all edges if this was a core hit, else all edgges that would become new leaves. 
-        if (type == DestroyCore || (base != core && base->EdgeCount() <= 1) || base->EdgeCount() == 0)
+        if (type == DestroyCore || (!base->isCore && base->EdgeCount() <= 1) || base->EdgeCount() == 0)
         {
             base->SetKiller(GetKiller());
             base->delayAction = type;
@@ -186,7 +188,7 @@ void Base::Destroy(Action type)
 // Select the correct image based on which siblings are connected
 void Base::UpdateShape()
 {
-    if(core == this)
+    if(isCore)
     {
         world.OnBaseChanged(this, u8(misc), 7);
         destructible = true;
@@ -212,19 +214,13 @@ void Base::UpdateShape()
 
 
 /* Create a collection of base elements using a random algorithm similar to
- * the one used by te original xkobo.
+ * the one used by the original xkobo.
  */
-
-static const Vector<s16> halfV (0,1);
-static const Vector<s16> halfH (1,0);
-static const Vector<s16> fullV (0,2);
-static const Vector<s16> fullH (2,0);
-
-static const Vector<s16> moves[4] = {
-    fullV * -1,
-    fullH,
-    fullV,
-    fullH * -1
+static const Direction moves[4] = {
+    Direction::North,
+    Direction::East,
+    Direction::South,
+    Direction::West
 };
 
 // Simple array wrapper for storing a 2d grid of Base pointers
@@ -263,38 +259,70 @@ struct Grid
     Vector<s16> size;
 };
 
+Base* Base::CreateNeighbor(Direction dir)
+{
+    Base* other = new Base(world, GetPosition() + dir.ToDelta(16), false);
+    switch (int(dir))
+    {
+        case Direction::North:
+            assert(!north);
+            north = other;
+            other->south = this;
+            break;
+        case Direction::South:
+            assert(!south);
+            south = other;
+            other->north = this;
+            break;
+        case Direction::East:
+            assert(!east);
+            east = other;
+            other->west = this;
+            break;
+        case Direction::West:
+            assert(!west);
+            west = other;
+            other->east = this;
+            break;
+        default:
+            assert(1); // Invalid direction
+    }
+    world.AddBase(other);
+    return other;
+}
+
+
 void Base::CreateFort(GameServer& server, const Rect<s16>& area)
 {
-    // The grid size is the size of the area divided by 16 rounded to the nearest integer and then
+    // The grid size is the size of the area divided by 31 rounded to the nearest integer and then
     // to the nearest odd number.
-    Vector<s16> gridSize = ((area.size + Vector<s16>(15,15)) / 32)  * 2 + Vector<s16>(1,1);
+    Vector<s16> gridSize = ((area.size + Vector<s16>(31,31)) / 64)  * 2 + Vector<s16>(1,1);
     
-    // Minimum grid size is 5x5
-    if (gridSize.x < 5)
+    // Minimum grid size is 3x3
+    if (gridSize.x < 3)
     {
-        gridSize.x = 5;
+        gridSize.x = 3;
     }
-    if (gridSize.y < 5)
+    if (gridSize.y < 3)
     {
-        gridSize.y = 5;
+        gridSize.y = 3;
     }
 
     DEBUG("Grid size: %d,%d", gridSize.x, gridSize.y);
 
-
-    // Get the center of the grid and the area
-    Vector<s16> start = gridSize / 2; 
-    DEBUG("Start: %d,%d", start.x, start.y);
-
     Grid grid(gridSize); // Allocate a grid of null pointers
-    Array<Vector<s16>> set; // Temporary set of nodes to visit later
+    Array<Vector<s16>> set; // Working set of nodes to visit later
 
+    // Pick a random position for the root node
+    Vector<s16> start = Vector<s16>(Rand() % gridSize.x, Rand() % gridSize.y); 
+    DEBUG("Start: %d,%d", start.x, start.y);
     // Create the initial node
-    grid[start] = new Base(server);
-
+    Base* core = new Base(server, start*32 + area.origin);
+    server.AddBase(core);
+    grid[start] = core;
     set.Push(start);
     
-    Array<Vector<s16>> directions;
+    Array<Direction> directions;
     while(!set.IsEmpty())
     {
         // pull a random item from the set
@@ -305,67 +333,37 @@ void Base::CreateFort(GameServer& server, const Rect<s16>& area)
         directions.ClearFast();
         for(auto move : moves)
         {
-            auto next = move + current;
+            auto next = move.ToDelta() + current;
             if(grid.isFree(next))
             {
-                directions.Push(next);
+                directions.Append(move);
             }
         }
 
         if (directions.IsEmpty())
         {
-            // The current node is already full, move to next one on the set  
+            // The current node is already full, finish initializing the node and move to next one on the set.  
+            grid[current]->UpdateShape();
             continue;
         }
 
         // Get the next coordinate
-        auto next = directions[Rand() % directions.Size()];
-        auto midpoint = (next + current) / 2;
+        auto dir = directions[Rand() % directions.Size()];
+        auto next = dir.ToDelta() + current;
         
-        // Create a corridor node between the current and the next node
-        grid[midpoint] = new Base(server);
+        // Create a bridge node between the current and the next node
+        Base* bridge = grid[current]->CreateNeighbor(dir);
 
         // Create the new node and push it to the set
         assert(grid[next] == nullptr);
-        grid[next] = new Base(server);
+        grid[next] = bridge->CreateNeighbor(dir);
+        bridge->UpdateShape();
         set.Push(next);
 
         // Return the current node to the set
         set.Push(current);
     }
 
-    // Finalize the maze and add the base elements to the current game
-    Vector<s16> v(0,0);
-    for (v.y = 0; v.y < gridSize.y; v.y++)
-    {
-        for(v.x = 0; v.x < gridSize.x; v.x++)
-        {
-            if( grid[v] )
-            {
-                if(grid.isValid(v-halfV))
-                {
-                    grid[v]->north = grid[v-halfV];
-                }
-                if(grid.isValid(v+halfH))
-                {
-                    grid[v]->east = grid[v+halfH];
-                }
-                if(grid.isValid(v+halfV))
-                {
-                    grid[v]->south = grid[v+halfV];
-                }
-                if(grid.isValid(v-halfH))
-                {
-                    grid[v]->west = grid[v-halfH];
-                }
-                grid[v]->core = grid[start];
-                grid[v]->SetPosition(v*16 + area.origin);
-                grid[v]->UpdateShape();
-
-                server.AddBase(grid[v]);
-            } 
-        }
-    }
 }
 
 /** The drawing of bases is handled by the background class

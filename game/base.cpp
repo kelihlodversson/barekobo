@@ -248,13 +248,6 @@ struct Grid
              (this->operator[](v) == nullptr); // not assigned
     }
 
-    bool isValid(const Vector<s16>& v)
-    {
-        return // return true iff the grid coordinate is ..
-             (v.x >= 0 && v.y >= 0 && v.x < size.x && v.y < size.y) && // within range, and
-             (this->operator[](v) != nullptr); // is assigned
-    }
-
     Array<Base*> data;
     Vector<s16> size;
 };

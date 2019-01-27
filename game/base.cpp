@@ -282,27 +282,8 @@ void Base::CreateFort(GameServer& server, const Rect<s16>& area)
     // Create the initial node
     grid[start] = new Base(server);
 
+    set.Push(start);
     
-    // Add the initial nodes above and below or left and right of the core to the set
-    {
-        if(Rand() & 0x800000)
-        {
-            set.Push(start - halfV);
-            set.Push(start + halfV);
-        }
-        else
-        {
-            set.Push(start - halfH);
-            set.Push(start + halfH);
-        }
-
-        for(const auto& v : set)
-        {
-            grid[v] = new Base(server); 
-        }
-    }
-
-
     Array<Vector<s16>> directions;
     while(!set.IsEmpty())
     {

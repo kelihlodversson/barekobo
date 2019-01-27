@@ -268,6 +268,16 @@ void Base::CreateFort(GameServer& server, const Rect<s16>& area)
     // The grid size is the size of the area divided by 16 rounded to the nearest integer and then
     // to the nearest odd number.
     Vector<s16> gridSize = ((area.size + Vector<s16>(15,15)) / 32)  * 2 + Vector<s16>(1,1);
+    
+    // Minimum grid size is 5x5
+    if (gridSize.x < 5)
+    {
+        gridSize.x = 5;
+    }
+    if (gridSize.y < 5)
+    {
+        gridSize.y = 5;
+    }
 
     DEBUG("Grid size: %d,%d", gridSize.x, gridSize.y);
 

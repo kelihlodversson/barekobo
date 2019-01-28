@@ -287,9 +287,8 @@ Base* Base::CreateNeighbor(Direction dir)
 
 void Base::CreateFort(GameServer& server, const Rect<s16>& area)
 {
-    // The grid size is the size of the area divided by 31 rounded to the nearest integer and then
-    // to the nearest odd number.
-    Vector<s16> gridSize = ((area.size + Vector<s16>(31,31)) / 64)  * 2 + Vector<s16>(1,1);
+    // The grid size is the size of the area divided by 32 rounded to the nearest integer.
+    Vector<s16> gridSize = (area.size + Vector<s16>(31,31)) / 32 ;
     
     // Minimum grid size is 3x3
     if (gridSize.x < 3)
@@ -307,7 +306,7 @@ void Base::CreateFort(GameServer& server, const Rect<s16>& area)
     Array<Vector<s16>> set; // Working set of nodes to visit later
 
     // Pick a random position for the root node
-    Vector<s16> start = Vector<s16>(Rand() % gridSize.x, Rand() % gridSize.y); 
+    Vector<s16> start = Vector<s16>((Rand() % (gridSize.x-2))+1, (Rand() % (gridSize.y-2)) + 1); 
     DEBUG("Start: %d,%d", start.x, start.y);
     // Create the initial node
     Base* core = new Base(server, start*32 + area.origin);

@@ -127,21 +127,15 @@ namespace hfh3
         bool OverlapsMod(const Rect<s16>& other, const Vector<s16>& modulo)
         {
             Rect<s16> shifted (other.origin - origin, other.size);
-            shifted.origin.x %= modulo.x;
-            shifted.origin.y %= modulo.y;
-
             Rect<s16> wrapped = shifted;
-            if (wrapped.origin.x < 0)
-            {
-                wrapped.origin.x += modulo.x;
-            }
-            if (wrapped.origin.y < 0)
-            {
-                wrapped.origin.y += modulo.y;
-            }
+            shifted.origin %= modulo;
+            wrapped.origin = wrapped.origin.Mod(modulo);
 
-            return ((shifted.Left() < size.x && shifted.Right()  > 0) || (wrapped.Left() < size.x && wrapped.Right()  > 0)) &&
-                   ((shifted.Top()  < size.y && shifted.Bottom() > 0) || (wrapped.Top()  < size.y && wrapped.Bottom() > 0)) ;
+            assert(wrapped.Right() > 0);
+            assert(wrapped.Bottom() > 0);
+
+            return ((shifted.Left() < size.x && shifted.Right()  > 0) || (wrapped.Left() < size.x)) &&
+                   ((shifted.Top()  < size.y && shifted.Bottom() > 0) || (wrapped.Top()  < size.y)) ;
 
         }
     

@@ -116,6 +116,34 @@ namespace hfh3
             return {static_cast<U>(x), static_cast<U>(y)};
         }
 
+        /** Returns the modulo of a vector to a size.
+          * Useful for normalizing a vector to a toroidal coordinates.
+          * The difference from the % operator is that the result will
+          * always be positive.
+          */
+        Vector<T> Mod(const Vector<T>& size) const
+        {
+            Vector<T> res = (*this) % size;
+            if (res.x < 0)
+                res.x += size.x;
+            if (res.y < 0)
+                res.y += size.y;
+            return res;
+        }
+
+        /** Returns the minimum delta between two vectors in
+          * a toroidal coordinate system.
+          * Use this instead of subtraction when finding the direction
+          * or distance between points that needs to wrap around the origin.
+          */
+        Vector<T> DeltaMod(const Vector<T>& other, const Vector<T>& size) const
+        {
+            Vector<T> center = size / 2;
+            Vector<T> offset = center - *this;
+            Vector<T> transformed = (other + offset).Mod(size);
+            return center - transformed;
+        }
+
         /** Returns the square of the magnitude of a vector.
           */
         T SqrMagnitude() const

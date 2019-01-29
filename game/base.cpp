@@ -377,24 +377,24 @@ Rect<s16> Base::GetBounds()
 
     if( !east )
     {
-        result.size.x   -= 3;
+        result.size.x   -= 1;
     }
 
     if( !south )
     {
-        result.size.y   -= 3;
+        result.size.y   -= 1;
     }
 
     if( !west )
     {
-        result.origin.x += 3;
-        result.size.x   -= 3;
+        result.origin.x += 1;
+        result.size.x   -= 1;
     }
 
     if( !north )
     {
-        result.origin.y += 3;
-        result.size.y   -= 3;
+        result.origin.y += 1;
+        result.size.y   -= 1;
     }
     return result;
 }

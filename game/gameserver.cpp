@@ -505,7 +505,7 @@ Actor* GameServer::FindPlayer(const Vector<s16>& position, int radius, Vector<s1
         }
 
         // Use 32 bits when calculating the square magnitude to avoid overflows
-        Vector<s32> delta (p.actor->GetPosition() - position);
+        Vector<s32> delta (p.actor->GetPosition().DeltaMod(position, stage.GetSize()));
         int sqMagnitude = delta.SqrMagnitude();
         if (sqMagnitude < minSquared)
         {

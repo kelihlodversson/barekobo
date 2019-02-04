@@ -4,6 +4,9 @@ namespace hfh3
 {
     /** A partial replacement of std::function<...> as we don't have access to the STL 
       * on a barebone environment.
+      * This implementation is a simplified version of the GCC standard library's 
+      * implementation of std::function.
+      * (https://gcc.gnu.org/svn/gcc/trunk/libstdc++-v3/include/std/functional?p=268513)
       */
     template<typename>
     class Callback;

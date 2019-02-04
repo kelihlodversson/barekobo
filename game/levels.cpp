@@ -3,7 +3,10 @@
 using namespace hfh3;
 
 /* Note this definition uses C99 designated initializers for struct members.
- * This is not a part of the C++ standard, but allowed by g++
+ * This is not a part of the C++ standard, but allowed by g++.
+ * 
+ * Levels are based on a subset of the level layouts from the original XKobo by A. Higuchi.
+ * (https://github.com/hatemogi/xkobo/blob/master/src/scenes.C) 
  */
 Levels::Levels()
 : Array({

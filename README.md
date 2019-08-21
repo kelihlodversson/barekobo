@@ -1,7 +1,7 @@
 # BareKobo
 Bare-metal multiplayer reimplementation of XKobo for Rasberry PI (2 and 3)
 
-[game screen shot](https://raw.githubusercontent.com/kelihlodversson/barekobo-dissertation/master/5_dissertation/screenshots/network_game_over_both.png)
+![game screen shot](https://raw.githubusercontent.com/kelihlodversson/barekobo-dissertation/master/5_dissertation/screenshots/network_game_over_both.png)
 
 This is a bare-metal project based on a subset of XKobo, a 2D space shooter
 where players need to avoid enemy ships and destroy maze-looking space stations,

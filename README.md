@@ -3,8 +3,8 @@ Bare-metal multiplayer reimplementation of XKobo for Rasberry PI (2 and 3)
 
 ![game screen shot](https://raw.githubusercontent.com/kelihlodversson/barekobo-dissertation/master/5_dissertation/screenshots/network_game_over_both.png)
 
-This is a bare-metal project based on a subset of XKobo, a 2D space shooter
-where players need to avoid enemy ships and destroy maze-looking space stations,
+This is a bare-metal project based on a [subset of XKobo](https://github.com/hatemogi/xkobo), 
+a 2D space shooter where players need to avoid enemy ships and destroy maze-looking space stations,
 extended with a cooperative multiplayer mode for a pair of Raspberry PI
 devices running on the same network.
 
@@ -33,4 +33,4 @@ sudo umount /mnt/<path to SD card>/
 ``` 
 
 This project is part of an individual master's degree project. Feel free to read
-the [dissertation](https://github.com/kelihlodversson/barekobo-dissertation/blob/master/5_dissertation/hfh3_dissertation.pdf) and take a look at the [viva presentation slides](https://github.com/kelihlodversson/barekobo-dissertation/blob/master/6_presentation/hfh3_presentation.pdf)
+the [dissertation](https://github.com/kelihlodversson/barekobo-dissertation/raw/master/5_dissertation/hfh3_dissertation.pdf) and take a look at the [viva presentation slides](https://github.com/kelihlodversson/barekobo-dissertation/blob/master/6_presentation/hfh3_presentation.pdf)
